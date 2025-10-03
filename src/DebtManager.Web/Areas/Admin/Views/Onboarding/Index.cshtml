@@ -1,0 +1,51 @@
+@model DebtManager.Web.Areas.Admin.Controllers.OnboardingVm
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2 class="text-xl font-semibold mb-4">Client Onboarding</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="p-3 bg-green-100 border border-green-300 text-green-800 rounded mb-3">@TempData["Message"]</div>
+}
+
+<form asp-action="ValidateAbn" method="post" class="space-y-4">
+    <div>
+        <label class="block text-sm">ABN</label>
+        <input name="Abn" value="@Model.Abn" placeholder="Enter ABN (11 digits)" class="border p-2 w-full" />
+        <span class="text-red-700 text-sm">@Html.ValidationMessage("Abn")</span>
+    </div>
+    <button class="bg-blue-600 text-white px-4 py-2">Validate ABN</button>
+    @Html.AntiForgeryToken()
+    @if (Model.IsValidAbn.HasValue)
+    {
+        if (Model.IsValidAbn.Value)
+        {
+            <p class="text-green-700 mt-2">ABN looks valid (stub) ✅</p>
+        }
+        else
+        {
+            <p class="text-red-700 mt-2">Invalid ABN ❌</p>
+        }
+    }
+</form>
+
+@if (Model.IsValidAbn == true)
+{
+    <form asp-action="Create" method="post" class="space-y-4 mt-6 border-t pt-4">
+        <div>
+            <label class="block text-sm">Organization Name</label>
+            <input name="Name" value="@Model.Name" placeholder="e.g. Contoso Pty Ltd" class="border p-2 w-full" />
+            <span class="text-red-700 text-sm">@Html.ValidationMessage("Name")</span>
+        </div>
+        <div>
+            <label class="block text-sm">Subdomain (optional)</label>
+            <input name="Subdomain" value="@Model.Subdomain" placeholder="e.g. contoso" class="border p-2 w-full" />
+            <span class="text-red-700 text-sm">@Html.ValidationMessage("Subdomain")</span>
+        </div>
+        <input type="hidden" name="Abn" value="@Model.Abn" />
+        <input type="hidden" name="IsValidAbn" value="@Model.IsValidAbn" />
+        <button class="bg-emerald-600 text-white px-4 py-2">Submit for approval</button>
+        @Html.AntiForgeryToken()
+    </form>
+}

@@ -1,0 +1,17 @@
+{
+  "name": "debtmanager-web",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tailwindcss -i ./Styles/input.css -o ./wwwroot/css/site.css --watch",
+    "build": "tailwindcss -i ./Styles/input.css -o ./wwwroot/css/site.css --minify"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.12"
+  }
+}

@@ -1,0 +1,24 @@
+# Build artifacts
+bin/
+obj/
+
+# VS Code
+.vscode/
+
+# Node
+node_modules/
+src/DebtManager.Web/node_modules/
+
+# Logs
+*.log
+logs/
+
+# User secrets
+**/secrets.json
+
+# OS
+.DS_Store
+
+# Publish output
+publish/
+dist/

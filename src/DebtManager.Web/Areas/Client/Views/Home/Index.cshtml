@@ -1,0 +1,12 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var themeName = ViewBag.ThemeName as string ?? "Default";
+}
+<div class="container mx-auto p-6">
+    <h2 class="text-2xl font-semibold">Client Dashboard — @themeName</h2>
+    <ul class="mt-4 list-disc list-inside text-gray-700">
+        <li>Upload invoices</li>
+        <li>Remittance schedule</li>
+        <li>Branding & bank details</li>
+    </ul>
+</div>
