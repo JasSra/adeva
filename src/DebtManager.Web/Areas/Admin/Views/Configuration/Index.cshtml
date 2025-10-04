@@ -1,0 +1,104 @@
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="mb-6">
+    <ul class="flex border-b">
+        <li class="mr-1">
+            <a href="/Admin/Configuration" class="inline-block py-2 px-4 bg-white border-b-2 border-blue-600 text-blue-600 font-semibold">General</a>
+        </li>
+        <li class="mr-1">
+            <a href="/Admin/Configuration/Fees" class="inline-block py-2 px-4 text-gray-600 hover:text-blue-600">Fees</a>
+        </li>
+        <li class="mr-1">
+            <a href="/Admin/Configuration/Branding" class="inline-block py-2 px-4 text-gray-600 hover:text-blue-600">Branding</a>
+        </li>
+        <li class="mr-1">
+            <a href="/Admin/Configuration/Integrations" class="inline-block py-2 px-4 text-gray-600 hover:text-blue-600">Integrations</a>
+        </li>
+    </ul>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+            <h3 class="text-lg font-semibold">System Information</h3>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="flex justify-between py-2 border-b">
+                <span class="text-gray-600">Version</span>
+                <span class="font-medium">1.0.0</span>
+            </div>
+            <div class="flex justify-between py-2 border-b">
+                <span class="text-gray-600">Environment</span>
+                <span class="font-medium">Development</span>
+            </div>
+            <div class="flex justify-between py-2 border-b">
+                <span class="text-gray-600">Database</span>
+                <span class="font-medium">SQL Server</span>
+            </div>
+            <div class="flex justify-between py-2">
+                <span class="text-gray-600">Cache</span>
+                <span class="font-medium">In-Memory</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+            <h3 class="text-lg font-semibold">Quick Settings</h3>
+        </div>
+        <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between py-2 border-b">
+                <div>
+                    <p class="font-medium">Maintenance Mode</p>
+                    <p class="text-sm text-gray-600">Temporarily disable public access</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+            <div class="flex items-center justify-between py-2 border-b">
+                <div>
+                    <p class="font-medium">Email Notifications</p>
+                    <p class="text-sm text-gray-600">Send system notifications</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+            <div class="flex items-center justify-between py-2">
+                <div>
+                    <p class="font-medium">Auto Approve Clients</p>
+                    <p class="text-sm text-gray-600">Automatically approve new organizations</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-6 bg-white rounded-lg shadow">
+    <div class="p-6 border-b">
+        <h3 class="text-lg font-semibold">Available Actions</h3>
+    </div>
+    <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button class="px-4 py-3 border rounded hover:bg-gray-50 text-left">
+            <p class="font-medium">Clear Cache</p>
+            <p class="text-sm text-gray-600">Reset application cache</p>
+        </button>
+        <button class="px-4 py-3 border rounded hover:bg-gray-50 text-left">
+            <p class="font-medium">View Logs</p>
+            <p class="text-sm text-gray-600">Check system logs</p>
+        </button>
+        <button class="px-4 py-3 border rounded hover:bg-gray-50 text-left">
+            <p class="font-medium">Export Data</p>
+            <p class="text-sm text-gray-600">Download system data</p>
+        </button>
+    </div>
+</div>

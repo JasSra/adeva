@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IDebtRepository, DebtRepository>();
         services.AddScoped<IPaymentPlanRepository, PaymentPlanRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<IAdminUserRepository, AdminUserRepository>();
 
         // Notifications
         services.AddScoped<IEmailSender, EmailSender>();
