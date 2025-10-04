@@ -1,6 +1,8 @@
 # Debt Management Platform
 
-Minimal scaffold per plan to bootstrap development.
+A white-labelled, multi-tenant debt management web application built on .NET 8.
+
+📚 **[View the Complete Wiki Documentation](wiki/Home.md)**
 
 ## Solution layout (small projects, modular)
 
@@ -70,6 +72,18 @@ Sign in: /Account/SignIn  •  Sign out: /Account/SignOutUser
 - AbrApi__DefinitionUrl=<https://abr.business.gov.au/ApiDocumentation>
 
 If BaseUrl is not set, the app uses a local stub that validates 11-digit ABNs.
+
+## Documentation
+
+Comprehensive documentation is available in the **[Wiki](wiki/Home.md)**:
+
+- **[Getting Started](wiki/Getting-Started.md)** - Detailed setup and installation guide
+- **[Architecture](wiki/Architecture.md)** - Technical architecture and design patterns
+- **[User Guides](wiki/User-Guides.md)** - Role-based workflow documentation
+- **[API Reference](wiki/API-Reference.md)** - Integration and API documentation
+- **[Development Guide](wiki/Development-Guide.md)** - Development workflows and coding standards
+- **[Deployment](wiki/Deployment.md)** - Deployment and operations guide
+- **[FAQ](wiki/FAQ.md)** - Frequently asked questions and troubleshooting
 
 ## Tests
 
