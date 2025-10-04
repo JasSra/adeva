@@ -86,6 +86,31 @@ Open <http://localhost:5000> or <https://localhost:5001>.
 - Sections: Applications, Debts, Debtors, Organizations, Transactions, Payments, Communications, Audit, Accounts, Configuration
 - All sections include search, pagination, and filtering
 
+### AI-Powered Template Authoring
+
+**Interactive Template Editor** with live preview and AI assistance:
+
+- **Documentation**: See [`docs/AI-Template-Authoring.md`](docs/AI-Template-Authoring.md) for complete guide
+- **Access**: Navigate to Admin → Communications → Templates → Create Template
+
+**Key Features:**
+- Real-time live preview with sample data
+- AI-generated template content for Email and SMS
+- AI-powered subject line suggestions
+- Automatic content formatting and optimization
+- Quick-insert variable buttons ({DebtorName}, {Amount}, {DueDate}, etc.)
+- Character count for SMS templates (160 char limit)
+- Context-aware template generation based on template name
+
+**Quick Start:**
+1. Go to `/Admin/Comms/CreateTemplate`
+2. Enter template name (e.g., "Payment Reminder")
+3. Select type (Email or SMS)
+4. Click "Generate Sample" for AI-created content
+5. Edit and preview in real-time
+6. Click "AI Improve" to enhance formatting
+7. Save template for use in communications
+
 ### Auth configuration (Azure AD B2C)
 
 Configure via environment variables (override `appsettings.json` as needed):
