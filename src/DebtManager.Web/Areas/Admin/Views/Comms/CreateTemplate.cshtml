@@ -1,0 +1,370 @@
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="mb-6">
+    <ul class="flex border-b">
+        <li class="mr-1">
+            <a href="/Admin/Comms" class="inline-block py-2 px-4 text-gray-600 hover:text-blue-600">Overview</a>
+        </li>
+        <li class="mr-1">
+            <a href="/Admin/Comms/Templates" class="inline-block py-2 px-4 text-gray-600 hover:text-blue-600">Templates</a>
+        </li>
+        <li class="mr-1">
+            <span class="inline-block py-2 px-4 bg-white border-b-2 border-blue-600 text-blue-600 font-semibold">Create Template</span>
+        </li>
+    </ul>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Editor Panel -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+            <h3 class="text-lg font-semibold">Template Editor</h3>
+            <p class="text-sm text-gray-600 mt-1">Create a new email or SMS template with AI assistance</p>
+        </div>
+        
+        <form id="templateForm" class="p-6">
+            <div class="space-y-4">
+                <div>
+                    <label for="templateName" class="block text-sm font-medium text-gray-700 mb-1">Template Name *</label>
+                    <input type="text" id="templateName" name="name" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="e.g., Payment Reminder" />
+                </div>
+
+                <div>
+                    <label for="templateType" class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                    <select id="templateType" name="type" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select type...</option>
+                        <option value="email">Email</option>
+                        <option value="sms">SMS</option>
+                    </select>
+                </div>
+
+                <div id="emailSubjectContainer" style="display: none;">
+                    <label for="templateSubject" class="block text-sm font-medium text-gray-700 mb-1">Subject Line *</label>
+                    <div class="relative">
+                        <input type="text" id="templateSubject" name="subject"
+                               class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Enter subject line..." />
+                        <button type="button" id="aiSubjectBtn" class="absolute right-2 top-2 text-purple-600 hover:text-purple-700" title="AI Suggestions">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="templateContent" class="block text-sm font-medium text-gray-700">Content *</label>
+                        <button type="button" id="aiImproveBtn" class="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                            AI Improve
+                        </button>
+                    </div>
+                    <textarea id="templateContent" name="content" rows="12" required
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                              placeholder="Enter template content...&#10;&#10;Use variables like:&#10;{DebtorName}&#10;{Amount}&#10;{DueDate}&#10;{ReferenceId}&#10;{ClientName}&#10;{PaymentUrl}"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Use {VariableName} for dynamic content</p>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-semibold text-blue-900 mb-1">Available Variables</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" class="variable-tag px-2 py-1 bg-white border border-blue-300 rounded text-xs hover:bg-blue-100" data-var="{DebtorName}">DebtorName</button>
+                                <button type="button" class="variable-tag px-2 py-1 bg-white border border-blue-300 rounded text-xs hover:bg-blue-100" data-var="{Amount}">Amount</button>
+                                <button type="button" class="variable-tag px-2 py-1 bg-white border border-blue-300 rounded text-xs hover:bg-blue-100" data-var="{DueDate}">DueDate</button>
+                                <button type="button" class="variable-tag px-2 py-1 bg-white border border-blue-300 rounded text-xs hover:bg-blue-100" data-var="{ReferenceId}">ReferenceId</button>
+                                <button type="button" class="variable-tag px-2 py-1 bg-white border border-blue-300 rounded text-xs hover:bg-blue-100" data-var="{ClientName}">ClientName</button>
+                                <button type="button" class="variable-tag px-2 py-1 bg-white border border-blue-300 rounded text-xs hover:bg-blue-100" data-var="{PaymentUrl}">PaymentUrl</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Save Template
+                    </button>
+                    <a href="/Admin/Comms/Templates" class="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Live Preview Panel -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Live Preview</h3>
+            <button type="button" id="generateSampleBtn" class="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Generate Sample
+            </button>
+        </div>
+        
+        <div class="p-6">
+            <div id="previewContainer" class="border rounded-lg p-4 min-h-[400px] bg-gray-50">
+                <div id="previewPlaceholder" class="flex flex-col items-center justify-center h-full text-gray-400">
+                    <svg class="w-16 h-16 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <p class="text-sm">Preview will appear here</p>
+                    <p class="text-xs mt-1">Start typing to see live preview</p>
+                </div>
+                <div id="previewEmail" style="display: none;">
+                    <div class="mb-4 pb-4 border-b">
+                        <div class="text-xs text-gray-500 mb-1">Subject:</div>
+                        <div id="previewSubject" class="font-semibold text-gray-800"></div>
+                    </div>
+                    <div id="previewBody" class="prose prose-sm max-w-none"></div>
+                </div>
+                <div id="previewSms" style="display: none;">
+                    <div class="bg-white rounded-lg shadow-sm border p-4 max-w-sm">
+                        <div class="text-xs text-gray-500 mb-2">SMS Message</div>
+                        <div id="previewSmsBody" class="text-sm whitespace-pre-wrap"></div>
+                        <div id="previewSmsLength" class="text-xs text-gray-500 mt-2 text-right"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // State
+    const sampleData = {
+        DebtorName: 'John Smith',
+        Amount: '$1,250.00',
+        DueDate: 'January 31, 2024',
+        ReferenceId: 'REF-2024-001',
+        ClientName: 'Acme Collections',
+        PaymentUrl: 'https://app.adeva.com/pay/abc123'
+    };
+
+    // DOM Elements
+    const templateType = document.getElementById('templateType');
+    const templateSubject = document.getElementById('templateSubject');
+    const templateContent = document.getElementById('templateContent');
+    const emailSubjectContainer = document.getElementById('emailSubjectContainer');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const previewEmail = document.getElementById('previewEmail');
+    const previewSms = document.getElementById('previewSms');
+    const previewSubject = document.getElementById('previewSubject');
+    const previewBody = document.getElementById('previewBody');
+    const previewSmsBody = document.getElementById('previewSmsBody');
+    const previewSmsLength = document.getElementById('previewSmsLength');
+
+    // Template type change handler
+    templateType.addEventListener('change', function() {
+        if (this.value === 'email') {
+            emailSubjectContainer.style.display = 'block';
+            templateContent.placeholder = 'Enter email content...\n\nUse HTML for formatting:\n<h1>Hello {DebtorName}</h1>\n<p>Your payment of {Amount} is due on {DueDate}.</p>';
+        } else if (this.value === 'sms') {
+            emailSubjectContainer.style.display = 'none';
+            templateContent.placeholder = 'Enter SMS content...\n\nKeep it short (max 160 chars):\nHi {DebtorName}, your payment of {Amount} is due on {DueDate}. Pay now: {PaymentUrl}';
+        }
+        updatePreview();
+    });
+
+    // Live preview updaters
+    templateSubject.addEventListener('input', updatePreview);
+    templateContent.addEventListener('input', updatePreview);
+
+    function updatePreview() {
+        const type = templateType.value;
+        const subject = templateSubject.value;
+        const content = templateContent.value;
+
+        if (!type || !content) {
+            previewPlaceholder.style.display = 'flex';
+            previewEmail.style.display = 'none';
+            previewSms.style.display = 'none';
+            return;
+        }
+
+        const processedContent = replacePlaceholders(content);
+
+        if (type === 'email') {
+            const processedSubject = replacePlaceholders(subject);
+            previewSubject.textContent = processedSubject || '(No subject)';
+            previewBody.innerHTML = processedContent;
+            previewPlaceholder.style.display = 'none';
+            previewEmail.style.display = 'block';
+            previewSms.style.display = 'none';
+        } else if (type === 'sms') {
+            previewSmsBody.textContent = processedContent;
+            previewSmsLength.textContent = `${processedContent.length} characters`;
+            previewPlaceholder.style.display = 'none';
+            previewEmail.style.display = 'none';
+            previewSms.style.display = 'block';
+        }
+    }
+
+    function replacePlaceholders(text) {
+        if (!text) return '';
+        let result = text;
+        for (const [key, value] of Object.entries(sampleData)) {
+            result = result.replace(new RegExp(`{${key}}`, 'g'), value);
+        }
+        return result;
+    }
+
+    // Variable tag click handlers
+    document.querySelectorAll('.variable-tag').forEach(button => {
+        button.addEventListener('click', function() {
+            const variable = this.dataset.var;
+            const textarea = templateContent;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            textarea.value = text.substring(0, start) + variable + text.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + variable.length, start + variable.length);
+            updatePreview();
+        });
+    });
+
+    // Generate sample data
+    document.getElementById('generateSampleBtn').addEventListener('click', async function() {
+        const type = templateType.value;
+        const templateName = document.getElementById('templateName').value;
+        
+        if (!type) {
+            alert('Please select a template type first');
+            return;
+        }
+
+        this.disabled = true;
+        this.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating...';
+
+        try {
+            const response = await fetch('/Admin/Comms/GenerateSampleTemplate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, name: templateName })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (type === 'email') {
+                    templateSubject.value = data.subject || '';
+                }
+                templateContent.value = data.content || '';
+                updatePreview();
+            } else {
+                alert('Failed to generate sample template');
+            }
+        } catch (error) {
+            console.error('Error generating sample:', error);
+            alert('Error generating sample template');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Generate Sample';
+        }
+    });
+
+    // AI Subject suggestions
+    document.getElementById('aiSubjectBtn').addEventListener('click', async function() {
+        const content = templateContent.value;
+        const name = document.getElementById('templateName').value;
+        
+        if (!content && !name) {
+            alert('Please enter template name or content first');
+            return;
+        }
+
+        this.disabled = true;
+        const originalHtml = this.innerHTML;
+        this.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+        try {
+            const response = await fetch('/Admin/Comms/SuggestSubject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content, name })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.suggestion) {
+                    templateSubject.value = data.suggestion;
+                    updatePreview();
+                }
+            } else {
+                alert('Failed to generate subject suggestion');
+            }
+        } catch (error) {
+            console.error('Error generating subject:', error);
+            alert('Error generating subject suggestion');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = originalHtml;
+        }
+    });
+
+    // AI Improve content
+    document.getElementById('aiImproveBtn').addEventListener('click', async function() {
+        const content = templateContent.value;
+        const type = templateType.value;
+        
+        if (!content) {
+            alert('Please enter some content first');
+            return;
+        }
+
+        if (!type) {
+            alert('Please select a template type first');
+            return;
+        }
+
+        this.disabled = true;
+        const originalHtml = this.innerHTML;
+        this.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Improving...';
+
+        try {
+            const response = await fetch('/Admin/Comms/ImproveContent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content, type })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.improved) {
+                    templateContent.value = data.improved;
+                    updatePreview();
+                }
+            } else {
+                alert('Failed to improve content');
+            }
+        } catch (error) {
+            console.error('Error improving content:', error);
+            alert('Error improving content');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = originalHtml;
+        }
+    });
+
+    // Form submission
+    document.getElementById('templateForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Template creation would be saved here. This is a demo implementation.');
+        // In a real implementation, this would POST to a save endpoint
+    });
+</script>
