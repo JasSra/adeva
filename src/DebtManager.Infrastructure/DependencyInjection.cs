@@ -8,6 +8,8 @@ using DebtManager.Contracts.Notifications;
 using DebtManager.Infrastructure.Notifications;
 using DebtManager.Contracts.Payments;
 using DebtManager.Infrastructure.Payments;
+using DebtManager.Contracts.Configuration;
+using DebtManager.Infrastructure.Configuration;
 
 namespace DebtManager.Infrastructure;
 
@@ -15,32 +17,15 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration? configuration = null)
     {
-        // ABR Http Client
-        services.AddHttpClient<AbrHttpValidator>((sp, http) =>
-        {
-            var config = configuration ?? sp.GetRequiredService<IConfiguration>();
-            var baseUrl = config["AbrApi:BaseUrl"] ?? "";
-            var apiKey = config["AbrApi:ApiKey"] ?? "";
-            if (!string.IsNullOrWhiteSpace(baseUrl))
-            {
-                http.BaseAddress = new Uri(baseUrl);
-            }
-            if (!string.IsNullOrWhiteSpace(apiKey))
-            {
-                http.DefaultRequestHeaders.Add("X-API-KEY", apiKey);
-            }
-        });
+        // ABR Http Client (no config here; validator will use DB-backed config)
+        services.AddHttpClient<AbrHttpValidator>();
 
         // Choose implementation based on presence of BaseUrl; fall back to stub
         services.AddScoped<IAbrValidator>(sp =>
         {
-            var config = (configuration ?? sp.GetRequiredService<IConfiguration>());
-            var baseUrl = config["AbrApi:BaseUrl"];
-            if (!string.IsNullOrWhiteSpace(baseUrl))
-            {
-                return sp.GetRequiredService<AbrHttpValidator>();
-            }
-            return new AbrValidatorStub();
+            // Decide dynamically at runtime in validator using config values
+            var handler = sp.GetRequiredService<AbrHttpValidator>();
+            return handler;
         });
 
         // Repositories
@@ -51,6 +36,9 @@ public static class DependencyInjection
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IAdminUserRepository, AdminUserRepository>();
         services.AddScoped<IArticleRepository, ArticleRepository>();
+
+        // Config service
+        services.AddScoped<IAppConfigService, AppConfigService>();
 
         // Notifications
         services.AddScoped<IEmailSender, EmailSender>();

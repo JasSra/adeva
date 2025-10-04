@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using DebtManager.Contracts.External;
+using DebtManager.Contracts.Configuration;
 
 namespace DebtManager.Infrastructure.External;
 
@@ -18,14 +18,13 @@ public class AbrHttpValidator : IAbrValidator
 {
     private readonly HttpClient _http;
     private readonly ILogger<AbrHttpValidator> _logger;
-    private readonly string _definitionUrl;
+    private readonly IAppConfigService _appConfig;
 
-    public AbrHttpValidator(HttpClient http, IConfiguration config, ILogger<AbrHttpValidator> logger)
+    public AbrHttpValidator(HttpClient http, IAppConfigService appConfig, ILogger<AbrHttpValidator> logger)
     {
         _http = http;
         _logger = logger;
-        var def = config["AbrApi:DefinitionUrl"];
-        _definitionUrl = string.IsNullOrWhiteSpace(def) ? "https://abr.business.gov.au/ApiDocumentation" : def;
+        _appConfig = appConfig;
     }
 
     public async Task<bool> ValidateAsync(string abn, CancellationToken ct = default)
@@ -33,8 +32,20 @@ public class AbrHttpValidator : IAbrValidator
         if (string.IsNullOrWhiteSpace(abn)) return false;
         try
         {
-            // Example GET /validate?abn=... expecting { isValid: bool }
-            var resp = await _http.GetAsync($"validate?abn={Uri.EscapeDataString(abn)}", ct);
+            var baseUrl = await _appConfig.GetAsync("AbrApi:BaseUrl", ct);
+            var apiKey = await _appConfig.GetAsync("AbrApi:ApiKey", ct);
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                // If not configured, fallback stub rules
+                return abn.Length == 11;
+            }
+
+            using var req = new HttpRequestMessage(HttpMethod.Get, new Uri(new Uri(baseUrl.TrimEnd('/') + "/"), $"validate?abn={Uri.EscapeDataString(abn)}"));
+            if (!string.IsNullOrWhiteSpace(apiKey))
+            {
+                req.Headers.TryAddWithoutValidation("X-API-KEY", apiKey);
+            }
+            var resp = await _http.SendAsync(req, ct);
             if (!resp.IsSuccessStatusCode)
             {
                 _logger.LogWarning("ABR validation failed with status {Status}", resp.StatusCode);
@@ -45,7 +56,8 @@ public class AbrHttpValidator : IAbrValidator
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error calling ABR service. See definition: {Url}", _definitionUrl);
+            var def = await _appConfig.GetAsync("AbrApi:DefinitionUrl", ct) ?? "https://abr.business.gov.au/ApiDocumentation";
+            _logger.LogError(ex, "Error calling ABR service. See definition: {Url}", def);
             return false;
         }
     }

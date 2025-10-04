@@ -3,6 +3,7 @@ using System.Linq;
 using DebtManager.Domain.Common;
 using DebtManager.Domain.Debtors;
 using DebtManager.Domain.Debts;
+using DebtManager.Domain.Documents;
 
 namespace DebtManager.Domain.Organizations;
 
@@ -10,6 +11,7 @@ public class Organization : Entity
 {
     private readonly List<Debtor> _debtors;
     private readonly List<Debt> _debts;
+    private readonly List<Document> _documents;
 
     public string Name { get; private set; }
     public string LegalName { get; private set; }
@@ -37,11 +39,13 @@ public class Organization : Entity
 
     public IReadOnlyCollection<Debtor> Debtors => _debtors.AsReadOnly();
     public IReadOnlyCollection<Debt> Debts => _debts.AsReadOnly();
+    public IReadOnlyCollection<Document> Documents => _documents.AsReadOnly();
 
     private Organization()
     {
         _debtors = new List<Debtor>();
         _debts = new List<Debt>();
+        _documents = new List<Document>();
         Name = LegalName = Abn = DefaultCurrency = PrimaryColorHex = SecondaryColorHex = SupportEmail = SupportPhone = Timezone = string.Empty;
     }
 
@@ -195,6 +199,14 @@ public class Organization : Entity
         }
 
         _debts.Add(debt);
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void AttachDocument(Document doc)
+    {
+        if (doc is null) throw new ArgumentNullException(nameof(doc));
+        if (_documents.Any(d => d.Id == doc.Id)) return;
+        _documents.Add(doc);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 }

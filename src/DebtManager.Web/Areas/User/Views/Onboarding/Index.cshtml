@@ -1,0 +1,26 @@
+@model DebtManager.Web.Areas.User.Controllers.DebtorOnboardingVm
+@{
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+    ViewBag.Title = "Complete Your Profile";
+}
+<h2 class="text-xl font-semibold mb-4">Complete Your Profile</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="p-3 bg-green-100 border border-green-300 text-green-800 rounded mb-3">@TempData["Message"]</div>
+}
+
+<form asp-action="Create" method="post" class="space-y-4">
+    <div>
+        <label class="block text-sm">First Name</label>
+        <input name="FirstName" value="@Model.FirstName" class="border p-2 w-full" />
+        <span class="text-red-700 text-sm">@Html.ValidationMessage("FirstName")</span>
+    </div>
+    <div>
+        <label class="block text-sm">Last Name</label>
+        <input name="LastName" value="@Model.LastName" class="border p-2 w-full" />
+        <span class="text-red-700 text-sm">@Html.ValidationMessage("LastName")</span>
+    </div>
+    <button class="bg-emerald-600 text-white px-4 py-2">Save</button>
+    @Html.AntiForgeryToken()
+</form>

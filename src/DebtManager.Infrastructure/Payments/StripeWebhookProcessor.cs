@@ -1,8 +1,8 @@
 using DebtManager.Contracts.Payments;
 using DebtManager.Contracts.Persistence;
+using DebtManager.Contracts.Configuration;
 using DebtManager.Domain.Payments;
 using Hangfire;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Stripe;
 using DomainPaymentMethod = DebtManager.Domain.Payments.PaymentMethod;
@@ -11,23 +11,23 @@ namespace DebtManager.Infrastructure.Payments;
 
 public class StripeWebhookProcessor : IWebhookProcessor
 {
-    private readonly IConfiguration _configuration;
+    private readonly IAppConfigService _config;
     private readonly ILogger<StripeWebhookProcessor> _logger;
     private readonly IBackgroundJobClient _backgroundJobClient;
 
     public StripeWebhookProcessor(
-        IConfiguration configuration,
+        IAppConfigService config,
         ILogger<StripeWebhookProcessor> logger,
         IBackgroundJobClient backgroundJobClient)
     {
-        _configuration = configuration;
+        _config = config;
         _logger = logger;
         _backgroundJobClient = backgroundJobClient;
     }
 
     public async Task ProcessStripeWebhookAsync(string payload, string signature, CancellationToken ct = default)
     {
-        var webhookSecret = _configuration["Stripe:WebhookSecret"];
+        var webhookSecret = await _config.GetAsync("Stripe:WebhookSecret", ct);
         
         if (string.IsNullOrWhiteSpace(webhookSecret))
         {

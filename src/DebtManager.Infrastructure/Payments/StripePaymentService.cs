@@ -1,6 +1,6 @@
 using DebtManager.Contracts.Payments;
 using DebtManager.Contracts.Persistence;
-using Microsoft.Extensions.Configuration;
+using DebtManager.Contracts.Configuration;
 using Microsoft.Extensions.Logging;
 using Stripe;
 using DomainPaymentMethod = DebtManager.Domain.Payments.PaymentMethod;
@@ -10,23 +10,17 @@ namespace DebtManager.Infrastructure.Payments;
 public class StripePaymentService : IPaymentService
 {
     private readonly IDebtRepository _debtRepository;
-    private readonly IConfiguration _configuration;
+    private readonly IAppConfigService _config;
     private readonly ILogger<StripePaymentService> _logger;
 
     public StripePaymentService(
         IDebtRepository debtRepository,
-        IConfiguration configuration,
+        IAppConfigService config,
         ILogger<StripePaymentService> logger)
     {
         _debtRepository = debtRepository;
-        _configuration = configuration;
+        _config = config;
         _logger = logger;
-
-        var apiKey = configuration["Stripe:SecretKey"];
-        if (!string.IsNullOrWhiteSpace(apiKey))
-        {
-            StripeConfiguration.ApiKey = apiKey;
-        }
     }
 
     public async Task<PaymentIntentResult> CreatePaymentIntentAsync(
@@ -35,6 +29,12 @@ public class StripePaymentService : IPaymentService
         string currency = "AUD",
         CancellationToken ct = default)
     {
+        var secretKey = await _config.GetAsync("Stripe:SecretKey", ct);
+        if (string.IsNullOrWhiteSpace(secretKey))
+            throw new InvalidOperationException("Stripe secret key not configured");
+
+        StripeConfiguration.ApiKey = secretKey;
+
         var debt = await _debtRepository.GetWithDetailsAsync(debtId, ct);
         if (debt == null)
         {
@@ -109,6 +109,11 @@ public class StripePaymentService : IPaymentService
         string paymentIntentId,
         CancellationToken ct = default)
     {
+        var secretKey = await _config.GetAsync("Stripe:SecretKey", ct);
+        if (string.IsNullOrWhiteSpace(secretKey))
+            throw new InvalidOperationException("Stripe secret key not configured");
+
+        StripeConfiguration.ApiKey = secretKey;
         var service = new PaymentIntentService();
         var intent = await service.GetAsync(paymentIntentId, cancellationToken: ct);
         
@@ -119,6 +124,11 @@ public class StripePaymentService : IPaymentService
         string paymentIntentId,
         CancellationToken ct = default)
     {
+        var secretKey = await _config.GetAsync("Stripe:SecretKey", ct);
+        if (string.IsNullOrWhiteSpace(secretKey))
+            throw new InvalidOperationException("Stripe secret key not configured");
+
+        StripeConfiguration.ApiKey = secretKey;
         var service = new PaymentIntentService();
         var intent = await service.GetAsync(paymentIntentId, cancellationToken: ct);
         

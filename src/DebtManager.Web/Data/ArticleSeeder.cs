@@ -29,28 +29,28 @@ public static class ArticleSeeder
         return new List<Article>
         {
             Article.Create(
-                "About Adeva",
+                "About Adeva Plus",
                 "about-us",
                 CreateAboutUsContent(),
-                "Discover how Adeva is revolutionizing debt management through technology and innovation.",
+                "Discover how Adeva Plus is revolutionizing debt management through technology and innovation.",
                 "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200",
-                "Adeva Team"
+                "Adeva Plus Team"
             ),
 
             Article.Create(
                 "How It Works",
                 "how-it-works",
                 CreateHowItWorksContent(),
-                "Learn how Adeva streamlines debt management for businesses and debtors.",
+                "Learn how Adeva Plus streamlines debt management for businesses and debtors.",
                 "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200",
-                "Adeva Team"
+                "Adeva Plus Team"
             ),
 
             Article.Create(
                 "Frequently Asked Questions",
                 "faq",
                 CreateFaqContent(),
-                "Find answers to common questions about using Adeva for debt management.",
+                "Find answers to common questions about using Adeva Plus for debt management.",
                 "https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=1200",
                 "Support Team"
             ),
@@ -59,7 +59,7 @@ public static class ArticleSeeder
                 "Privacy Policy",
                 "privacy-policy",
                 CreatePrivacyPolicyContent(),
-                "Learn how Adeva protects your privacy and handles your personal information.",
+                "Learn how Adeva Plus protects your privacy and handles your personal information.",
                 "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200",
                 "Legal Team"
             ),
@@ -77,7 +77,7 @@ public static class ArticleSeeder
                 "Getting Started Guide",
                 "getting-started",
                 CreateGettingStartedContent(),
-                "Your quick-start guide to using Adeva for debt management.",
+                "Your quick-start guide to using Adeva Plus for debt management.",
                 "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200",
                 "Support Team"
             ),
@@ -86,7 +86,7 @@ public static class ArticleSeeder
                 "Payment Plans Explained",
                 "payment-plans",
                 CreatePaymentPlansContent(),
-                "Learn about the flexible payment plan options available through Adeva.",
+                "Learn about the flexible payment plan options available through Adeva Plus.",
                 "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200",
                 "Financial Team"
             ),
@@ -104,7 +104,7 @@ public static class ArticleSeeder
                 "For Organizations: Branding Guide",
                 "branding-guide",
                 CreateBrandingGuideContent(),
-                "Customize Adeva to match your brand identity.",
+                "Customize Adeva Plus to match your brand identity.",
                 "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=1200",
                 "Product Team"
             ),
@@ -122,7 +122,7 @@ public static class ArticleSeeder
                 "API Documentation",
                 "api-documentation",
                 CreateApiDocsContent(),
-                "Integrate Adeva with your existing systems using our RESTful API.",
+                "Integrate Adeva Plus with your existing systems using our RESTful API.",
                 "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=1200",
                 "Engineering Team"
             ),
@@ -131,7 +131,7 @@ public static class ArticleSeeder
                 "Contact Support",
                 "contact-support",
                 CreateContactContent(),
-                "Multiple ways to get help and support from the Adeva team.",
+                "Multiple ways to get help and support from the Adeva Plus team.",
                 "https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=1200",
                 "Support Team"
             ),
@@ -140,7 +140,7 @@ public static class ArticleSeeder
                 "Compliance & Regulations",
                 "compliance",
                 CreateComplianceContent(),
-                "Understanding Adeva's commitment to compliance and regulatory adherence.",
+                "Understanding Adeva Plus's commitment to compliance and regulatory adherence.",
                 "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1200",
                 "Compliance Team"
             ),
@@ -149,7 +149,7 @@ public static class ArticleSeeder
                 "Integration Options",
                 "integrations",
                 CreateIntegrationsContent(),
-                "Connect Adeva with your existing business systems for maximum efficiency.",
+                "Connect Adeva Plus with your existing business systems for maximum efficiency.",
                 "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200",
                 "Integration Team"
             ),
@@ -158,15 +158,15 @@ public static class ArticleSeeder
                 "Release Notes & Changelog",
                 "changelog",
                 CreateChangelogContent(),
-                "Track the latest updates, features, and improvements to the Adeva platform.",
+                "Track the latest updates, features, and improvements to the Adeva Plus platform.",
                 "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200",
                 "Product Team"
             )
         };
     }
 
-    private static string CreateAboutUsContent() => @"<h2>Welcome to Adeva Debt Management</h2>
-<p>Adeva is a cutting-edge debt management platform designed to simplify the debt collection process for businesses and debtors alike.</p>
+    private static string CreateAboutUsContent() => @"<h2>Welcome to Adeva Plus Debt Management</h2>
+<p>Adeva Plus is a cutting-edge debt management platform designed to simplify the debt collection process for businesses and debtors alike.</p>
 <h3>Our Vision</h3>
 <p>We envision a world where debt management is streamlined, automated, and humane.</p>
 <h3>What We Offer</h3>
@@ -177,7 +177,7 @@ public static class ArticleSeeder
 <li><strong>Secure Payment Processing</strong></li>
 </ul>";
 
-    private static string CreateHowItWorksContent() => @"<h2>How Adeva Works</h2>
+    private static string CreateHowItWorksContent() => @"<h2>How Adeva Plus Works</h2>
 <p>Our platform makes debt management simple and efficient.</p>
 <h3>For Businesses</h3>
 <ol>
@@ -194,8 +194,8 @@ public static class ArticleSeeder
 </ol>";
 
     private static string CreateFaqContent() => @"<h2>Frequently Asked Questions</h2>
-<h3>What is Adeva?</h3>
-<p>Adeva is a comprehensive debt management platform.</p>
+<h3>What is Adeva Plus?</h3>
+<p>Adeva Plus is a comprehensive debt management platform.</p>
 <h3>Is my data secure?</h3>
 <p>Yes, we use industry-standard encryption and security measures.</p>
 <h3>How do I access my account?</h3>
@@ -204,7 +204,7 @@ public static class ArticleSeeder
     private static string CreatePrivacyPolicyContent() => @"<h2>Privacy Policy</h2>
 <p><em>Last Updated: January 2024</em></p>
 <h3>1. Introduction</h3>
-<p>Adeva is committed to protecting your privacy.</p>
+<p>Adeva Plus is committed to protecting your privacy.</p>
 <h3>2. Information We Collect</h3>
 <p>We collect personal information necessary to provide our services.</p>
 <h3>3. How We Use Your Information</h3>
@@ -213,11 +213,11 @@ public static class ArticleSeeder
     private static string CreateTermsContent() => @"<h2>Terms of Service</h2>
 <p><em>Last Updated: January 2024</em></p>
 <h3>1. Acceptance of Terms</h3>
-<p>By using Adeva, you agree to these terms.</p>
+<p>By using Adeva Plus, you agree to these terms.</p>
 <h3>2. Service Description</h3>
-<p>Adeva provides cloud-based debt management services.</p>";
+<p>Adeva Plus provides cloud-based debt management services.</p>";
 
-    private static string CreateGettingStartedContent() => @"<h2>Getting Started with Adeva</h2>
+    private static string CreateGettingStartedContent() => @"<h2>Getting Started with Adeva Plus</h2>
 <h3>For Businesses</h3>
 <ol>
 <li>Set up your account</li>
@@ -273,7 +273,7 @@ public static class ArticleSeeder
 <h3>Getting Started</h3>
 <p>Use API keys for authentication.</p>
 <h3>Base URL</h3>
-<pre>https://api.adeva.com/v1/</pre>
+<pre>https://api.adevaplus.com/v1/</pre>
 <h3>Core Endpoints</h3>
 <ul>
 <li>GET /debts</li>
@@ -281,11 +281,11 @@ public static class ArticleSeeder
 <li>GET /payments</li>
 </ul>";
 
-    private static string CreateContactContent() => @"<h2>Contact Adeva Support</h2>
+    private static string CreateContactContent() => @"<h2>Contact Adeva Plus Support</h2>
 <h3>Email</h3>
-<p>support@adeva.com</p>
+<p>support@adevaplus.com</p>
 <h3>Phone</h3>
-<p>1300 ADEVA (1300 233 382)</p>
+<p>1300 ADEVA PLUS</p>
 <h3>Office Hours</h3>
 <p>Monday-Friday, 9:00 AM - 5:00 PM AEST</p>";
 

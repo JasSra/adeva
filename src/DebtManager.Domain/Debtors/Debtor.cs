@@ -4,6 +4,7 @@ using DebtManager.Domain.Common;
 using DebtManager.Domain.Debts;
 using DebtManager.Domain.Organizations;
 using DebtManager.Domain.Payments;
+using DebtManager.Domain.Documents;
 
 namespace DebtManager.Domain.Debtors;
 
@@ -31,6 +32,7 @@ public class Debtor : Entity
 {
     private readonly List<Debt> _debts;
     private readonly List<Transaction> _transactions;
+    private readonly List<Document> _documents;
 
     public Guid OrganizationId { get; private set; }
     public string ReferenceId { get; private set; }
@@ -61,11 +63,13 @@ public class Debtor : Entity
     public Organization? Organization { get; private set; }
     public IReadOnlyCollection<Debt> Debts => _debts.AsReadOnly();
     public IReadOnlyCollection<Transaction> Transactions => _transactions.AsReadOnly();
+    public IReadOnlyCollection<Document> Documents => _documents.AsReadOnly();
 
     private Debtor()
     {
         _debts = new List<Debt>();
         _transactions = new List<Transaction>();
+        _documents = new List<Document>();
         ReferenceId = Email = Phone = AlternatePhone = string.Empty;
         FirstName = LastName = PreferredName = string.Empty;
         AddressLine1 = AddressLine2 = City = State = PostalCode = string.Empty;
@@ -237,6 +241,14 @@ public class Debtor : Entity
         }
 
         _transactions.Add(transaction);
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void AttachDocument(Document doc)
+    {
+        if (doc is null) throw new ArgumentNullException(nameof(doc));
+        if (_documents.Any(d => d.Id == doc.Id)) return;
+        _documents.Add(doc);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 }

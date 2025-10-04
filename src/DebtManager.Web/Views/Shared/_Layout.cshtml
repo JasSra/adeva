@@ -1,3 +1,5 @@
+@using Microsoft.Extensions.Hosting
+@inject Microsoft.Extensions.Hosting.IHostEnvironment Env
 @{
     var themeName = ViewBag.ThemeName as string ?? "Default";
 }
@@ -6,7 +8,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Debt Manager - @themeName</title>
+    <title>Adeva Plus - @themeName</title>
     <link rel="stylesheet" href="/css/site.css" />
     <script>
         // Dark mode toggle
@@ -15,7 +17,7 @@
         } else {
             document.documentElement.classList.remove('dark')
         }
-        
+
         function toggleDarkMode() {
             if (document.documentElement.classList.contains('dark')) {
                 document.documentElement.classList.remove('dark');
@@ -25,7 +27,7 @@
                 localStorage.theme = 'dark';
             }
         }
-        
+
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
             menu.classList.toggle('hidden');
@@ -36,7 +38,7 @@
     <header class="p-4 border-b bg-white dark:bg-gray-800 dark:border-gray-700">
         <div class="container mx-auto">
             <div class="flex items-center justify-between">
-                <h1 class="text-xl font-bold dark:text-white">Debt Manager — @themeName</h1>
+                <h1 class="text-xl font-bold dark:text-white">Adeva Plus — @themeName</h1>
                 <div class="flex items-center gap-4">
                     <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle dark mode">
                         <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +61,24 @@
                 <a href="/Client" class="hover:underline py-1">Client</a>
                 <a href="/Admin" class="hover:underline py-1">Admin</a>
                 <a href="/Admin/Onboarding" class="hover:underline py-1">Onboarding</a>
-                <span class="hidden md:block md:flex-1"></span>
+                @if (Env.IsDevelopment())
+                {
+                    <span class="hidden md:block md:flex-1"></span>
+                    <span class="text-xs uppercase text-gray-500 dark:text-gray-400 self-center">Dev</span>
+                    @if (User?.Identity?.IsAuthenticated ?? false)
+                    {
+                        <a href="/Dev/Impersonate" class="hover:underline py-1">Impersonate</a>
+                        <a href="/Dev/Danger" class="hover:underline py-1 text-red-600">Danger</a>
+                    }
+                    else
+                    {
+                        <a href="/Dev/Login" class="hover:underline py-1">Dev Login</a>
+                    }
+                }
+                else
+                {
+                    <span class="hidden md:block md:flex-1"></span>
+                }
                 @if (User?.Identity?.IsAuthenticated ?? false)
                 {
                     <span class="text-gray-600 dark:text-gray-400 py-1">@User.Identity!.Name</span>

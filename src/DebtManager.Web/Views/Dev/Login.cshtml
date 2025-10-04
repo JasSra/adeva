@@ -1,0 +1,24 @@
+@{
+    Layout = "~/Views/Shared/_LandingLayout.cshtml";
+    ViewData["Title"] = "Dev Login";
+}
+
+<div class="max-w-md mx-auto bg-white rounded shadow p-6 mt-10">
+    <h2 class="text-xl font-semibold mb-4">Development Login</h2>
+    <p class="text-sm text-gray-600 mb-4">Only available in Development environment.</p>
+    <form method="post">
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <input name="username" class="w-full border rounded px-3 py-2" value="admin" />
+        </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input name="password" type="password" class="w-full border rounded px-3 py-2" value="admin" />
+        </div>
+        <button class="px-4 py-2 bg-blue-600 text-white rounded">Login</button>
+    </form>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="mt-4 text-red-600 text-sm">Invalid credentials</div>
+    }
+</div>

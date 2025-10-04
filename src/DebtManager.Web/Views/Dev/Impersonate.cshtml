@@ -1,0 +1,46 @@
+@model List<DebtManager.Web.Controllers.DevUserVm>
+@{
+    Layout = "~/Views/Shared/_LandingLayout.cshtml";
+    ViewData["Title"] = "Impersonate User";
+}
+
+<div class="max-w-3xl mx-auto bg-white rounded shadow p-6 mt-10">
+    <h2 class="text-xl font-semibold mb-4">Impersonate</h2>
+    <p class="text-sm text-gray-600 mb-4">Switch effective role/scopes for testing. You can return to Dev Admin any time.</p>
+
+    <div class="flex items-center gap-4 mb-6">
+        <form method="post" action="/Dev/StopImpersonation">
+            <button class="px-4 py-2 bg-gray-700 text-white rounded">Return to Dev Admin</button>
+        </form>
+        <a class="px-4 py-2 bg-red-600 text-white rounded" href="/Dev/Danger">Danger Zone</a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="text-left border-b">
+                    <th class="py-2">Email</th>
+                    <th class="py-2">UserName</th>
+                    <th class="py-2">External Id</th>
+                    <th class="py-2"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr class="border-b">
+                        <td class="py-2">@u.Email</td>
+                        <td class="py-2">@u.UserName</td>
+                        <td class="py-2">@u.ExternalAuthId</td>
+                        <td class="py-2">
+                            <form method="post" action="/Dev/ImpersonateById">
+                                <input type="hidden" name="id" value="@u.Id" />
+                                <button class="px-3 py-1 bg-blue-600 text-white rounded">Impersonate</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

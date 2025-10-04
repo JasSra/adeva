@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using DebtManager.Web.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DebtManager.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
-public class ConfigurationController : Controller
+[Authorize(Policy = "RequireAdminScope")]
+public partial class ConfigurationController : Controller
 {
     public IActionResult Index()
     {

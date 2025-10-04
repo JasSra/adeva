@@ -4,11 +4,16 @@ using DebtManager.Domain.Organizations;
 using DebtManager.Domain.Payments;
 using DebtManager.Domain.AdminUsers;
 using DebtManager.Domain.Articles;
+using DebtManager.Domain.Documents;
+using DebtManager.Domain.Configuration;
+using DebtManager.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace DebtManager.Infrastructure.Persistence;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options)
 {
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Debtor> Debtors => Set<Debtor>();
@@ -18,10 +23,48 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
     public DbSet<Article> Articles => Set<Article>();
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+    public DbSet<AppConfigEntry> AppConfigEntries => Set<AppConfigEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Identity tables configuration (optional: rename tables)
+        modelBuilder.Entity<ApplicationUser>(builder =>
+        {
+            builder.Property(u => u.ExternalAuthId).HasMaxLength(256);
+            builder.Property(u => u.TotpSecretKey).HasMaxLength(512);
+            builder.Property(u => u.TotpRecoveryCodes).HasMaxLength(2000);
+            builder.HasIndex(u => u.ExternalAuthId);
+
+            builder.HasOne(u => u.Profile)
+                .WithOne(p => p.User!)
+                .HasForeignKey<UserProfile>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserProfile>(builder =>
+        {
+            builder.HasIndex(p => p.OrganizationId);
+            builder.HasIndex(p => p.DebtorId);
+            builder.HasOne(p => p.Organization)
+                .WithMany()
+                .HasForeignKey(p => p.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(p => p.Debtor)
+                .WithMany()
+                .HasForeignKey(p => p.DebtorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AppConfigEntry>(builder =>
+        {
+            builder.HasIndex(x => x.Key).IsUnique();
+            builder.Property(x => x.Key).HasMaxLength(300).IsRequired();
+            builder.Property(x => x.Value).HasMaxLength(4000);
+        });
 
         modelBuilder.Entity<Organization>(builder =>
         {
@@ -31,6 +74,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             builder.Property(x => x.SecondaryColorHex).HasMaxLength(16);
             builder.Navigation(x => x.Debtors).HasField("_debtors").UsePropertyAccessMode(PropertyAccessMode.Field);
             builder.Navigation(x => x.Debts).HasField("_debts").UsePropertyAccessMode(PropertyAccessMode.Field);
+            builder.Navigation(x => x.Documents).HasField("_documents").UsePropertyAccessMode(PropertyAccessMode.Field);
             builder.HasMany(x => x.Debtors).WithOne(x => x.Organization).HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
             builder.HasMany(x => x.Debts).WithOne(x => x.Organization).HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
         });
@@ -41,6 +85,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             builder.HasIndex(x => new { x.OrganizationId, x.Email });
             builder.Navigation(x => x.Debts).HasField("_debts").UsePropertyAccessMode(PropertyAccessMode.Field);
             builder.Navigation(x => x.Transactions).HasField("_transactions").UsePropertyAccessMode(PropertyAccessMode.Field);
+            builder.Navigation(x => x.Documents).HasField("_documents").UsePropertyAccessMode(PropertyAccessMode.Field);
             builder.HasMany(x => x.Debts).WithOne(x => x.Debtor).HasForeignKey(x => x.DebtorId).OnDelete(DeleteBehavior.Restrict);
             builder.HasMany(x => x.Transactions).WithOne(x => x.Debtor).HasForeignKey(x => x.DebtorId).OnDelete(DeleteBehavior.Restrict);
         });
@@ -119,6 +164,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             builder.Property(x => x.AuthorName).HasMaxLength(200);
             builder.Property(x => x.MetaDescription).HasMaxLength(300);
             builder.Property(x => x.MetaKeywords).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<Document>(builder =>
+        {
+            builder.Property(d => d.FileName).HasMaxLength(400).IsRequired();
+            builder.Property(d => d.ContentType).HasMaxLength(200).IsRequired();
+            builder.Property(d => d.StoragePath).HasMaxLength(1000).IsRequired();
+            builder.Property(d => d.Sha256).HasMaxLength(128);
+            builder.HasIndex(d => new { d.OrganizationId, d.DebtorId, d.Type });
+            builder.HasOne(d => d.Organization).WithMany(o => o.Documents).HasForeignKey(d => d.OrganizationId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(d => d.Debtor).WithMany(de => de.Documents).HasForeignKey(d => d.DebtorId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

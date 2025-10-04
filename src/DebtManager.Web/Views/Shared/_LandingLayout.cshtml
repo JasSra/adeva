@@ -1,9 +1,10 @@
+@inject Microsoft.Extensions.Hosting.IHostEnvironment Env
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Debt Management Solutions</title>
+    <title>Adeva Plus</title>
     <link rel="stylesheet" href="/css/site.css" />
 </head>
 <body class="min-h-screen bg-gray-50">
@@ -11,11 +12,14 @@
         <div class="container mx-auto px-4 py-4">
             <nav class="flex items-center justify-between">
                 <div class="flex items-center">
-                    <a href="/" class="text-2xl font-bold text-blue-600">DebtManager</a>
+                    <a href="/" class="text-2xl font-bold text-blue-600">Adeva Plus</a>
                 </div>
                 <div class="flex items-center gap-6">
                     @if (User?.Identity?.IsAuthenticated ?? false)
                     {
+                        <a href="/User" class="text-gray-700 hover:text-blue-600">My Debts</a>
+                        <a href="/Client" class="text-gray-700 hover:text-blue-600">Client Portal</a>
+                        <a href="/Admin" class="text-gray-700 hover:text-blue-600">Admin</a>
                         <span class="text-gray-600">@User.Identity!.Name</span>
                         <a href="/Account/SignOutUser" class="text-gray-700 hover:text-blue-600">Sign out</a>
                     }
@@ -23,6 +27,21 @@
                     {
                         <a href="/Account/SignInClient" class="text-gray-700 hover:text-blue-600">For Business</a>
                         <a href="/Account/SignInUser" class="text-gray-700 hover:text-blue-600">My Account</a>
+                    }
+
+                    @* Dev-only superuser links *@
+                    @if (Env.IsDevelopment())
+                    {
+                        <span class="text-xs uppercase text-gray-400">Dev</span>
+                        if (User?.Identity?.IsAuthenticated ?? false)
+                        {
+                            <a href="/Dev/Impersonate" class="text-gray-700 hover:text-blue-600">Impersonate</a>
+                            <a href="/Dev/Danger" class="text-red-600 hover:text-red-700">Danger</a>
+                        }
+                        else
+                        {
+                            <a href="/Dev/Login" class="text-gray-700 hover:text-blue-600">Dev Login</a>
+                        }
                     }
                 </div>
             </nav>
@@ -37,7 +56,7 @@
         <div class="container mx-auto px-4 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="font-bold text-lg mb-4">DebtManager</h3>
+                    <h3 class="font-bold text-lg mb-4">Adeva Plus</h3>
                     <p class="text-gray-400">Professional debt management solutions for businesses and individuals.</p>
                 </div>
                 <div>
@@ -52,8 +71,8 @@
                 <div>
                     <h4 class="font-semibold mb-4">Contact</h4>
                     <ul class="space-y-2 text-gray-400">
-                        <li>support@debtmanager.com</li>
-                        <li>1300 DEBT MGR</li>
+                        <li>support@adevaplus.com</li>
+                        <li>1300 ADEVA PLUS</li>
                         <li><a href="/health/live" class="hover:text-white">System Status</a></li>
                     </ul>
                 </div>
@@ -79,7 +98,7 @@
                 </div>
             </div>
             <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; 2024 DebtManager. All rights reserved.</p>
+                <p>&copy; 2024 Adeva Plus. All rights reserved.</p>
             </div>
         </div>
     </footer>

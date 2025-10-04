@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Services.AbrValidation": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:59786;http://localhost:59787"
+    }
+  }
+}

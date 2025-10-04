@@ -1,0 +1,80 @@
+@model DebtManager.Web.Areas.Client.Controllers.ClientOnboardingVm
+@{
+    Layout = "~/Areas/Client/Views/Shared/_ClientLayout.cshtml";
+    ViewBag.Title = "Organization Onboarding";
+}
+<h2 class="text-xl font-semibold mb-4">Organization Onboarding</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="p-3 bg-green-100 border border-green-300 text-green-800 rounded mb-3">@TempData["Message"]</div>
+}
+
+<form asp-action="ValidateAbn" method="post" class="space-y-4">
+    <div class="grid md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm">ABN</label>
+            <input name="Abn" value="@Model.Abn" placeholder="Enter ABN (11 digits)" class="border p-2 w-full" />
+            <span class="text-red-700 text-sm">@Html.ValidationMessage("Abn")</span>
+            @if (Model.IsValidAbn.HasValue)
+            {
+                <p class="mt-1 text-sm @(Model.IsValidAbn.Value ? "text-green-700" : "text-red-700")">
+                    @(Model.IsValidAbn.Value ? "ABN looks valid ?" : "Invalid ABN ?")
+                </p>
+            }
+        </div>
+        <div>
+            <label class="block text-sm">ACN (optional)</label>
+            <input name="Acn" value="@Model.Acn" placeholder="Enter ACN (9 digits)" class="border p-2 w-full" />
+            <span class="text-red-700 text-sm">@Html.ValidationMessage("Acn")</span>
+            @if (Model.IsValidAcn.HasValue)
+            {
+                <p class="mt-1 text-sm @(Model.IsValidAcn.Value ? "text-green-700" : "text-red-700")">
+                    @(Model.IsValidAcn.Value ? "ACN looks valid ?" : "Invalid ACN ?")
+                </p>
+            }
+        </div>
+    </div>
+    <button class="bg-blue-600 text-white px-4 py-2">Validate</button>
+    @Html.AntiForgeryToken()
+</form>
+
+@if (Model.IsValidAbn == true)
+{
+    <form asp-action="Create" method="post" class="space-y-4 mt-6 border-t pt-4">
+        <div>
+            <label class="block text-sm">Organization Name</label>
+            <input name="Name" value="@Model.Name" placeholder="e.g. Contoso Pty Ltd" class="border p-2 w-full" />
+            <span class="text-red-700 text-sm">@Html.ValidationMessage("Name")</span>
+        </div>
+        <div>
+            <label class="block text-sm">Trading Name (optional)</label>
+            <input name="TradingName" value="@Model.TradingName" class="border p-2 w-full" />
+        </div>
+        <div>
+            <label class="block text-sm">Subdomain (optional)</label>
+            <input name="Subdomain" value="@Model.Subdomain" placeholder="e.g. contoso" class="border p-2 w-full" />
+            <span class="text-red-700 text-sm">@Html.ValidationMessage("Subdomain")</span>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm">Support Email (optional)</label>
+                <input name="SupportEmail" value="@Model.SupportEmail" class="border p-2 w-full" />
+            </div>
+            <div>
+                <label class="block text-sm">Support Phone (optional)</label>
+                <input name="SupportPhone" value="@Model.SupportPhone" class="border p-2 w-full" />
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm">Timezone (optional)</label>
+            <input name="Timezone" value="@Model.Timezone" placeholder="Australia/Sydney" class="border p-2 w-full" />
+        </div>
+        <input type="hidden" name="Abn" value="@Model.Abn" />
+        <input type="hidden" name="Acn" value="@Model.Acn" />
+        <input type="hidden" name="IsValidAbn" value="@Model.IsValidAbn" />
+        <input type="hidden" name="IsValidAcn" value="@Model.IsValidAcn" />
+        <button class="bg-emerald-600 text-white px-4 py-2">Create Organization</button>
+        @Html.AntiForgeryToken()
+    </form>
+}

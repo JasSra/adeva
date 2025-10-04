@@ -1,0 +1,57 @@
+@model DebtManager.Web.Controllers.TotpSetupVm
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Security Setup";
+}
+<div class="max-w-2xl mx-auto bg-white rounded shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">Set up Multi-Factor Authentication</h2>
+
+    @if (TempData["Error"] is string err)
+    {
+        <div class="p-3 bg-red-100 text-red-800 rounded mb-4">@err</div>
+    }
+    @if (TempData["Message"] is string msg)
+    {
+        <div class="p-3 bg-green-100 text-green-800 rounded mb-4">@msg</div>
+    }
+
+    <div class="space-y-6">
+        <div>
+            <h3 class="font-semibold mb-2">1) Authenticator App</h3>
+            <p class="text-sm text-gray-600 mb-2">Scan this code in your authenticator app, or enter the key manually.</p>
+            <div class="flex items-center gap-6">
+                <img src="@Model.QrCodeDataUrl" alt="TOTP QR code" class="w-40 h-40 border rounded" />
+                <div class="p-3 bg-gray-50 border rounded flex-1">
+                    <div class="font-mono text-sm mb-2">Key: @Model.AuthenticatorKey</div>
+                    <div class="text-xs text-gray-500 break-all">URI: @Model.OtpauthUri</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="font-semibold mb-2">2) Verify Phone Number</h3>
+            <form asp-action="SendSms" method="post" class="flex gap-2 items-center">
+                @Html.AntiForgeryToken()
+                <input name="phoneNumber" value="@Model.PhoneNumber" placeholder="e.g. +61..." class="border p-2 rounded flex-1" />
+                <button class="px-4 py-2 bg-blue-600 text-white rounded">Send Code</button>
+            </form>
+        </div>
+
+        <div>
+            <h3 class="font-semibold mb-2">3) Confirm Codes</h3>
+            <form asp-action="Complete" method="post" class="space-y-3">
+                @Html.AntiForgeryToken()
+                <div>
+                    <label class="block text-sm">SMS Code</label>
+                    <input name="SmsCode" class="border p-2 w-full" />
+                </div>
+                <div>
+                    <label class="block text-sm">Authenticator Code</label>
+                    <input name="TotpCode" class="border p-2 w-full" />
+                </div>
+                <input type="hidden" name="PhoneNumber" value="@Model.PhoneNumber" />
+                <button class="px-4 py-2 bg-emerald-600 text-white rounded">Finish</button>
+            </form>
+        </div>
+    </div>
+</div>

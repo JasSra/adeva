@@ -11,6 +11,12 @@ using Serilog;
 using Microsoft.Identity.Web;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
+using DebtManager.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using DebtManager.Web.Auth;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using DebtManager.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +33,56 @@ builder.Services.AddHealthChecks();
 var cs = builder.Configuration.GetConnectionString("Default") ?? "Server=(localdb)\\MSSQLLocalDB;Database=DebtManager;Trusted_Connection=True;";
 builder.Services.AddDbContext<AppDbContext>(opts => opts.UseSqlServer(cs));
 
+// Identity Core using EF stores
+builder.Services
+    .AddIdentityCore<ApplicationUser>(options =>
+    {
+        options.User.RequireUniqueEmail = false; // External identity provides uniqueness by oid
+        options.SignIn.RequireConfirmedAccount = false;
+        options.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
+    })
+    .AddRoles<ApplicationRole>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+// Configure authentication: Cookies as default auth, OIDC as challenge.
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+    })
+    .AddMicrosoftIdentityWebApp(options =>
+    {
+        var b2c = builder.Configuration.GetSection("AzureAdB2C");
+        options.ClientId = b2c["ClientId"]!;
+        options.Instance = b2c["Instance"] ?? "https://jsraauth.b2clogin.com/";
+        options.Domain = b2c["Domain"] ?? "jsraauth.onmicrosoft.com";
+        options.Authority = b2c["Authority"]!;
+        options.ClientSecret = b2c["ClientSecret"]; // Added client secret
+        options.CallbackPath = b2c["CallbackPath"] ?? "/signin-oidc";
+        options.SignedOutCallbackPath = b2c["SignedOutCallbackPath"] ?? "/signout-callback-oidc";
+        options.TokenValidationParameters.NameClaimType = "name";
+        options.Events = new OpenIdConnectEvents
+        {
+            OnTokenValidated = async ctx => await TokenValidatedHandler.OnTokenValidated(ctx)
+        };
+    })
+    .EnableTokenAcquisitionToCallDownstreamApi()
+    .AddInMemoryTokenCaches();
+
+// Configure the cookie handler options (scheme added by MicrosoftIdentityWeb)
+builder.Services.Configure<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+{
+    options.LoginPath = "/Dev/Login";
+    options.AccessDeniedPath = "/Dev/Login";
+    options.SlidingExpiration = true;
+});
+
+// Claims transformation to map scopes -> roles
+builder.Services.AddScoped<IClaimsTransformation, B2CRoleClaimsTransformation>();
+
 // Hangfire (SQL Server for persistence and audit)
 var hangfireCs = builder.Configuration.GetConnectionString("Hangfire") ?? cs;
 builder.Services.AddHangfire(cfg => cfg
@@ -38,25 +94,9 @@ builder.Services.AddHangfireServer();
 // Branding resolver
 builder.Services.AddScoped<BrandingResolverMiddleware>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
-
-// Azure AD B2C Auth with MSAL
-var b2c = builder.Configuration.GetSection("AzureAdB2C");
-builder.Services
-    .AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-    .AddMicrosoftIdentityWebApp(options =>
-    {
-        options.ClientId = b2c["ClientId"]!;
-        options.Instance = b2c["Instance"] ?? "https://jsraauth.b2clogin.com/";
-        options.Domain = b2c["Domain"] ?? "jsraauth.onmicrosoft.com";
-        options.Authority = b2c["Authority"]!;
-        options.CallbackPath = b2c["CallbackPath"] ?? "/signin-oidc";
-        options.SignedOutCallbackPath = b2c["SignedOutCallbackPath"] ?? "/signout-callback-oidc";
-        options.TokenValidationParameters.NameClaimType = "name";
-    })
-    .EnableTokenAcquisitionToCallDownstreamApi()
-    .AddInMemoryTokenCaches();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -74,12 +114,8 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// Seed initial data
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DebtManager.Web.Data.ArticleSeeder.SeedArticlesAsync(dbContext);
-}
+// Initialize database (dev-friendly): drop/create, seed admin/config/articles
+await DebtManager.Web.Data.DbInitializer.InitializeAsync(app.Services, app.Environment);
 
 app.UseSerilogRequestLogging();
 
@@ -96,6 +132,12 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Enforce security onboarding (TOTP, phone, client org)
+app.UseMiddleware<SecurityEnforcementMiddleware>();
+
+// Admin bootstrap nudge (after auth)
+app.UseMiddleware<BootstrapNudgeMiddleware>();
 
 app.UseMiddleware<BrandingResolverMiddleware>();
 
