@@ -1,0 +1,76 @@
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="mb-6">
+    <ul class="flex border-b">
+        <li class="mr-1">
+            <a href="/Admin/Comms" class="inline-block py-2 px-4 bg-white border-b-2 border-blue-600 text-blue-600 font-semibold">Overview</a>
+        </li>
+        <li class="mr-1">
+            <a href="/Admin/Comms/Templates" class="inline-block py-2 px-4 text-gray-600 hover:text-blue-600">Templates</a>
+        </li>
+    </ul>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Email Templates</h3>
+        <p class="text-3xl font-bold text-blue-600 mb-2">12</p>
+        <p class="text-sm text-gray-600">Active templates</p>
+        <a href="/Admin/Comms/Templates?type=email" class="mt-4 inline-block text-blue-600 hover:underline">Manage →</a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">SMS Templates</h3>
+        <p class="text-3xl font-bold text-green-600 mb-2">8</p>
+        <p class="text-sm text-gray-600">Active templates</p>
+        <a href="/Admin/Comms/Templates?type=sms" class="mt-4 inline-block text-blue-600 hover:underline">Manage →</a>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Messages Sent</h3>
+        <p class="text-3xl font-bold text-purple-600 mb-2">1,234</p>
+        <p class="text-sm text-gray-600">This month</p>
+        <a href="/Admin/Comms/History" class="mt-4 inline-block text-blue-600 hover:underline">View History →</a>
+    </div>
+</div>
+
+<div class="mt-6 bg-white rounded-lg shadow">
+    <div class="p-6 border-b">
+        <h3 class="text-lg font-semibold">Recent Messages</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Template</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">2024-01-15 14:32</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">john.doe@example.com</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">Email</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">Payment Reminder</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Sent</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">2024-01-15 13:15</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">0412 345 678</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">SMS</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">Payment Confirmation</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Delivered</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
