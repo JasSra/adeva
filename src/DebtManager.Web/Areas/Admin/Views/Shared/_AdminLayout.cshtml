@@ -8,14 +8,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin - Debt Manager - @themeName</title>
     <link rel="stylesheet" href="/css/site.css" />
+    <script>
+        // Dark mode toggle
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+        
+        function toggleDarkMode() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        }
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+    </script>
 </head>
-<body class="min-h-screen bg-gray-50">
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <div class="flex h-screen">
+        <!-- Mobile Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden hidden" onclick="toggleSidebar()"></div>
+        
         <!-- Sidebar -->
-        <aside class="w-64 bg-gray-800 text-white flex flex-col">
-            <div class="p-4 border-b border-gray-700">
-                <h1 class="text-xl font-bold">Admin Portal</h1>
-                <p class="text-sm text-gray-400">@themeName</p>
+        <aside id="sidebar" class="fixed md:static w-64 bg-gray-800 dark:bg-gray-950 text-white flex flex-col z-30 h-full transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div class="p-4 border-b border-gray-700 dark:border-gray-800">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-xl font-bold">Admin Portal</h1>
+                        <p class="text-sm text-gray-400 dark:text-gray-500">@themeName</p>
+                    </div>
+                    <button onclick="toggleSidebar()" class="md:hidden p-1 rounded hover:bg-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
             <nav class="flex-1 overflow-y-auto p-4">
                 <div class="space-y-1">
@@ -142,15 +177,15 @@
                     </a>
                 </div>
             </nav>
-            <div class="p-4 border-t border-gray-700">
+            <div class="p-4 border-t border-gray-700 dark:border-gray-800">
                 @if (User?.Identity?.IsAuthenticated ?? false)
                 {
                     <div class="flex items-center">
                         <div class="flex-1">
                             <p class="text-sm font-medium">@User.Identity!.Name</p>
-                            <p class="text-xs text-gray-400">Administrator</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500">Administrator</p>
                         </div>
-                        <a href="/Account/SignOutUser" class="text-gray-400 hover:text-white">
+                        <a href="/Account/SignOutUser" class="text-gray-400 hover:text-white dark:text-gray-500 dark:hover:text-white">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
@@ -169,21 +204,46 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Bar -->
-            <header class="bg-white border-b px-6 py-4">
+            <header class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 px-4 md:px-6 py-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-semibold text-gray-800">@ViewBag.Title</h2>
-                    <div class="flex items-center space-x-4">
-                        <a href="/health/live" class="text-sm text-gray-600 hover:text-gray-900">Health</a>
-                        <a href="/" class="text-sm text-gray-600 hover:text-gray-900">Public Site</a>
+                    <div class="flex items-center gap-4">
+                        <button onclick="toggleSidebar()" class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <svg class="w-6 h-6 text-gray-800 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <h2 class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">@ViewBag.Title</h2>
+                    </div>
+                    <div class="flex items-center space-x-2 md:space-x-4">
+                        <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle dark mode">
+                            <svg class="w-5 h-5 dark:hidden text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                            <svg class="w-5 h-5 hidden dark:block text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </button>
+                        <a href="/health/live" class="hidden sm:block text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Health</a>
+                        <a href="/" class="hidden sm:block text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Public Site</a>
                     </div>
                 </div>
             </header>
             
             <!-- Main Content Area -->
-            <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+            <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 md:p-6">
                 @RenderBody()
             </main>
         </div>
     </div>
+    <script>
+        // Handle sidebar overlay toggle
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    </script>
 </body>
 </html>
