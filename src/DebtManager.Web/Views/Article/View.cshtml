@@ -1,0 +1,109 @@
+@{
+    Layout = "~/Views/Shared/_LandingLayout.cshtml";
+    var article = ViewBag.Article as DebtManager.Domain.Articles.Article;
+    ViewData["Title"] = article.Title;
+}
+
+<!-- Analytics Tracking -->
+<script>
+    // Article View Analytics
+    (function() {
+        // Track article view
+        const articleData = {
+            id: '@article.Id',
+            slug: '@article.Slug',
+            title: '@article.Title',
+            author: '@(article.AuthorName ?? "Unknown")',
+            viewedAt: new Date().toISOString()
+        };
+        
+        // Send analytics event (placeholder - integrate with your analytics platform)
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'article_view', {
+                'article_id': articleData.id,
+                'article_slug': articleData.slug,
+                'article_title': articleData.title
+            });
+        }
+        
+        // Console log for debugging
+        console.log('Article viewed:', articleData);
+        
+        // You can also send to custom analytics endpoint
+        // fetch('/api/analytics/track', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify(articleData)
+        // });
+    })();
+</script>
+
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    @if (!string.IsNullOrEmpty(article.HeaderImageUrl))
+    {
+        <div class="mb-8 rounded-lg overflow-hidden">
+            <img src="@article.HeaderImageUrl" alt="@article.Title" class="w-full h-96 object-cover" />
+        </div>
+    }
+
+    <article class="bg-white rounded-lg shadow-lg p-8">
+        <header class="mb-6 pb-6 border-b">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">@article.Title</h1>
+            
+            <div class="flex items-center gap-6 text-sm text-gray-600">
+                @if (!string.IsNullOrEmpty(article.AuthorName))
+                {
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span>@article.AuthorName</span>
+                    </div>
+                }
+                
+                @if (article.PublishedAtUtc.HasValue)
+                {
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>@article.PublishedAtUtc.Value.ToString("MMMM dd, yyyy")</span>
+                    </div>
+                }
+
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span>@article.ViewCount views</span>
+                </div>
+            </div>
+        </header>
+
+        @if (!string.IsNullOrEmpty(article.Excerpt))
+        {
+            <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-600 rounded">
+                <p class="text-lg text-gray-700 italic">@article.Excerpt</p>
+            </div>
+        }
+
+        <div class="prose prose-lg max-w-none">
+            @Html.Raw(article.Content)
+        </div>
+    </article>
+
+    <div class="mt-8 text-center">
+        <a href="/" class="text-blue-600 hover:underline">← Back to Home</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(article.MetaDescription))
+{
+    <meta name="description" content="@article.MetaDescription" />
+}
+
+@if (!string.IsNullOrEmpty(article.MetaKeywords))
+{
+    <meta name="keywords" content="@article.MetaKeywords" />
+}

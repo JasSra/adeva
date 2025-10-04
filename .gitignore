@@ -22,3 +22,6 @@ logs/
 # Publish output
 publish/
 dist/
+
+# Uploaded files
+src/DebtManager.Web/wwwroot/uploads/

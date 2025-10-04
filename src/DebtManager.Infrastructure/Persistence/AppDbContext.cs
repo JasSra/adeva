@@ -3,6 +3,7 @@ using DebtManager.Domain.Debts;
 using DebtManager.Domain.Organizations;
 using DebtManager.Domain.Payments;
 using DebtManager.Domain.AdminUsers;
+using DebtManager.Domain.Articles;
 using Microsoft.EntityFrameworkCore;
 
 namespace DebtManager.Infrastructure.Persistence;
@@ -16,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PaymentInstallment> PaymentInstallments => Set<PaymentInstallment>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
+    public DbSet<Article> Articles => Set<Article>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -105,6 +107,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             builder.Property(x => x.Email).HasMaxLength(256);
             builder.Property(x => x.Name).HasMaxLength(200);
             builder.Property(x => x.ExternalAuthId).HasMaxLength(256);
+        });
+
+        modelBuilder.Entity<Article>(builder =>
+        {
+            builder.HasIndex(x => x.Slug).IsUnique();
+            builder.Property(x => x.Title).HasMaxLength(300).IsRequired();
+            builder.Property(x => x.Slug).HasMaxLength(300).IsRequired();
+            builder.Property(x => x.Content).IsRequired();
+            builder.Property(x => x.Excerpt).HasMaxLength(500);
+            builder.Property(x => x.AuthorName).HasMaxLength(200);
+            builder.Property(x => x.MetaDescription).HasMaxLength(300);
+            builder.Property(x => x.MetaKeywords).HasMaxLength(500);
         });
     }
 }
