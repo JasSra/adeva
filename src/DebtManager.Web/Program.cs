@@ -5,7 +5,7 @@ using DebtManager.Infrastructure;
 using DebtManager.Infrastructure.Persistence;
 using DebtManager.Application;
 using Hangfire;
-using Hangfire.MemoryStorage;
+using Hangfire.SqlServer;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Microsoft.Identity.Web;
@@ -27,8 +27,12 @@ builder.Services.AddHealthChecks();
 var cs = builder.Configuration.GetConnectionString("Default") ?? "Server=(localdb)\\MSSQLLocalDB;Database=DebtManager;Trusted_Connection=True;";
 builder.Services.AddDbContext<AppDbContext>(opts => opts.UseSqlServer(cs));
 
-// Hangfire (in-memory for dev)
-builder.Services.AddHangfire(cfg => cfg.UseSimpleAssemblyNameTypeSerializer().UseRecommendedSerializerSettings().UseMemoryStorage());
+// Hangfire (SQL Server for persistence and audit)
+var hangfireCs = builder.Configuration.GetConnectionString("Hangfire") ?? cs;
+builder.Services.AddHangfire(cfg => cfg
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(hangfireCs));
 builder.Services.AddHangfireServer();
 
 // Branding resolver
@@ -91,7 +95,11 @@ app.UseMiddleware<BrandingResolverMiddleware>();
 app.MapHealthChecks("/health/live");
 app.MapHealthChecks("/health/ready");
 
-app.MapHangfireDashboard();
+// Hangfire Dashboard - Secured with Admin scope
+app.MapHangfireDashboard("/hangfire", new Hangfire.DashboardOptions
+{
+    Authorization = new[] { new HangfireAuthorizationFilter() }
+});
 
 // Areas routing
 app.MapControllerRoute(

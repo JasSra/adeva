@@ -6,6 +6,8 @@ using DebtManager.Infrastructure.Persistence.Repositories;
 using DebtManager.Contracts.External;
 using DebtManager.Contracts.Notifications;
 using DebtManager.Infrastructure.Notifications;
+using DebtManager.Contracts.Payments;
+using DebtManager.Infrastructure.Payments;
 
 namespace DebtManager.Infrastructure;
 
@@ -52,6 +54,11 @@ public static class DependencyInjection
         // Notifications
         services.AddScoped<IEmailSender, EmailSender>();
         services.AddScoped<ISmsSender, SmsSender>();
+
+        // Payment Services
+        services.AddScoped<IPaymentService, StripePaymentService>();
+        services.AddScoped<IWebhookProcessor, StripeWebhookProcessor>();
+        
         return services;
     }
 }

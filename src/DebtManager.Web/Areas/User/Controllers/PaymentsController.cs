@@ -55,4 +55,12 @@ public class PaymentsController : Controller
         ViewBag.PageSize = pageSize;
         return View();
     }
+
+    public IActionResult Success()
+    {
+        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
+        ViewBag.ThemeName = theme?.Name ?? "Default";
+        ViewBag.Title = "Payment Successful";
+        return View();
+    }
 }
