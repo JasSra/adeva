@@ -1,0 +1,93 @@
+@{
+    var reference = ViewBag.Reference as string;
+    var contact = ViewBag.Contact as string;
+    var themeName = ViewBag.ThemeName as string ?? "Default";
+    var theme = Context.Items[DebtManager.Web.Services.BrandingResolverMiddleware.ThemeItemKey] as DebtManager.Web.Services.BrandingTheme;
+    var primaryColor = theme?.PrimaryColorHex ?? "#0ea5e9";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Identity - @themeName</title>
+    <link rel="stylesheet" href="/css/site.css" />
+    <style>
+        .brand-primary-bg { background-color: @primaryColor; }
+        .brand-primary-text { color: @primaryColor; }
+        .brand-primary-border { border-color: @primaryColor; }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="brand-primary-bg text-white py-6">
+        <div class="container mx-auto px-4">
+            <h1 class="text-2xl font-bold">@themeName</h1>
+            <p class="text-sm text-white text-opacity-80">Secure Payment Portal</p>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-md mx-auto">
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-semibold">Verify Your Identity</h3>
+                    <p class="text-sm text-gray-500 mt-1">Enter the code we sent to your @(contact == "email" ? "email" : "phone")</p>
+                </div>
+                
+                <div class="p-6">
+                    <form action="/Payment/ProcessPayment" method="post" class="space-y-6">
+                        <input type="hidden" name="reference" value="@reference" />
+                        <input type="hidden" name="contact" value="@contact" />
+                        
+                        <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded mb-6">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-green-700">
+                                        Code sent successfully! Check your @(contact == "email" ? "email inbox" : "phone messages").
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Verification Code *</label>
+                            <input type="text" name="otp" placeholder="Enter 6-digit code" maxlength="6" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-center text-2xl tracking-widest font-mono" required />
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="button" class="text-sm text-blue-600 hover:underline">
+                                Didn't receive the code? Resend
+                            </button>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button type="submit" class="flex-1 px-6 py-3 brand-primary-bg text-white rounded-lg hover:opacity-90 transition font-medium">
+                                Verify & Continue
+                            </button>
+                            <a href="/Payment/Anonymous?reference=@reference" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                                Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center text-sm text-gray-500">
+                <p>The code expires in 10 minutes</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm">&copy; 2024 @themeName. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

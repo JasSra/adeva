@@ -1,0 +1,115 @@
+@{
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+    var debtId = ViewBag.DebtId;
+}
+
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+            <h3 class="text-lg font-semibold">Make a Payment</h3>
+            <p class="text-sm text-gray-500 mt-1">Securely pay your debt using your preferred payment method</p>
+        </div>
+        
+        <div class="p-6">
+            @if (debtId != null)
+            {
+                <div class="mb-6 bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-900 mb-2">Payment Summary</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-500">Debt Reference</p>
+                            <p class="font-medium">#D-@debtId</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Outstanding Balance</p>
+                            <p class="font-medium text-red-600">$3,250.00</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Minimum Payment</p>
+                            <p class="font-medium">$500.00</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Due Date</p>
+                            <p class="font-medium">Jan 15, 2025</p>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <form class="space-y-6">
+                @if (debtId == null)
+                {
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Debt</label>
+                        <select class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                            <option value="">Choose a debt to pay...</option>
+                            <option value="5001">#D-5001 - $3,250.00 outstanding</option>
+                            <option value="5002">#D-5002 - Settled</option>
+                        </select>
+                    </div>
+                }
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Amount</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-2.5 text-gray-500">$</span>
+                        <input type="number" step="0.01" min="0" value="500.00" class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-2" placeholder="0.00" />
+                    </div>
+                    <div class="mt-2 flex gap-2">
+                        <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Min: $500</button>
+                        <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Full: $3,250</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="paymentMethod" value="card" checked class="mr-3" />
+                            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                            <span class="font-medium">Credit/Debit Card</span>
+                        </label>
+                        <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="radio" name="paymentMethod" value="bank" class="mr-3" />
+                            <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                            </svg>
+                            <span class="font-medium">Bank Transfer</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                <strong>Secure Payment</strong><br/>
+                                Your payment information is encrypted and secure. We use industry-standard security measures to protect your data.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">
+                        Proceed to Payment
+                    </button>
+                    <a href="/User/Debts" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="mt-6 text-center text-sm text-gray-500">
+        <p>By proceeding, you agree to our <a href="#" class="text-blue-600 hover:underline">Terms and Conditions</a></p>
+    </div>
+</div>
