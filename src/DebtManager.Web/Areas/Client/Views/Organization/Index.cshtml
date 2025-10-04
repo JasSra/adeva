@@ -1,0 +1,98 @@
+@{
+    Layout = "~/Areas/Client/Views/Shared/_ClientLayout.cshtml";
+}
+
+<div class="bg-white rounded-lg shadow">
+    <div class="p-6 border-b">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Organization Profile</h3>
+            <a href="/Client/Organization/Edit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Edit Profile</a>
+        </div>
+    </div>
+    
+    <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="text-sm font-semibold text-gray-700 mb-4">Basic Information</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Organization Name</label>
+                        <p class="mt-1 text-sm text-gray-900">Acme Corp Pty Ltd</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Trading Name</label>
+                        <p class="mt-1 text-sm text-gray-900">Acme Corp</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">ABN</label>
+                        <p class="mt-1 text-sm text-gray-900">12 345 678 901</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Subdomain</label>
+                        <p class="mt-1 text-sm text-gray-900">acme.adeva.local</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Status</label>
+                        <p class="mt-1">
+                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Active</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="text-sm font-semibold text-gray-700 mb-4">Contact Information</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Support Email</label>
+                        <p class="mt-1 text-sm text-gray-900">support@acme.com</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Support Phone</label>
+                        <p class="mt-1 text-sm text-gray-900">+61 2 1234 5678</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Billing Contact</label>
+                        <p class="mt-1 text-sm text-gray-900">John Smith</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Billing Email</label>
+                        <p class="mt-1 text-sm text-gray-900">billing@acme.com</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Timezone</label>
+                        <p class="mt-1 text-sm text-gray-900">Australia/Sydney</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-8">
+            <h4 class="text-sm font-semibold text-gray-700 mb-4">Banking Details</h4>
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            Banking details are securely stored and only visible to authorized administrators.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">BSB</label>
+                    <p class="mt-1 text-sm text-gray-900">••• •••</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Account Number</label>
+                    <p class="mt-1 text-sm text-gray-900">••••••••</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

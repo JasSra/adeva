@@ -1,0 +1,90 @@
+@{
+    Layout = "~/Areas/Client/Views/Shared/_ClientLayout.cshtml";
+}
+
+<div class="bg-white rounded-lg shadow">
+    <div class="p-6 border-b flex items-center justify-between">
+        <h3 class="text-lg font-semibold">My Debts</h3>
+        <div class="flex gap-2">
+            <select name="status" class="border rounded px-3 py-2 text-sm">
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="in_arrears">In Arrears</option>
+                <option value="settled">Settled</option>
+                <option value="disputed">Disputed</option>
+            </select>
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search debts..." class="border rounded px-3 py-2 text-sm" />
+            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Search</button>
+            <a href="/Client/Debts/Raise" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm">+ Raise Debt</a>
+        </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Debtor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Original Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">#D-5001</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">John Doe</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">$5,000.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">$3,250.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Active</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-15</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <a href="/Client/Debts/Details/5001" class="text-blue-600 hover:underline">View</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">#D-5002</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">Jane Smith</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">$2,500.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">$1,800.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">In Arrears</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-02-03</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <a href="/Client/Debts/Details/5002" class="text-blue-600 hover:underline">View</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">#D-5003</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">Robert Johnson</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">$8,750.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">$0.00</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Settled</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-12-10</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <a href="/Client/Debts/Details/5003" class="text-blue-600 hover:underline">View</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+            Showing <span class="font-medium">1</span> to <span class="font-medium">3</span> of <span class="font-medium">23</span> results
+        </div>
+        <div class="flex gap-2">
+            <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Previous</button>
+            <button class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-50">1</button>
+            <button class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-50">2</button>
+            <button class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-50">Next</button>
+        </div>
+    </div>
+</div>

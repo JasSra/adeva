@@ -1,0 +1,94 @@
+@{
+    Layout = "~/Areas/Client/Views/Shared/_ClientLayout.cshtml";
+}
+
+<div class="bg-white rounded-lg shadow">
+    <div class="p-6 border-b flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Communications</h3>
+        <div class="flex gap-2">
+            <select name="type" class="border rounded px-3 py-2 text-sm">
+                <option value="">All Types</option>
+                <option value="email">Email</option>
+                <option value="sms">SMS</option>
+                <option value="internal">Internal Message</option>
+            </select>
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search messages..." class="border rounded px-3 py-2 text-sm" />
+            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Search</button>
+        </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date/Time</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Related Debt</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-03-15 14:23</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Email</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm">Payment Reminder</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">john.doe@example.com</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">#D-5001</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Sent</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <a href="/Client/Communications/Details/1" class="text-blue-600 hover:underline">View</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-03-15 10:15</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">SMS</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm">Payment Confirmation</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">+61 412 345 678</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">#D-5002</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Delivered</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <a href="/Client/Communications/Details/2" class="text-blue-600 hover:underline">View</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-03-14 16:45</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Internal</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm">Debt Status Update</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">System</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">#D-5001</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Sent</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <a href="/Client/Communications/Details/3" class="text-blue-600 hover:underline">View</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+            Showing <span class="font-medium">1</span> to <span class="font-medium">3</span> of <span class="font-medium">87</span> results
+        </div>
+        <div class="flex gap-2">
+            <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Previous</button>
+            <button class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-50">1</button>
+            <button class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-50">2</button>
+            <button class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-50">Next</button>
+        </div>
+    </div>
+</div>

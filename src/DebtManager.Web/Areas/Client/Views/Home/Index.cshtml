@@ -1,12 +1,147 @@
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Areas/Client/Views/Shared/_ClientLayout.cshtml";
     var themeName = ViewBag.ThemeName as string ?? "Default";
 }
-<div class="container mx-auto p-6">
-    <h2 class="text-2xl font-semibold">Client Dashboard — @themeName</h2>
-    <ul class="mt-4 list-disc list-inside text-gray-700">
-        <li>Upload invoices</li>
-        <li>Remittance schedule</li>
-        <li>Branding & bank details</li>
-    </ul>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Active Debts</p>
+                <p class="text-2xl font-semibold text-gray-900">23</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Collected This Month</p>
+                <p class="text-2xl font-semibold text-gray-900">$45,230</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0 bg-yellow-100 rounded-md p-3">
+                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Outstanding</p>
+                <p class="text-2xl font-semibold text-gray-900">$127,540</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0 bg-purple-100 rounded-md p-3">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">Receipts</p>
+                <p class="text-2xl font-semibold text-gray-900">142</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+            <h3 class="text-lg font-semibold">Quick Actions</h3>
+        </div>
+        <div class="p-6">
+            <div class="space-y-3">
+                <a href="/Client/Debts/Raise" class="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition">
+                    <svg class="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <div>
+                        <p class="font-medium">Raise a Debt</p>
+                        <p class="text-sm text-gray-500">Submit a new debt for collection</p>
+                    </div>
+                </a>
+                <a href="/Client/Receipts" class="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition">
+                    <svg class="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <div>
+                        <p class="font-medium">View Receipts</p>
+                        <p class="text-sm text-gray-500">Access payment receipts and invoices</p>
+                    </div>
+                </a>
+                <a href="/Client/Branding" class="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition">
+                    <svg class="w-5 h-5 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                    </svg>
+                    <div>
+                        <p class="font-medium">Update Branding</p>
+                        <p class="text-sm text-gray-500">Customize logos, colors, and templates</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+            <h3 class="text-lg font-semibold">Recent Activity</h3>
+        </div>
+        <div class="p-6">
+            <div class="space-y-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 bg-green-100 rounded-full p-2">
+                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <p class="text-sm font-medium">Payment Received</p>
+                        <p class="text-sm text-gray-500">Debt #D-5001 - $500.00</p>
+                        <p class="text-xs text-gray-400 mt-1">2 hours ago</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 bg-blue-100 rounded-full p-2">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <p class="text-sm font-medium">New Debt Created</p>
+                        <p class="text-sm text-gray-500">Debt #D-5023 - $1,250.00</p>
+                        <p class="text-xs text-gray-400 mt-1">5 hours ago</p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 bg-yellow-100 rounded-full p-2">
+                        <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <p class="text-sm font-medium">Email Reminder Sent</p>
+                        <p class="text-sm text-gray-500">To debtor for #D-4987</p>
+                        <p class="text-xs text-gray-400 mt-1">1 day ago</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
