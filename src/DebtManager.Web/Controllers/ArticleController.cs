@@ -12,7 +12,8 @@ public class ArticleController : Controller
         _articleRepository = articleRepository;
     }
 
-    public async Task<IActionResult> View(string slug)
+    [Route("Article/View/{slug}")]
+    public async Task<IActionResult> ViewArticle(string slug)
     {
         var article = await _articleRepository.GetBySlugAsync(slug);
         
