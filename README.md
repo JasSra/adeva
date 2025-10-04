@@ -48,6 +48,32 @@ Contracts decouple interfaces from implementations so we can split into independ
 
 Open <http://localhost:5000> or <https://localhost:5001>.
 
+### Payment System Setup
+
+**Quick Payment Flow** - Enhanced 2-click payment experience with Stripe:
+
+- **Setup Guide**: See [`docs/PAYMENT_SETUP.md`](docs/PAYMENT_SETUP.md) for configuration instructions
+- **Documentation**: See [`docs/PAYMENT_FLOW.md`](docs/PAYMENT_FLOW.md) for architecture and features
+
+**Features:**
+- Stripe Payment Intents integration with Apple Pay, Google Pay, and card payments
+- Mobile-first responsive UI with Stripe Elements
+- Anonymous payment by debt reference number
+- Background webhook processing with Hangfire
+- SQL Server job persistence for audit trail
+- Secure admin-only Hangfire dashboard (`/hangfire`)
+
+**Quick Configuration:**
+```json
+{
+  "Stripe": {
+    "PublishableKey": "pk_test_...",
+    "SecretKey": "sk_test_...",
+    "WebhookSecret": "whsec_..."
+  }
+}
+```
+
 ### Admin Setup
 
 **First Admin Creation:**

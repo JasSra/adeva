@@ -1,0 +1,78 @@
+@{
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+}
+
+<div class="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+    <div class="bg-white rounded-lg shadow-lg text-center p-8">
+        <div class="mb-6">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+        </div>
+        
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
+        <p class="text-gray-600 mb-6">Your payment has been received and is being processed.</p>
+        
+        <div id="payment-details" class="bg-gray-50 rounded-lg p-6 mb-6 text-left">
+            <h3 class="font-semibold text-gray-900 mb-4">Payment Details</h3>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Payment ID:</span>
+                    <span class="font-mono text-gray-900" id="payment-id">Loading...</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Amount:</span>
+                    <span class="font-semibold text-gray-900" id="payment-amount">-</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Status:</span>
+                    <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                        <span class="w-2 h-2 bg-green-600 rounded-full mr-1"></span>
+                        Completed
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Date:</span>
+                    <span class="text-gray-900" id="payment-date">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <p class="text-sm text-gray-500 mb-6">
+            A confirmation email has been sent to your registered email address.
+            You can view this transaction in your payment history.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="/User" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                Go to Dashboard
+            </a>
+            <a href="/User/Payments" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                View Payment History
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Parse payment intent from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentIntentId = urlParams.get('payment_intent');
+    const paymentIntentClientSecret = urlParams.get('payment_intent_client_secret');
+    
+    if (paymentIntentId) {
+        // Retrieve payment status from Stripe
+        fetch(`/api/payment/status/${paymentIntentId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('payment-id').textContent = paymentIntentId;
+                document.getElementById('payment-date').textContent = new Date().toLocaleString();
+                // Additional details would be populated from the API response
+            })
+            .catch(error => {
+                console.error('Error retrieving payment status:', error);
+            });
+    }
+</script>
