@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddMediatR(assemblies);
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         services.AddAutoMapper(assemblies);
+        
         return services;
     }
 }

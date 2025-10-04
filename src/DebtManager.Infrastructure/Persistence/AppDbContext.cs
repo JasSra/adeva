@@ -2,6 +2,7 @@ using DebtManager.Domain.Debtors;
 using DebtManager.Domain.Debts;
 using DebtManager.Domain.Organizations;
 using DebtManager.Domain.Payments;
+using DebtManager.Domain.AdminUsers;
 using Microsoft.EntityFrameworkCore;
 
 namespace DebtManager.Infrastructure.Persistence;
@@ -14,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PaymentPlan> PaymentPlans => Set<PaymentPlan>();
     public DbSet<PaymentInstallment> PaymentInstallments => Set<PaymentInstallment>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -94,6 +96,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             builder.HasOne(x => x.Debt).WithMany(x => x.Transactions).HasForeignKey(x => x.DebtId).OnDelete(DeleteBehavior.Restrict);
             builder.HasOne(x => x.PaymentPlan).WithMany(x => x.Transactions).HasForeignKey(x => x.PaymentPlanId).OnDelete(DeleteBehavior.Restrict);
             builder.HasOne(x => x.PaymentInstallment).WithMany(x => x.Transactions).HasForeignKey(x => x.PaymentInstallmentId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AdminUser>(builder =>
+        {
+            builder.HasIndex(x => x.Email).IsUnique();
+            builder.HasIndex(x => x.ExternalAuthId).IsUnique();
+            builder.Property(x => x.Email).HasMaxLength(256);
+            builder.Property(x => x.Name).HasMaxLength(200);
+            builder.Property(x => x.ExternalAuthId).HasMaxLength(256);
         });
     }
 }

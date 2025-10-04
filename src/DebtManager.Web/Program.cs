@@ -33,6 +33,7 @@ builder.Services.AddHangfireServer();
 
 // Branding resolver
 builder.Services.AddScoped<BrandingResolverMiddleware>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 

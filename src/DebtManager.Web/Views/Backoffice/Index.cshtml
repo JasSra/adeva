@@ -1,0 +1,83 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isInitialSignupAllowed = ViewBag.IsInitialAdminSignupAllowed as bool? ?? false;
+}
+
+<div class="container mx-auto p-6 max-w-2xl">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold mb-6 text-center">System Backoffice</h1>
+        
+        @if (isInitialSignupAllowed)
+        {
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-blue-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 class="text-lg font-semibold text-blue-800 mb-2">Initial Admin Setup Required</h3>
+                        <p class="text-blue-700 mb-4">No administrator accounts exist yet. You can create the first admin account using the link below.</p>
+                        <p class="text-sm text-blue-600 mb-4">
+                            <strong>Important:</strong> This link is only available when no admin exists. After the first admin is created, 
+                            only existing administrators can assign admin roles to other users.
+                        </p>
+                        <a href="/Account/SignInAdmin?returnUrl=/Admin" 
+                           class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors">
+                            🔐 Sign In as Initial Administrator
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 rounded p-4 text-sm text-gray-600">
+                <h4 class="font-semibold mb-2">What happens next?</h4>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li>Click the link above to sign in with Azure AD B2C</li>
+                    <li>Your account will be registered as the first administrator</li>
+                    <li>You'll be redirected to the Admin Dashboard</li>
+                    <li>You can then assign admin roles to other users from the User Accounts page</li>
+                    <li>This signup link will no longer be available once an admin exists</li>
+                </ol>
+            </div>
+        }
+        else
+        {
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-yellow-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <h3 class="text-lg font-semibold text-yellow-800 mb-2">Admin Signup Restricted</h3>
+                        <p class="text-yellow-700 mb-4">@ViewBag.Message</p>
+                        <p class="text-sm text-yellow-600">
+                            If you need admin access, please contact an existing administrator to assign the role to your account.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a href="/" class="text-blue-600 hover:underline">← Return to Home</a>
+            </div>
+        }
+        
+        <div class="mt-8 pt-6 border-t">
+            <h3 class="text-lg font-semibold mb-3">System Links</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <a href="/health/live" class="block p-3 border rounded hover:bg-gray-50 text-sm">
+                    <span class="font-medium">Health Check</span> - System status
+                </a>
+                <a href="/hangfire" class="block p-3 border rounded hover:bg-gray-50 text-sm">
+                    <span class="font-medium">Hangfire</span> - Background jobs
+                </a>
+                @if (!isInitialSignupAllowed)
+                {
+                    <a href="/Admin" class="block p-3 border rounded hover:bg-gray-50 text-sm">
+                        <span class="font-medium">Admin Portal</span> - Administration
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
