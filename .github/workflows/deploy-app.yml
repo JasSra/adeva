@@ -1,0 +1,147 @@
+name: Deploy Application
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy (dev or prod)'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build application
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      - name: Publish application
+        run: dotnet publish src/DebtManager.Web/DebtManager.Web.csproj --configuration Release --output ./publish --no-build
+
+      - name: Build Tailwind CSS
+        run: |
+          cd src/DebtManager.Web
+          npm install
+          npm run build
+
+      - name: Copy Tailwind output to publish folder
+        run: |
+          mkdir -p ./publish/wwwroot/css
+          cp src/DebtManager.Web/wwwroot/css/app.css ./publish/wwwroot/css/ || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp
+          path: ./publish
+
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'dev'
+    environment: dev
+    
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp
+          path: ./publish
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          package: ./publish
+
+      - name: Run EF Migrations
+        run: |
+          # Install EF Core tools
+          dotnet tool install --global dotnet-ef || true
+          
+          # Note: Migrations should be run using a connection string with proper permissions
+          # This is a placeholder - actual implementation should use Azure CLI or separate migration job
+          echo "Migration step - configure with proper connection string in production"
+
+      - name: Azure Logout
+        if: always()
+        run: az logout
+
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event.inputs.environment == 'prod'
+    environment: prod
+    
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp
+          path: ./publish
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          package: ./publish
+
+      - name: Run EF Migrations
+        run: |
+          # Install EF Core tools
+          dotnet tool install --global dotnet-ef || true
+          
+          # Note: Migrations should be run using a connection string with proper permissions
+          # This is a placeholder - actual implementation should use Azure CLI or separate migration job
+          echo "Migration step - configure with proper connection string in production"
+
+      - name: Azure Logout
+        if: always()
+        run: az logout

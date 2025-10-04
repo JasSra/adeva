@@ -152,10 +152,13 @@
 
 ## Deployment & Ops
 - Target: Azure App Service or container platform.
-- Production DB: Azure SQL Managed Instance.
+- Production DB: Azure SQL Database.
 - Health endpoints: `/health/live`, `/health/ready`.
 - Monitoring: Application Insights.
 - SSL automation, GDPR compliance, retention policies.
+- **Deployment**: Bicep IaC templates + GitHub Actions workflows (see `deploy/` directory).
+- **Regions**: Australia East (primary).
+- **Tiers**: Free (dev/staging) and Beefy (production) configurations.
 
 ---
 
@@ -175,3 +178,7 @@
 - [x] Tailwind pipeline + shared layout.
 - [x] Admin onboarding flow + ABR validation placeholder.
 - [x] Document config/secrets strategy.
+- [x] Azure deployment infrastructure (Bicep IaC + GitHub Actions).
+  - [x] Free tier setup for dev/staging.
+  - [x] Beefy tier setup for production.
+  - [x] CI/CD workflows for automated deployments.

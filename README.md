@@ -4,6 +4,18 @@ A white-labelled, multi-tenant debt management web application built on .NET 8.
 
 📚 **[View the Complete Wiki Documentation](wiki/Home.md)**
 
+## Deployment
+
+This application is ready for deployment to Azure using Infrastructure as Code (Bicep templates) and GitHub Actions.
+
+**Quick Deploy**: See [`deploy/QUICKSTART.md`](deploy/QUICKSTART.md) for step-by-step deployment instructions.
+
+**Detailed Guide**: See [`deploy/AZURE_DEPLOYMENT.md`](deploy/AZURE_DEPLOYMENT.md) for comprehensive documentation.
+
+- **Free Tier**: ~$5-10 AUD/month (dev/staging)
+- **Beefy Tier**: ~$470-700 AUD/month (production)
+- **Region**: Australia East
+
 ## Solution layout (small projects, modular)
 
 - src/DebtManager.Contracts — interfaces/DTOs shared across services (e.g., IAbrValidator)
