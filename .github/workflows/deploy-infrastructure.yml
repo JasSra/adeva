@@ -1,0 +1,64 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy (dev or prod)'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      tierType:
+        description: 'Infrastructure tier (free or beefy)'
+        required: true
+        type: choice
+        options:
+          - free
+          - beefy
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-infrastructure:
+    name: Deploy Azure Infrastructure
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Create Resource Group
+        run: |
+          az group create \
+            --name ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --location australiaeast
+
+      - name: Deploy Bicep Template
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          template: ./deploy/bicep/main.bicep
+          parameters: >
+            environmentName=${{ github.event.inputs.environment }}
+            tierType=${{ github.event.inputs.tierType }}
+            sqlAdminLogin=${{ secrets.SQL_ADMIN_LOGIN }}
+            sqlAdminPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
+            azureAdB2CClientId=${{ secrets.AZURE_AD_B2C_CLIENT_ID }}
+            azureAdB2CAuthority=${{ secrets.AZURE_AD_B2C_AUTHORITY }}
+          failOnStdErr: false
+
+      - name: Azure Logout
+        if: always()
+        run: az logout
