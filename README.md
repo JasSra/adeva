@@ -34,6 +34,18 @@ Contracts decouple interfaces from implementations so we can split into independ
 
 Open <http://localhost:5000> or <https://localhost:5001>.
 
+### Admin Setup
+
+**First Admin Creation:**
+- Visit `/Backoffice` to see the one-time admin signup link
+- Link is only visible when NO admin users exist
+- After first admin is created, only existing admins can assign admin roles
+
+**Admin Portal:**
+- Access at `/Admin` with comprehensive sidebar navigation
+- Sections: Applications, Debts, Debtors, Organizations, Transactions, Payments, Communications, Audit, Accounts, Configuration
+- All sections include search, pagination, and filtering
+
 ### Auth configuration (Azure AD B2C)
 
 Configure via environment variables (override `appsettings.json` as needed):
