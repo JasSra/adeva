@@ -4,6 +4,40 @@
     ViewData["Title"] = article.Title;
 }
 
+<!-- Analytics Tracking -->
+<script>
+    // Article View Analytics
+    (function() {
+        // Track article view
+        const articleData = {
+            id: '@article.Id',
+            slug: '@article.Slug',
+            title: '@article.Title',
+            author: '@(article.AuthorName ?? "Unknown")',
+            viewedAt: new Date().toISOString()
+        };
+        
+        // Send analytics event (placeholder - integrate with your analytics platform)
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'article_view', {
+                'article_id': articleData.id,
+                'article_slug': articleData.slug,
+                'article_title': articleData.title
+            });
+        }
+        
+        // Console log for debugging
+        console.log('Article viewed:', articleData);
+        
+        // You can also send to custom analytics endpoint
+        // fetch('/api/analytics/track', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify(articleData)
+        // });
+    })();
+</script>
+
 <div class="container mx-auto px-4 py-8 max-w-4xl">
     @if (!string.IsNullOrEmpty(article.HeaderImageUrl))
     {

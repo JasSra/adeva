@@ -42,10 +42,19 @@ public class ArticlesController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(string title, string slug, string content, string? excerpt, string? headerImageUrl, string? authorName, string? metaDescription, string? metaKeywords)
+    public async Task<IActionResult> Create(string title, string slug, string content, string? excerpt, IFormFile? headerImage, string? headerImageUrl, string? authorName, string? metaDescription, string? metaKeywords)
     {
-        var article = Article.Create(title, slug, content, excerpt, headerImageUrl, authorName);
-        article.Update(title, content, excerpt, headerImageUrl, authorName, metaDescription, metaKeywords);
+        string? uploadedImageUrl = null;
+        
+        if (headerImage != null && headerImage.Length > 0)
+        {
+            uploadedImageUrl = await SaveUploadedFileAsync(headerImage);
+        }
+        
+        var finalImageUrl = uploadedImageUrl ?? headerImageUrl;
+        
+        var article = Article.Create(title, slug, content, excerpt, finalImageUrl, authorName);
+        article.Update(title, content, excerpt, finalImageUrl, authorName, metaDescription, metaKeywords);
         
         await _articleRepository.AddAsync(article);
         await _articleRepository.SaveChangesAsync();
@@ -70,7 +79,7 @@ public class ArticlesController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Edit(Guid id, string title, string slug, string content, string? excerpt, string? headerImageUrl, string? authorName, string? metaDescription, string? metaKeywords)
+    public async Task<IActionResult> Edit(Guid id, string title, string slug, string content, string? excerpt, IFormFile? headerImage, string? headerImageUrl, string? authorName, string? metaDescription, string? metaKeywords)
     {
         var article = await _articleRepository.GetAsync(id);
         if (article == null)
@@ -78,7 +87,16 @@ public class ArticlesController : Controller
             return NotFound();
         }
         
-        article.Update(title, content, excerpt, headerImageUrl, authorName, metaDescription, metaKeywords);
+        string? uploadedImageUrl = null;
+        
+        if (headerImage != null && headerImage.Length > 0)
+        {
+            uploadedImageUrl = await SaveUploadedFileAsync(headerImage);
+        }
+        
+        var finalImageUrl = uploadedImageUrl ?? headerImageUrl ?? article.HeaderImageUrl;
+        
+        article.Update(title, content, excerpt, finalImageUrl, authorName, metaDescription, metaKeywords);
         if (article.Slug != slug)
         {
             article.UpdateSlug(slug);
@@ -132,5 +150,21 @@ public class ArticlesController : Controller
         await _articleRepository.SaveChangesAsync();
         
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<string> SaveUploadedFileAsync(IFormFile file)
+    {
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "articles");
+        Directory.CreateDirectory(uploadsFolder);
+
+        var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+        using (var fileStream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(fileStream);
+        }
+
+        return $"/uploads/articles/{uniqueFileName}";
     }
 }
