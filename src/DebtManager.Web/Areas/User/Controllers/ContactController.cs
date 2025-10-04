@@ -6,13 +6,13 @@ namespace DebtManager.Web.Areas.User.Controllers;
 
 [Area("User")]
 [Authorize(Policy = "RequireUserScope")]
-public class HomeController : Controller
+public class ContactController : Controller
 {
     public IActionResult Index()
     {
         var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
         ViewBag.ThemeName = theme?.Name ?? "Default";
-        ViewBag.Title = "Dashboard";
+        ViewBag.Title = "Contact Details";
         return View();
     }
 }

@@ -1,0 +1,134 @@
+@{
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+}
+
+<div class="bg-white rounded-lg shadow">
+    <div class="p-6 border-b flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Audit Log</h3>
+        <div class="flex gap-2">
+            <select class="border rounded px-3 py-2 text-sm">
+                <option value="">All Activities</option>
+                <option value="payment">Payments</option>
+                <option value="debt">Debt Changes</option>
+                <option value="contact">Contact Updates</option>
+                <option value="communication">Communications</option>
+            </select>
+            <input type="date" class="border rounded px-3 py-2 text-sm" />
+        </div>
+    </div>
+    
+    <div class="p-6">
+        <div class="space-y-6">
+            <!-- Today -->
+            <div>
+                <h4 class="text-sm font-semibold text-gray-500 mb-3">Today</h4>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-green-100 rounded-full p-2">
+                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-gray-900">Payment Processed</p>
+                            <p class="text-sm text-gray-600">Payment of $500.00 for Debt #D-5001 was successfully processed via Credit Card</p>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span class="text-xs text-gray-500">2:30 PM</span>
+                                <span class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-800">Payment</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yesterday -->
+            <div>
+                <h4 class="text-sm font-semibold text-gray-500 mb-3">Yesterday</h4>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-blue-100 rounded-full p-2">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-gray-900">Debt Details Viewed</p>
+                            <p class="text-sm text-gray-600">Viewed details for Debt #D-5001</p>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span class="text-xs text-gray-500">4:15 PM</span>
+                                <span class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800">View</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-purple-100 rounded-full p-2">
+                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-gray-900">Email Received</p>
+                            <p class="text-sm text-gray-600">Payment reminder email sent for Debt #D-5001</p>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span class="text-xs text-gray-500">9:00 AM</span>
+                                <span class="px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-800">Communication</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Last Week -->
+            <div>
+                <h4 class="text-sm font-semibold text-gray-500 mb-3">Last Week</h4>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-yellow-100 rounded-full p-2">
+                            <svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-gray-900">Contact Information Updated</p>
+                            <p class="text-sm text-gray-600">Primary email address updated to john.doe@example.com</p>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span class="text-xs text-gray-500">Dec 8, 2024 at 3:20 PM</span>
+                                <span class="px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800">Contact Update</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-green-100 rounded-full p-2">
+                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-gray-900">Login</p>
+                            <p class="text-sm text-gray-600">Successful login to User Portal</p>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span class="text-xs text-gray-500">Dec 7, 2024 at 10:30 AM</span>
+                                <span class="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-800">Security</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+            Showing <span class="font-medium">1</span> to <span class="font-medium">6</span> of <span class="font-medium">24</span> activities
+        </div>
+        <div class="flex gap-2">
+            <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Previous</button>
+            <button class="px-3 py-1 border rounded text-sm bg-blue-600 text-white">1</button>
+            <button class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-50">2</button>
+            <button class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-50">Next</button>
+        </div>
+    </div>
+</div>
