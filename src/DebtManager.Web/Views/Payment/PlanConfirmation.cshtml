@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = ViewBag.Title ?? "Payment Plan Confirmed";
+    var paymentPlanId = ViewBag.PaymentPlanId;
+}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-green-500 px-6 py-4">
+                <div class="flex items-center">
+                    <svg class="h-8 w-8 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <h1 class="text-2xl font-bold text-white">Payment Plan Confirmed!</h1>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="mb-6">
+                    <p class="text-gray-700 text-lg mb-4">
+                        Your payment plan has been successfully created and is ready for processing.
+                    </p>
+                    <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                        <p class="text-blue-800 font-semibold">Payment Plan ID: <span class="font-mono">@paymentPlanId</span></p>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 pt-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">What's Next?</h2>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <svg class="h-6 w-6 text-green-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <strong>Email Confirmation:</strong> You'll receive a confirmation email with your payment plan details within the next few minutes.
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-6 w-6 text-green-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <strong>Payment Reminders:</strong> We'll send you reminders before each payment is due.
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-6 w-6 text-green-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <strong>Track Your Progress:</strong> You can view your payment history and remaining balance anytime in your account.
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-6 w-6 text-yellow-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            <div>
+                                <strong>Custom Plans Require Approval:</strong> If you selected a custom payment schedule, it will be reviewed by an administrator within 1-2 business days.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="mt-8 flex justify-center space-x-4">
+                    <a href="/" class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-semibold transition">
+                        Return to Dashboard
+                    </a>
+                    <a href="/Payment/SelectPlan?debtId=@paymentPlanId" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-semibold transition">
+                        View Plan Details
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 text-center text-sm text-gray-600">
+            <p>Need help? Contact our support team at <a href="mailto:support@example.com" class="text-blue-600 hover:underline">support@example.com</a></p>
+        </div>
+    </div>
+</div>
