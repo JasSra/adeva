@@ -1,0 +1,49 @@
+@model DebtManager.Web.Models.BrandLogoModel
+@{
+    var variant = (Model?.Variant ?? "full").ToLowerInvariant();
+    var size = (Model?.Size ?? "md").ToLowerInvariant();
+    string sizeClass = size switch { "xs"=>"h-6", "sm"=>"h-8", "lg"=>"h-12", "xl"=>"h-16", _=>"h-10"};
+}
+@if (variant == "circle")
+{
+    <span class="inline-flex items-center">
+        <span class="brand-circle @sizeClass w-auto"></span>
+        <span class="sr-only">@Model?.Title</span>
+    </span>
+}
+else if (variant == "mark")
+{
+    <span class="inline-flex items-center">
+        <svg class="@sizeClass w-auto" viewBox="0 0 120 40" role="img" aria-label="@Model?.Title">
+            <defs>
+                <linearGradient id="g1" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#0a4d68" />
+                    <stop offset="100%" stop-color="#1f8a70" />
+                </linearGradient>
+            </defs>
+            <path d="M12 30 L22 10 L32 30 Z" fill="url(#g1)" opacity="0.95" />
+            <circle cx="26" cy="20" r="5" fill="#fff" opacity="0.95" />
+        </svg>
+    </span>
+}
+else
+{
+    <span class="inline-flex items-center">
+        <svg class="@sizeClass w-auto" viewBox="0 0 240 48" role="img" aria-label="@Model?.Title">
+            <defs>
+                <linearGradient id="brandGrad" x1="0" x2="1">
+                    <stop offset="0%" stop-color="#0a4d68" />
+                    <stop offset="100%" stop-color="#1f8a70" />
+                </linearGradient>
+            </defs>
+            <g transform="translate(0,2)">
+                <rect x="0" y="0" width="44" height="44" rx="12" fill="url(#brandGrad)"/>
+                <path d="M12 30 L22 14 L32 30 Z" fill="#fff"/>
+            </g>
+            <g transform="translate(58,6)" fill="#0b1b3a">
+                <text x="0" y="28" font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-weight="700" font-size="26">Adeva</text>
+                <text x="96" y="28" font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-weight="600" font-size="26" fill="url(#brandGrad)">Plus</text>
+            </g>
+        </svg>
+    </span>
+}

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48">
+  <defs>
+    <linearGradient id="brandGrad" x1="0" x2="1">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(0,2)">
+    <rect x="0" y="0" width="44" height="44" rx="12" fill="url(#brandGrad)"/>
+    <path d="M12 30 L22 14 L32 30 Z" fill="#fff"/>
+  </g>
+  <g transform="translate(58,6)" fill="#0b1b3a">
+    <text x="0" y="28" font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-weight="700" font-size="26">Adeva</text>
+    <text x="96" y="28" font-family="'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-weight="600" font-size="26" fill="url(#brandGrad)">Plus</text>
+  </g>
+</svg>

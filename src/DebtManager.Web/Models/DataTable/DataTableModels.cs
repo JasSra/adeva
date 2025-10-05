@@ -39,6 +39,9 @@ public class DataTableViewModel
     public List<(string Value, string Label)> StatusOptions { get; set; } = new();
     public bool ShowDensityToggle { get; set; } = true; // compact vs normal
 
+    // Optional remote source for rows (JSON)
+    public string? DataUrl { get; set; }
+
     public DataTableViewModel() { }
     public DataTableViewModel(string title)
     {

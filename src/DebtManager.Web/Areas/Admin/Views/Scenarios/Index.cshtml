@@ -183,7 +183,7 @@
     <!-- Actions -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Actions</h3>
-        <div class="flex space-x-4">
+        <div class="flex flex-wrap gap-3 items-center">
             <form method="post" asp-action="Clear" onsubmit="return confirm('Are you sure you want to clear all dummy data? This action cannot be undone.');">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
@@ -216,57 +216,56 @@ else
             <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
                 Generate realistic test data including organizations, customers, debts, and payment plans for development and testing purposes.
             </p>
-            
+
             <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6 max-w-2xl mx-auto">
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">What will be created:</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-left">
+                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Quick Generate</h4>
+                <form method="post" asp-action="Generate" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                    @Html.AntiForgeryToken()
                     <div>
-                        <p class="font-medium text-gray-900 dark:text-white mb-2">Organizations (4)</p>
-                        <ul class="space-y-1 text-gray-600 dark:text-gray-400">
-                            <li>• Pending approval</li>
-                            <li>• Rejected</li>
-                            <li>• Active & established</li>
-                            <li>• Recently approved</li>
-                        </ul>
+                        <label class="block text-sm">Pack Name</label>
+                        <input name="PackName" class="border p-2 w-full rounded" placeholder="e.g. Demo Pack" />
+                        <input type="hidden" name="Currency" value="AUD" />
                     </div>
                     <div>
-                        <p class="font-medium text-gray-900 dark:text-white mb-2">Customers (~20)</p>
-                        <ul class="space-y-1 text-gray-600 dark:text-gray-400">
-                            <li>• New customers</li>
-                            <li>• Invited customers</li>
-                            <li>• Active & paying</li>
-                            <li>• Delinquent</li>
-                            <li>• Settled</li>
-                        </ul>
+                        <label class="block text-sm">Active Orgs</label>
+                        <input name="ActiveOrganizations" type="number" value="1" class="border p-2 w-full rounded" />
                     </div>
                     <div>
-                        <p class="font-medium text-gray-900 dark:text-white mb-2">Debts (~15-20)</p>
-                        <ul class="space-y-1 text-gray-600 dark:text-gray-400">
-                            <li>• New debts</li>
-                            <li>• Active with plans</li>
-                            <li>• In arrears</li>
-                            <li>• Disputed</li>
-                            <li>• Settled</li>
-                        </ul>
+                        <label class="block text-sm">Recent Orgs</label>
+                        <input name="RecentOrganizations" type="number" value="1" class="border p-2 w-full rounded" />
                     </div>
                     <div>
-                        <p class="font-medium text-gray-900 dark:text-white mb-2">Additional Data</p>
-                        <ul class="space-y-1 text-gray-600 dark:text-gray-400">
-                            <li>• ~10 Payment plans</li>
-                            <li>• ~5 Transactions</li>
-                            <li>• Multiple scenarios</li>
-                        </ul>
+                        <label class="block text-sm">New/Invited/Active/Delinq/Settled per Org</label>
+                        <div class="grid grid-cols-5 gap-2">
+                            <input name="NewCustomersPerOrg" type="number" value="2" class="border p-2 w-full rounded" />
+                            <input name="InvitedCustomersPerOrg" type="number" value="2" class="border p-2 wfull rounded" />
+                            <input name="ActiveCustomersPerOrg" type="number" value="3" class="border p-2 w-full rounded" />
+                            <input name="DelinquentCustomersPerOrg" type="number" value="2" class="border p-2 w-full rounded" />
+                            <input name="SettledCustomersPerOrg" type="number" value="1" class="border p-2 w-full rounded" />
+                        </div>
                     </div>
-                </div>
+                    <div class="flex items-end gap-3">
+                        <label class="inline-flex items-center text-sm">
+                            <input type="checkbox" name="IncludePaymentPlans" checked class="mr-2" /> Plans
+                        </label>
+                        <label class="inline-flex items-center text-sm">
+                            <input type="checkbox" name="IncludeTransactions" checked class="mr-2" /> Transactions
+                        </label>
+                    </div>
+                    <div class="md:col-span-3">
+                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Generate Pack</button>
+                    </div>
+                </form>
+                <p class="text-xs text-gray-500 mt-3">All records will be tagged with dummy + a pack id for easy cleanup and filtering.</p>
             </div>
 
             <form method="post" asp-action="Seed">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                    Generate Dummy Data
+                    Generate Legacy Dummy Data
                 </button>
             </form>
-            
+
             <p class="text-xs text-gray-500 dark:text-gray-500 mt-4">
                 All generated data will be tagged as "dummy" for easy identification and removal
             </p>
@@ -278,17 +277,7 @@ else
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Documentation</h3>
         <div class="prose dark:prose-invert max-w-none">
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                The dummy data seeder creates realistic test scenarios for:
-            </p>
-            <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                <li><strong>Development:</strong> Test features with realistic data</li>
-                <li><strong>Testing:</strong> Validate workflows across different entity states</li>
-                <li><strong>Demonstration:</strong> Show the application with complete scenarios</li>
-                <li><strong>Training:</strong> Provide familiar scenarios for user onboarding</li>
-            </ul>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-3">
-                All entities are tagged with <code class="px-1 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-xs">dummy</code> and specific scenario tags for easy filtering.
-                Learn more in the <a href="https://github.com/JasSra/adeva/blob/main/docs/Dummy-Data-Seeding.md" target="_blank" class="text-blue-600 hover:underline">documentation</a>.
+                The scenario generator creates realistic packs of organizations, customers, debts, plans and transactions. Each run is uniquely tagged so you can share pack details (ids, counts) with testers.
             </p>
         </div>
     </div>

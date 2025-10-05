@@ -8,50 +8,23 @@
     {
         TableKey = "admin.organizations",
         Title = "Organizations",
-        Columns =
-        [
+        DataUrl = Url.Action("Get", "OrganizationsApi", new { area = "Admin" }),
+        Columns = new System.Collections.Generic.List<DebtManager.Web.Models.DataTable.DataTableColumn>
+        {
             new("Id","ID"),
             new("Name","Name"),
             new("Abn","ABN"),
             new("Subdomain","Subdomain"),
             new("Status","Status"),
             new("Debtors","Debtors")
-        ],
-        Rows =
-        [
-            new()
-            {
-                Key = "101",
-                Cells = new() {
-                    ["Id"] = "#101",
-                    ["Name"] = "<a class=\"font-medium\" href=\"/Admin/Organizations/Details/101\">Acme Corp Pty Ltd</a>",
-                    ["Abn"] = "12345678901",
-                    ["Subdomain"] = "acme",
-                    ["Status"] = "<span class=\"px-2 py-1 text-xs rounded-full bg-green-100 text-green-800\">Active</span>",
-                    ["Debtors"] = "24"
-                },
-                ActionsHtml = "<a class=\"text-blue-600 hover:underline mr-3\" href=\"/Admin/Organizations/Details/101\">View</a><a class=\"text-blue-600 hover:underline\" href=\"/Admin/Organizations/Edit/101\">Edit</a>"
-            },
-            new()
-            {
-                Key = "102",
-                Cells = new() {
-                    ["Id"] = "#102",
-                    ["Name"] = "<a class=\"font-medium\" href=\"/Admin/Organizations/Details/102\">Tech Solutions Ltd</a>",
-                    ["Abn"] = "98765432109",
-                    ["Subdomain"] = "techsol",
-                    ["Status"] = "<span class=\"px-2 py-1 text-xs rounded-full bg-green-100 text-green-800\">Active</span>",
-                    ["Debtors"] = "18"
-                },
-                ActionsHtml = "<a class=\"text-blue-600 hover:underline mr-3\" href=\"/Admin/Organizations/Details/102\">View</a><a class=\"text-blue-600 hover:underline\" href=\"/Admin/Organizations/Edit/102\">Edit</a>"
-            }
-        ],
-        Page = 1,
-        PageSize = 10,
-        TotalCount = 12,
+        },
+        Rows = new System.Collections.Generic.List<DebtManager.Web.Models.DataTable.DataTableRow>(),
+        Page = (int)(ViewBag.Page ?? 1),
+        PageSize = (int)(ViewBag.PageSize ?? 10),
+        TotalCount = 0,
         ShowSearch = true,
         ShowStatusFilter = true,
-        StatusOptions = new() { ("active","Active"), ("pending","Pending"), ("suspended","Suspended") },
+        StatusOptions = new System.Collections.Generic.List<(string,string)> { ("active","Active"), ("pending","Pending"), ("suspended","Suspended") },
         ShowDensityToggle = true
     };
 }

@@ -1,0 +1,78 @@
+@model DebtManager.Web.Controllers.FakeSigninVm
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Fake Sign-in (Dev)";
+    bool allowAdmin;
+    bool.TryParse(Configuration["DevAuth:AllowAdminScope"], out allowAdmin);
+}
+<div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded shadow p-6">
+    <h2 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Fake Sign-in (Development)</h2>
+    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Generate a fake identity for local onboarding without Azure AD B2C. Override any field and choose scopes.</p>
+
+    <form method="post" asp-action="FakeSignin" class="space-y-4">
+        @Html.AntiForgeryToken()
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm text-gray-800 dark:text-gray-200">First name</label>
+                <input name="FirstName" value="@Model.FirstName" class="border p-2 w-full rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400" />
+            </div>
+            <div>
+                <label class="block text-sm text-gray-800 dark:text-gray-200">Last name</label>
+                <input name="LastName" value="@Model.LastName" class="border p-2 w-full rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400" />
+            </div>
+        </div>
+        <div>
+            <label class="block text-sm text-gray-800 dark:text-gray-200">Email</label>
+            <input name="Email" value="@Model.Email" class="border p-2 w-full rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400" />
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm text-gray-800 dark:text-gray-200">Issuer</label>
+                <input name="Issuer" value="@Model.Issuer" class="border p-2 w-full rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400" />
+            </div>
+            <div>
+                <label class="block text-sm text-gray-800 dark:text-gray-200">Issuer ID (oid)</label>
+                <input name="IssuerId" value="@Model.IssuerId" class="border p-2 w-full rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400" />
+            </div>
+        </div>
+
+        <fieldset class="mt-2">
+            <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">Scopes</legend>
+            <label class="inline-flex items-center mr-4 text-gray-800 dark:text-gray-200">
+                <input type="checkbox" name="ScopeClient" @(Model.ScopeClient ? "checked" : null) class="mr-2" /> Client
+            </label>
+            <label class="inline-flex items-center mr-4 text-gray-800 dark:text-gray-200">
+                <input type="checkbox" name="ScopeUser" @(Model.ScopeUser ? "checked" : null) class="mr-2" /> User
+            </label>
+            @if (allowAdmin)
+            {
+                <label class="inline-flex items-center text-red-600 dark:text-red-400">
+                    <input type="checkbox" name="ScopeAdmin" @(Model.ScopeAdmin ? "checked" : null) class="mr-2" /> Admin (guarded)
+                </label>
+            }
+        </fieldset>
+
+        <fieldset class="mt-2">
+            <legend class="text-sm font-semibold text-gray-900 dark:text-gray-100">Automation</legend>
+            <label class="block text-gray-800 dark:text-gray-200">
+                <input type="checkbox" name="ForceSecuritySetup" @(Model.ForceSecuritySetup ? "checked" : null) class="mr-2" /> Redirect to Security Setup after sign-in
+            </label>
+            <label class="block text-gray-800 dark:text-gray-200">
+                <input type="checkbox" name="CreateClientOrganization" @(Model.CreateClientOrganization ? "checked" : null) class="mr-2" /> Create a Client organization and link to profile
+            </label>
+            <label class="block text-gray-800 dark:text-gray-200">
+                <input type="checkbox" name="CreateDebtor" @(Model.CreateDebtor ? "checked" : null) class="mr-2" /> Create a Debtor and link to profile
+            </label>
+        </fieldset>
+
+        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+
+        <div class="flex gap-2">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded">Sign in</button>
+            <a href="/Dev/Login" class="px-4 py-2 border rounded text-gray-800 dark:text-gray-200">Back</a>
+        </div>
+
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">Any existing session will be cleared before signing in.</p>
+    </form>
+</div>

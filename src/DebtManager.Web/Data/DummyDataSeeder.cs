@@ -127,10 +127,12 @@ public static class DummyDataSeeder
     private static List<Debtor> CreateDummyDebtors(Organization org)
     {
         var debtors = new List<Debtor>();
-        var random = new Random(org.Id.GetHashCode());
+
+        // Ensure debtor ReferenceId is unique across organizations
+        var refPrefix = (org.Subdomain ?? org.Id.ToString("N").Substring(0, 8)).ToUpperInvariant();
 
         // Scenario: New debtor
-        var newDebtor = new Debtor(org.Id, "NEW-001", "john.smith@example.com", "+61400111222", "John", "Smith");
+        var newDebtor = new Debtor(org.Id, $"{refPrefix}-NEW-001", "john.smith@example.com", "+61400111222", "John", "Smith");
         newDebtor.UpdatePersonalDetails("John", "Smith", "Johnny", new DateTime(1985, 5, 15), null);
         newDebtor.UpdateAddress("123 Main St", "Unit 4", "Sydney", "NSW", "2000", "AU");
         newDebtor.SetStatus(DebtorStatus.New);
@@ -138,7 +140,7 @@ public static class DummyDataSeeder
         debtors.Add(newDebtor);
 
         // Scenario: Invited debtor
-        var invitedDebtor = new Debtor(org.Id, "INV-001", "sarah.jones@example.com", "+61400333444", "Sarah", "Jones");
+        var invitedDebtor = new Debtor(org.Id, $"{refPrefix}-INV-001", "sarah.jones@example.com", "+61400333444", "Sarah", "Jones");
         invitedDebtor.UpdatePersonalDetails("Sarah", "Jones", "Sarah", new DateTime(1990, 8, 22), null);
         invitedDebtor.UpdateAddress("456 High St", "", "Melbourne", "VIC", "3000", "AU");
         invitedDebtor.SetStatus(DebtorStatus.Invited);
@@ -146,7 +148,7 @@ public static class DummyDataSeeder
         debtors.Add(invitedDebtor);
 
         // Scenario: Active debtor making payments
-        var activeDebtor = new Debtor(org.Id, "ACT-001", "mike.brown@example.com", "+61400555666", "Michael", "Brown");
+        var activeDebtor = new Debtor(org.Id, $"{refPrefix}-ACT-001", "mike.brown@example.com", "+61400555666", "Michael", "Brown");
         activeDebtor.UpdatePersonalDetails("Michael", "Brown", "Mike", new DateTime(1978, 3, 10), null);
         activeDebtor.UpdateAddress("789 Park Ave", "Apt 12", "Brisbane", "QLD", "4000", "AU");
         activeDebtor.UpdateEmployment("Tech Corp Pty Ltd", "$80,000-$100,000");
@@ -158,7 +160,7 @@ public static class DummyDataSeeder
         debtors.Add(activeDebtor);
 
         // Scenario: Delinquent debtor
-        var delinquentDebtor = new Debtor(org.Id, "DEL-001", "linda.white@example.com", "+61400777888", "Linda", "White");
+        var delinquentDebtor = new Debtor(org.Id, $"{refPrefix}-DEL-001", "linda.white@example.com", "+61400777888", "Linda", "White");
         delinquentDebtor.UpdatePersonalDetails("Linda", "White", "Lin", new DateTime(1982, 11, 5), null);
         delinquentDebtor.UpdateAddress("321 Ocean Rd", "", "Perth", "WA", "6000", "AU");
         delinquentDebtor.SetStatus(DebtorStatus.Delinquent);
@@ -168,7 +170,7 @@ public static class DummyDataSeeder
         debtors.Add(delinquentDebtor);
 
         // Scenario: Settled debtor
-        var settledDebtor = new Debtor(org.Id, "SET-001", "david.green@example.com", "+61400999000", "David", "Green");
+        var settledDebtor = new Debtor(org.Id, $"{refPrefix}-SET-001", "david.green@example.com", "+61400999000", "David", "Green");
         settledDebtor.UpdatePersonalDetails("David", "Green", "Dave", new DateTime(1975, 7, 18), null);
         settledDebtor.UpdateAddress("555 Lake St", "", "Adelaide", "SA", "5000", "AU");
         settledDebtor.SetStatus(DebtorStatus.Settled);

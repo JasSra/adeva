@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DebtManager.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
-public class ScenariosController : Controller
+public partial class ScenariosController : Controller
 {
     private readonly AppDbContext _context;
 
@@ -104,6 +104,22 @@ public class ScenariosController : Controller
             TempData["ErrorMessage"] = $"Error clearing dummy data: {ex.Message}";
         }
 
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Generate([FromForm] ScenarioRequest req)
+    {
+        try
+        {
+            var result = await ScenarioGenerator.GenerateAsync(_context, req);
+            TempData["SuccessMessage"] = $"Generated pack {result.PackId} ({result.PackName}) — Orgs: {result.OrganizationIds.Count}, Debtors: {result.DebtorIds.Count}, Debts: {result.DebtIds.Count}.";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = $"Error generating scenarios: {ex.Message}";
+        }
         return RedirectToAction(nameof(Index));
     }
 }

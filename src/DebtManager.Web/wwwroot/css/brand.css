@@ -1,0 +1,6 @@
+.brand-circle { display:inline-block; aspect-ratio:1/1; width:2.75rem; border-radius:9999px; background:
+ radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), transparent 40%),
+ linear-gradient(135deg, #0a4d68 0%, #1f8a70 100%); /* Governmentish teal-navy */
+ box-shadow: 0 4px 18px rgba(10,77,104,.25), inset 0 1px 4px rgba(255,255,255,.35);
+}
+.brand-circle:after{ content:"AP"; display:flex; align-items:center; justify-content:center; height:100%; font-weight:800; color:white; font-family:'Inter','Segoe UI',Arial,sans-serif; letter-spacing:.5px; }

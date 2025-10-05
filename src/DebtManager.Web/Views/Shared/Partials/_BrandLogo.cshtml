@@ -1,0 +1,21 @@
+@model DebtManager.Web.Models.BrandLogoModel
+@{
+    var variant = (Model?.Variant ?? "full").ToLowerInvariant();
+    var size = (Model?.Size ?? "md").ToLowerInvariant();
+    var asLink = Model?.AsLink ?? false;
+    var href = Model?.LinkHref ?? "/";
+    var title = Model?.Title ?? "Adeva Plus";
+    string sizeClass = size switch { "xs"=>"h-6", "sm"=>"h-8", "lg"=>"h-12", "xl"=>"h-16", _=>"h-10"};
+}
+@if (asLink)
+{
+    <a href="@href" title="@title" class="inline-flex items-center gap-3 select-none">
+        @await Html.PartialAsync("~/Views/Shared/Partials/_BrandLogoCore.cshtml", Model)
+    </a>
+}
+else
+{
+    <span class="inline-flex items-center gap-3 select-none">
+        @await Html.PartialAsync("~/Views/Shared/Partials/_BrandLogoCore.cshtml", Model)
+    </span>
+}

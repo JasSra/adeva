@@ -3,55 +3,74 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Security Setup";
 }
-<div class="max-w-2xl mx-auto bg-white rounded shadow p-6">
-    <h2 class="text-xl font-semibold mb-4">Set up Multi-Factor Authentication</h2>
+<div class="max-w-3xl mx-auto bg-white/95 rounded-lg shadow-lg p-6 md:p-8">
+    <h2 class="text-2xl font-semibold mb-2">@Model.Heading</h2>
+    <p class="text-sm text-gray-600 mb-6">@Model.SubHeading</p>
 
     @if (TempData["Error"] is string err)
     {
-        <div class="p-3 bg-red-100 text-red-800 rounded mb-4">@err</div>
+        <div class="p-3 bg-red-50 text-red-800 border border-red-200 rounded mb-4">@err</div>
     }
     @if (TempData["Message"] is string msg)
     {
-        <div class="p-3 bg-green-100 text-green-800 rounded mb-4">@msg</div>
+        <div class="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded mb-4">@msg</div>
     }
 
-    <div class="space-y-6">
-        <div>
-            <h3 class="font-semibold mb-2">1) Authenticator App</h3>
-            <p class="text-sm text-gray-600 mb-2">Scan this code in your authenticator app, or enter the key manually.</p>
-            <div class="flex items-center gap-6">
-                <img src="@Model.QrCodeDataUrl" alt="TOTP QR code" class="w-40 h-40 border rounded" />
-                <div class="p-3 bg-gray-50 border rounded flex-1">
-                    <div class="font-mono text-sm mb-2">Key: @Model.AuthenticatorKey</div>
-                    <div class="text-xs text-gray-500 break-all">URI: @Model.OtpauthUri</div>
+    <div class="grid md:grid-cols-2 gap-6">
+        @if (Model.ShowTotp)
+        {
+            <section class="space-y-3">
+                <h3 class="font-semibold">Step 1 — Add account to your authenticator</h3>
+                <p class="text-sm text-gray-600">Scan this QR code in your authenticator app or enter the key manually.</p>
+                <div class="flex items-start gap-4">
+                    <img src="@Model.QrCodeDataUrl" alt="TOTP QR code" class="w-56 h-56 border rounded" />
+                    <div class="p-3 bg-gray-50 border rounded flex-1">
+                        <div class="font-mono text-sm mb-2 break-all">Key: @Model.AuthenticatorKey</div>
+                        <div class="text-xs text-gray-500 break-all">URI: @Model.OtpauthUri</div>
+                    </div>
                 </div>
+                <form asp-action="Complete" method="post" class="space-y-3">
+                    @Html.AntiForgeryToken()
+                    <div>
+                        <label class="block text-sm">Authenticator Code</label>
+                        <input name="TotpCode" class="border p-2 w-full rounded" placeholder="6-digit code" />
+                    </div>
+                    <button class="px-4 py-2 bg-emerald-600 text-white rounded">Finish</button>
+                </form>
+            </section>
+        }
+        @if (Model.ShowSms)
+        {
+            <section class="space-y-3">
+                <h3 class="font-semibold">Step 1 — Verify your phone</h3>
+                <form asp-action="SendSms" method="post" class="flex gap-2 items-center">
+                    @Html.AntiForgeryToken()
+                    <input name="phoneNumber" value="@Model.PhoneNumber" placeholder="e.g. +61..." class="border p-2 rounded flex-1" />
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded">Send Code</button>
+                </form>
+                <form asp-action="Complete" method="post" class="space-y-3">
+                    @Html.AntiForgeryToken()
+                    <div>
+                        <label class="block text-sm">SMS Code</label>
+                        <input name="SmsCode" class="border p-2 w-full rounded" placeholder="Code from SMS" />
+                    </div>
+                    <input type="hidden" name="PhoneNumber" value="@Model.PhoneNumber" />
+                    <button class="px-4 py-2 bg-emerald-600 text-white rounded">Finish</button>
+                </form>
+            </section>
+        }
+
+        <aside class="bg-gray-50 border rounded p-4">
+            <h4 class="font-semibold mb-2">Why this matters</h4>
+            <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                @foreach (var t in Model.Tips)
+                {
+                    <li>@t</li>
+                }
+            </ul>
+            <div class="mt-4 text-xs text-gray-500">
+                Protecting your account helps safeguard sensitive financial data.
             </div>
-        </div>
-
-        <div>
-            <h3 class="font-semibold mb-2">2) Verify Phone Number</h3>
-            <form asp-action="SendSms" method="post" class="flex gap-2 items-center">
-                @Html.AntiForgeryToken()
-                <input name="phoneNumber" value="@Model.PhoneNumber" placeholder="e.g. +61..." class="border p-2 rounded flex-1" />
-                <button class="px-4 py-2 bg-blue-600 text-white rounded">Send Code</button>
-            </form>
-        </div>
-
-        <div>
-            <h3 class="font-semibold mb-2">3) Confirm Codes</h3>
-            <form asp-action="Complete" method="post" class="space-y-3">
-                @Html.AntiForgeryToken()
-                <div>
-                    <label class="block text-sm">SMS Code</label>
-                    <input name="SmsCode" class="border p-2 w-full" />
-                </div>
-                <div>
-                    <label class="block text-sm">Authenticator Code</label>
-                    <input name="TotpCode" class="border p-2 w-full" />
-                </div>
-                <input type="hidden" name="PhoneNumber" value="@Model.PhoneNumber" />
-                <button class="px-4 py-2 bg-emerald-600 text-white rounded">Finish</button>
-            </form>
-        </div>
+        </aside>
     </div>
 </div>

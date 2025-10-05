@@ -131,6 +131,13 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
+
+// Dev-only auth redirect middleware
+if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("DevAuth:EnableFakeSignin"))
+{
+    app.UseMiddleware<DevAuthRedirectMiddleware>();
+}
+
 app.UseAuthorization();
 
 // Enforce security onboarding (TOTP, phone, client org)
