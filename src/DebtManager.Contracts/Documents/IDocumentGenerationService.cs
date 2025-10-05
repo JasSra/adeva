@@ -1,6 +1,6 @@
 namespace DebtManager.Contracts.Documents;
 
-public class ReceiptData
+public class ReceiptGenerationData
 {
     public string ReceiptNumber { get; set; } = string.Empty;
     public DateTime IssuedDate { get; set; }
@@ -23,7 +23,7 @@ public class ReceiptData
     public decimal? RemainingBalance { get; set; }
 }
 
-public class InvoiceData
+public class InvoiceGenerationData
 {
     public string InvoiceNumber { get; set; } = string.Empty;
     public DateTime IssuedDate { get; set; }
@@ -54,8 +54,11 @@ public class InvoiceLineItem
 
 public interface IDocumentGenerationService
 {
-    Task<byte[]> GenerateReceiptPdfAsync(ReceiptData receiptData);
-    Task<string> GenerateReceiptHtmlAsync(ReceiptData receiptData);
-    Task<byte[]> GenerateInvoicePdfAsync(InvoiceData invoiceData);
-    Task<string> GenerateInvoiceHtmlAsync(InvoiceData invoiceData);
+    Task<byte[]> GenerateReceiptPdfAsync(ReceiptGenerationData receiptData);
+    Task<string> GenerateReceiptHtmlAsync(ReceiptGenerationData receiptData);
+    Task<byte[]> GenerateInvoicePdfAsync(InvoiceGenerationData invoiceData);
+    Task<string> GenerateInvoiceHtmlAsync(InvoiceGenerationData invoiceData);
+    Task SendReceiptEmailAsync(ReceiptGenerationData receiptData, string toEmail, string? ccEmail = null);
+    Task SendInvoiceEmailAsync(InvoiceGenerationData invoiceData, string toEmail, string? ccEmail = null);
+    Task SendBatchReceiptEmailsAsync(List<(ReceiptGenerationData receipt, string email)> receipts);
 }

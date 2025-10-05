@@ -34,6 +34,9 @@ public class Invoice : Entity
     public string? Notes { get; private set; }
     public string? PaymentReference { get; private set; }
     public Guid? DocumentId { get; private set; }
+    public string? GeneratedByUserId { get; private set; }
+    public DateTime? EmailSentAtUtc { get; private set; }
+    public string? EmailSentTo { get; private set; }
 
     public Document? Document { get; private set; }
 
@@ -103,5 +106,18 @@ public class Invoice : Entity
     {
         DueDateUtc = dueDate;
         UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void SetGeneratedBy(string userId)
+    {
+        GeneratedByUserId = userId;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void MarkEmailSent(string emailAddress, DateTime? sentAtUtc = null)
+    {
+        EmailSentTo = emailAddress;
+        EmailSentAtUtc = sentAtUtc ?? DateTime.UtcNow;
+        UpdatedAtUtc = EmailSentAtUtc;
     }
 }

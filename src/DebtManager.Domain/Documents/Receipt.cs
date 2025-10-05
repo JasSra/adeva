@@ -16,6 +16,9 @@ public class Receipt : Entity
     public string? ReferenceNumber { get; private set; }
     public string? Notes { get; private set; }
     public Guid? DocumentId { get; private set; }
+    public string? GeneratedByUserId { get; private set; }
+    public DateTime? EmailSentAtUtc { get; private set; }
+    public string? EmailSentTo { get; private set; }
 
     public Transaction? Transaction { get; private set; }
     public Document? Document { get; private set; }
@@ -58,5 +61,18 @@ public class Receipt : Entity
     {
         Notes = notes;
         UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void SetGeneratedBy(string userId)
+    {
+        GeneratedByUserId = userId;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void MarkEmailSent(string emailAddress, DateTime? sentAtUtc = null)
+    {
+        EmailSentTo = emailAddress;
+        EmailSentAtUtc = sentAtUtc ?? DateTime.UtcNow;
+        UpdatedAtUtc = EmailSentAtUtc;
     }
 }

@@ -68,6 +68,12 @@
                     </div>
                     
                     <div>
+                        <label class="block text-sm font-medium mb-1">Email To (Optional)</label>
+                        <input type="email" name="sendToEmail" class="w-full border rounded px-3 py-2 text-sm" placeholder="debtor@example.com" />
+                        <p class="text-xs text-gray-500 mt-1">Leave blank to skip email sending</p>
+                    </div>
+                    
+                    <div>
                         <label class="block text-sm font-medium mb-1">Format</label>
                         <select name="format" class="w-full border rounded px-3 py-2 text-sm">
                             <option value="html">HTML (Preview)</option>
@@ -124,6 +130,12 @@
                     </div>
                     
                     <div>
+                        <label class="block text-sm font-medium mb-1">Email To (Optional)</label>
+                        <input type="email" name="sendToEmail" class="w-full border rounded px-3 py-2 text-sm" placeholder="organization@example.com" />
+                        <p class="text-xs text-gray-500 mt-1">Leave blank to skip email sending</p>
+                    </div>
+                    
+                    <div>
                         <label class="block text-sm font-medium mb-1">Format</label>
                         <select name="format" class="w-full border rounded px-3 py-2 text-sm">
                             <option value="html">HTML (Preview)</option>
@@ -158,6 +170,7 @@ document.getElementById('receiptForm').addEventListener('submit', async function
         isPartialPayment: formData.get('isPartialPayment') === 'on',
         remainingBalance: formData.get('remainingBalance') ? parseFloat(formData.get('remainingBalance')) : null,
         notes: formData.get('notes'),
+        sendToEmail: formData.get('sendToEmail'),
         format: formData.get('format')
     };
     
@@ -167,6 +180,10 @@ document.getElementById('receiptForm').addEventListener('submit', async function
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        
+        if (data.sendToEmail) {
+            alert('Receipt generated and sent to ' + data.sendToEmail);
+        }
         
         if (data.format === 'pdf') {
             const blob = await response.blob();
@@ -196,6 +213,7 @@ document.getElementById('invoiceForm').addEventListener('submit', async function
         description: formData.get('description'),
         dueDate: formData.get('dueDate') || null,
         paymentInstructions: formData.get('paymentInstructions'),
+        sendToEmail: formData.get('sendToEmail'),
         format: formData.get('format')
     };
     
@@ -205,6 +223,10 @@ document.getElementById('invoiceForm').addEventListener('submit', async function
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        
+        if (data.sendToEmail) {
+            alert('Invoice generated and sent to ' + data.sendToEmail);
+        }
         
         if (data.format === 'pdf') {
             const blob = await response.blob();

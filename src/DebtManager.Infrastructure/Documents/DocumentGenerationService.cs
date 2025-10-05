@@ -1,17 +1,25 @@
 using System.Text;
 using DebtManager.Contracts.Documents;
+using DebtManager.Contracts.Notifications;
 
 namespace DebtManager.Infrastructure.Documents;
 
 public class DocumentGenerationService : IDocumentGenerationService
 {
-    public Task<byte[]> GenerateReceiptPdfAsync(ReceiptData receiptData)
+    private readonly IEmailSender _emailSender;
+
+    public DocumentGenerationService(IEmailSender emailSender)
+    {
+        _emailSender = emailSender;
+    }
+
+    public Task<byte[]> GenerateReceiptPdfAsync(ReceiptGenerationData receiptData)
     {
         var html = GenerateReceiptHtmlAsync(receiptData).Result;
         return Task.FromResult(Encoding.UTF8.GetBytes(html));
     }
 
-    public Task<string> GenerateReceiptHtmlAsync(ReceiptData receiptData)
+    public Task<string> GenerateReceiptHtmlAsync(ReceiptGenerationData receiptData)
     {
         var html = $@"<!DOCTYPE html>
 <html>
@@ -118,7 +126,6 @@ public class DocumentGenerationService : IDocumentGenerationService
     <div class=""header"">
         <div>
             <h1>PAYMENT RECEIPT</h1>
-            {(receiptData.IsPartialPayment ? "<span class=\"status-badge\">PARTIAL PAYMENT</span>" : "<span class=\"status-badge\">PAID IN FULL</span>")}
         </div>
         <div class=""company-info"">
             {(!string.IsNullOrEmpty(receiptData.OrganizationLogo) ? $"<img src=\"{receiptData.OrganizationLogo}\" class=\"logo\" alt=\"Logo\"/>" : "")}
@@ -187,13 +194,13 @@ public class DocumentGenerationService : IDocumentGenerationService
         return Task.FromResult(html);
     }
 
-    public Task<byte[]> GenerateInvoicePdfAsync(InvoiceData invoiceData)
+    public Task<byte[]> GenerateInvoicePdfAsync(InvoiceGenerationData invoiceData)
     {
         var html = GenerateInvoiceHtmlAsync(invoiceData).Result;
         return Task.FromResult(Encoding.UTF8.GetBytes(html));
     }
 
-    public Task<string> GenerateInvoiceHtmlAsync(InvoiceData invoiceData)
+    public Task<string> GenerateInvoiceHtmlAsync(InvoiceGenerationData invoiceData)
     {
         var lineItemsHtml = new StringBuilder();
         foreach (var item in invoiceData.LineItems)
@@ -424,5 +431,39 @@ public class DocumentGenerationService : IDocumentGenerationService
 </html>";
 
         return Task.FromResult(html);
+    }
+
+    public async Task SendReceiptEmailAsync(ReceiptGenerationData receiptData, string toEmail, string? ccEmail = null)
+    {
+        var html = await GenerateReceiptHtmlAsync(receiptData);
+        var subject = $"Payment Receipt - {receiptData.ReceiptNumber}";
+        
+        var emailBody = $@"
+<p>Dear {receiptData.DebtorName},</p>
+<p>Thank you for your payment. Please find your receipt attached below.</p>
+<hr/>
+{html}";
+
+        await _emailSender.SendEmailAsync(toEmail, subject, emailBody);
+    }
+
+    public async Task SendInvoiceEmailAsync(InvoiceGenerationData invoiceData, string toEmail, string? ccEmail = null)
+    {
+        var html = await GenerateInvoiceHtmlAsync(invoiceData);
+        var subject = $"Invoice - {invoiceData.InvoiceNumber}";
+        
+        var emailBody = $@"
+<p>Dear {invoiceData.OrganizationName},</p>
+<p>Please find your invoice below. Payment is due by {invoiceData.DueDate?.ToString("MMMM dd, yyyy") ?? "the due date specified"}.</p>
+<hr/>
+{html}";
+
+        await _emailSender.SendEmailAsync(toEmail, subject, emailBody);
+    }
+
+    public async Task SendBatchReceiptEmailsAsync(List<(ReceiptGenerationData receipt, string email)> receipts)
+    {
+        var tasks = receipts.Select(r => SendReceiptEmailAsync(r.receipt, r.email));
+        await Task.WhenAll(tasks);
     }
 }

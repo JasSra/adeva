@@ -18,7 +18,7 @@ public class DocumentsController : Controller
     [HttpPost]
     public async Task<IActionResult> GenerateRemittanceInvoice([FromBody] RemittanceInvoiceRequest request)
     {
-        var invoiceData = new InvoiceData
+        var invoiceData = new InvoiceGenerationData
         {
             InvoiceNumber = request.InvoiceNumber ?? $"INV-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
             IssuedDate = request.IssuedDate ?? DateTime.UtcNow,
@@ -39,6 +39,12 @@ public class DocumentsController : Controller
             PaymentInstructions = request.PaymentInstructions
         };
 
+        // Send email if requested
+        if (!string.IsNullOrEmpty(request.SendToEmail))
+        {
+            await _documentService.SendInvoiceEmailAsync(invoiceData, request.SendToEmail);
+        }
+
         if (request.Format?.ToLower() == "pdf")
         {
             var pdf = await _documentService.GenerateInvoicePdfAsync(invoiceData);
@@ -52,7 +58,7 @@ public class DocumentsController : Controller
     [HttpPost]
     public async Task<IActionResult> GeneratePaymentReceipt([FromBody] PaymentReceiptRequest request)
     {
-        var receiptData = new ReceiptData
+        var receiptData = new ReceiptGenerationData
         {
             ReceiptNumber = request.ReceiptNumber ?? $"RCP-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
             IssuedDate = request.IssuedDate ?? DateTime.UtcNow,
@@ -75,6 +81,12 @@ public class DocumentsController : Controller
             RemainingBalance = request.RemainingBalance
         };
 
+        // Send email if requested
+        if (!string.IsNullOrEmpty(request.SendToEmail))
+        {
+            await _documentService.SendReceiptEmailAsync(receiptData, request.SendToEmail);
+        }
+
         if (request.Format?.ToLower() == "pdf")
         {
             var pdf = await _documentService.GenerateReceiptPdfAsync(receiptData);
@@ -85,9 +97,48 @@ public class DocumentsController : Controller
         return Content(html, "text/html");
     }
 
+    [HttpPost]
+    public async Task<IActionResult> SendBatchReceipts([FromBody] BatchReceiptRequest request)
+    {
+        var receipts = request.Recipients.Select(r => (
+            new ReceiptGenerationData
+            {
+                ReceiptNumber = $"RCP-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
+                IssuedDate = DateTime.UtcNow,
+                Amount = r.Amount,
+                Currency = "AUD",
+                PaymentMethod = r.PaymentMethod,
+                DebtorName = r.DebtorName,
+                DebtorEmail = r.Email,
+                DebtReference = r.DebtReference,
+                OrganizationName = request.OrganizationName,
+                PrimaryColor = request.PrimaryColor ?? "#0066cc",
+                IsPartialPayment = r.IsPartialPayment,
+                RemainingBalance = r.RemainingBalance
+            },
+            r.Email
+        )).ToList();
+
+        await _documentService.SendBatchReceiptEmailsAsync(receipts);
+
+        return Ok(new { message = $"Sent {receipts.Count} receipts successfully" });
+    }
+
     public IActionResult Index()
     {
         ViewBag.Title = "Document Generation";
+        return View();
+    }
+
+    public IActionResult ViewReceipts()
+    {
+        ViewBag.Title = "View Receipts";
+        return View();
+    }
+
+    public IActionResult ViewInvoices()
+    {
+        ViewBag.Title = "View Invoices";
         return View();
     }
 }
@@ -111,6 +162,7 @@ public class RemittanceInvoiceRequest
     public string? PrimaryColor { get; set; }
     public string? PaymentInstructions { get; set; }
     public string? Format { get; set; }
+    public string? SendToEmail { get; set; }
 }
 
 public class PaymentReceiptRequest
@@ -135,4 +187,23 @@ public class PaymentReceiptRequest
     public bool IsPartialPayment { get; set; }
     public decimal? RemainingBalance { get; set; }
     public string? Format { get; set; }
+    public string? SendToEmail { get; set; }
+}
+
+public class BatchReceiptRequest
+{
+    public string OrganizationName { get; set; } = string.Empty;
+    public string? PrimaryColor { get; set; }
+    public List<BatchReceiptRecipient> Recipients { get; set; } = new();
+}
+
+public class BatchReceiptRecipient
+{
+    public string DebtorName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public string PaymentMethod { get; set; } = string.Empty;
+    public string? DebtReference { get; set; }
+    public bool IsPartialPayment { get; set; }
+    public decimal? RemainingBalance { get; set; }
 }
