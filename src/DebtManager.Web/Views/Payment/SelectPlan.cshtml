@@ -1,0 +1,293 @@
+@{
+    ViewData["Title"] = ViewBag.Title ?? "Choose Your Payment Plan";
+    var debtId = ViewBag.DebtId;
+    var debtAmount = ViewBag.DebtAmount;
+    var currency = ViewBag.Currency ?? "AUD";
+}
+
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Choose Your Payment Plan</h1>
+            <p class="mt-2 text-lg text-gray-600">Select the option that works best for you</p>
+            <div class="mt-4 text-2xl font-semibold text-gray-900">
+                Outstanding Amount: <span class="text-blue-600">@currency @debtAmount.ToString("N2")</span>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p class="mt-4 text-gray-600">Loading payment options...</p>
+        </div>
+
+        <!-- Payment Plan Options Container -->
+        <div id="planOptions" class="hidden grid gap-6 lg:grid-cols-3 md:grid-cols-1">
+            <!-- Options will be dynamically loaded here -->
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="hidden text-center py-12">
+            <div class="text-red-600 text-lg">
+                <p>Unable to load payment options. Please try again later.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Plan Modal -->
+<div id="customPlanModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Create Custom Payment Schedule</h3>
+            <div id="customScheduleForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Installments</label>
+                    <input type="number" id="installmentCount" min="2" max="52" value="6" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div id="installmentInputs" class="space-y-3 mb-4 max-h-96 overflow-y-auto">
+                    <!-- Installment inputs will be generated here -->
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelCustomPlan" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button id="submitCustomPlan" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Submit for Approval
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const debtId = '@debtId';
+        const currency = '@currency';
+        const debtAmount = @debtAmount;
+        let paymentOptions = [];
+
+        // Load payment plan options
+        async function loadPaymentOptions() {
+            try {
+                const response = await fetch(`/api/payment-plans/options/${debtId}`);
+                if (!response.ok) throw new Error('Failed to load options');
+                
+                const data = await response.json();
+                paymentOptions = data.options;
+                
+                renderPaymentOptions(paymentOptions);
+                
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('planOptions').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading payment options:', error);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error').classList.remove('hidden');
+            }
+        }
+
+        // Render payment plan options
+        function renderPaymentOptions(options) {
+            const container = document.getElementById('planOptions');
+            container.innerHTML = '';
+            
+            options.forEach((option, index) => {
+                const card = createOptionCard(option, index);
+                container.appendChild(card);
+            });
+        }
+
+        // Create option card
+        function createOptionCard(option, index) {
+            const div = document.createElement('div');
+            div.className = `bg-white rounded-lg shadow-md overflow-hidden ${option.isRecommended ? 'ring-2 ring-blue-500' : ''}`;
+            
+            let badgeHtml = '';
+            if (option.isRecommended) {
+                badgeHtml = '<span class="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full">RECOMMENDED</span>';
+            } else if (option.requiresApproval) {
+                badgeHtml = '<span class="inline-block px-3 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-full">REQUIRES APPROVAL</span>';
+            }
+
+            const discountHtml = option.discountAmount && option.discountAmount > 0
+                ? `<div class="mt-2 text-green-600 font-semibold">
+                     Save ${currency} ${option.discountAmount.toFixed(2)} (${option.discountPercentage}% discount)
+                   </div>`
+                : '';
+
+            const benefitsHtml = option.benefits && option.benefits.length > 0
+                ? `<ul class="space-y-1 text-sm text-gray-600">
+                     ${option.benefits.map(b => `<li class="flex items-start"><span class="text-green-500 mr-2">✓</span>${b}</li>`).join('')}
+                   </ul>`
+                : '';
+
+            const scheduleHtml = option.installmentSchedule && option.installmentSchedule.length > 0 && option.installmentSchedule.length <= 5
+                ? `<div class="mt-4">
+                     <h4 class="text-sm font-semibold text-gray-700 mb-2">Payment Schedule:</h4>
+                     <div class="space-y-1 text-xs text-gray-600">
+                       ${option.installmentSchedule.map(inst => 
+                         `<div>${new Date(inst.dueDate).toLocaleDateString()}: ${currency} ${inst.amount.toFixed(2)}</div>`
+                       ).join('')}
+                     </div>
+                   </div>`
+                : option.installmentCount > 0
+                ? `<div class="mt-4 text-sm text-gray-600">
+                     ${option.installmentCount} installments of ~${currency} ${option.installmentAmount.toFixed(2)}
+                   </div>`
+                : '';
+
+            div.innerHTML = `
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">${option.title}</h3>
+                        ${badgeHtml}
+                    </div>
+                    <p class="text-gray-600 mb-4">${option.description}</p>
+                    <div class="mb-4">
+                        <div class="text-2xl font-bold text-gray-900">${currency} ${option.totalAmount.toFixed(2)}</div>
+                        ${option.originalAmount !== option.totalAmount ? `<div class="text-sm text-gray-500 line-through">${currency} ${option.originalAmount.toFixed(2)}</div>` : ''}
+                        ${discountHtml}
+                    </div>
+                    ${benefitsHtml}
+                    ${scheduleHtml}
+                    <div class="mt-6">
+                        <button onclick="selectPlan(${index})" 
+                                class="w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-semibold transition">
+                            ${option.type === 'Custom' ? 'Create Custom Plan' : 'Select This Plan'}
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        // Select a payment plan
+        async function selectPlan(optionIndex) {
+            const option = paymentOptions[optionIndex];
+            
+            if (option.type === 'Custom') {
+                showCustomPlanModal();
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/payment-plans/accept', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        debtId: debtId,
+                        selectedOption: option,
+                        userId: 'debtor-user' // TODO: Get from auth
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to accept plan');
+                }
+                
+                const result = await response.json();
+                window.location.href = `/Payment/PlanConfirmation?paymentPlanId=${result.paymentPlanId}`;
+            } catch (error) {
+                console.error('Error accepting plan:', error);
+                alert('Failed to accept payment plan. Please try again.');
+            }
+        }
+
+        // Show custom plan modal
+        function showCustomPlanModal() {
+            const modal = document.getElementById('customPlanModal');
+            modal.classList.remove('hidden');
+            generateInstallmentInputs();
+        }
+
+        // Generate installment inputs
+        function generateInstallmentInputs() {
+            const count = parseInt(document.getElementById('installmentCount').value);
+            const container = document.getElementById('installmentInputs');
+            container.innerHTML = '';
+            
+            const perInstallment = (debtAmount / count).toFixed(2);
+            const today = new Date();
+            
+            for (let i = 1; i <= count; i++) {
+                const dueDate = new Date(today);
+                dueDate.setDate(today.getDate() + (i * 7)); // Default to weekly
+                
+                const div = document.createElement('div');
+                div.className = 'grid grid-cols-2 gap-2';
+                div.innerHTML = `
+                    <div>
+                        <label class="block text-xs text-gray-700">Installment ${i} Date</label>
+                        <input type="date" data-installment="${i}" data-field="date" value="${dueDate.toISOString().split('T')[0]}"
+                               class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-700">Amount (${currency})</label>
+                        <input type="number" step="0.01" data-installment="${i}" data-field="amount" value="${perInstallment}"
+                               class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        // Submit custom plan
+        async function submitCustomPlan() {
+            const inputs = document.querySelectorAll('#installmentInputs input');
+            const schedule = [];
+            const count = parseInt(document.getElementById('installmentCount').value);
+            
+            for (let i = 1; i <= count; i++) {
+                const dateInput = document.querySelector(`input[data-installment="${i}"][data-field="date"]`);
+                const amountInput = document.querySelector(`input[data-installment="${i}"][data-field="amount"]`);
+                
+                schedule.push({
+                    sequence: i,
+                    dueDate: dateInput.value,
+                    amount: parseFloat(amountInput.value),
+                    description: `Custom installment ${i}`
+                });
+            }
+            
+            try {
+                const response = await fetch('/api/payment-plans/accept', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        debtId: debtId,
+                        selectedOption: paymentOptions.find(o => o.type === 'Custom'),
+                        customSchedule: schedule,
+                        userId: 'debtor-user' // TODO: Get from auth
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to submit custom plan');
+                }
+                
+                const result = await response.json();
+                window.location.href = `/Payment/PlanConfirmation?paymentPlanId=${result.paymentPlanId}`;
+            } catch (error) {
+                console.error('Error submitting custom plan:', error);
+                alert('Failed to submit custom plan: ' + error.message);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('installmentCount').addEventListener('change', generateInstallmentInputs);
+        document.getElementById('cancelCustomPlan').addEventListener('click', () => {
+            document.getElementById('customPlanModal').classList.add('hidden');
+        });
+        document.getElementById('submitCustomPlan').addEventListener('click', submitCustomPlan);
+
+        // Load options on page load
+        loadPaymentOptions();
+    </script>
+}
