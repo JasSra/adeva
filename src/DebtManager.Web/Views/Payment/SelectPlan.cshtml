@@ -5,49 +5,710 @@
     var currency = ViewBag.Currency ?? "AUD";
 }
 
-<div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Choose Your Payment Plan</h1>
-            <p class="mt-2 text-lg text-gray-600">Select the option that works best for you</p>
-            <div class="mt-4 text-2xl font-semibold text-gray-900">
-                Outstanding Amount: <span class="text-blue-600">@currency @debtAmount.ToString("N2")</span>
+<style>
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    @@keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .animate-pulse-subtle {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    .plan-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .plan-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .plan-card.selected {
+        border: 3px solid #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 1000px 100%;
+        animation: shimmer 2s infinite;
+    }
+
+    .comparison-table {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .savings-badge {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .progress-bar {
+        transition: width 1s ease-out;
+    }
+</style>
+
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Enhanced Header -->
+        <div class="text-center mb-12 animate-fade-in-up">
+            <div class="inline-block mb-4">
+                <span class="text-sm font-semibold text-blue-600 uppercase tracking-wide">Smart Payment Options</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+                Choose Your <span class="text-blue-600">Payment Plan</span>
+            </h1>
+            <p class="mt-2 text-xl text-gray-600 max-w-2xl mx-auto">
+                Select the payment option that fits your financial situation best
+            </p>
+            <div class="mt-6 inline-block bg-white rounded-2xl shadow-lg px-8 py-4">
+                <div class="text-sm text-gray-500 mb-1">Outstanding Amount</div>
+                <div class="text-3xl md:text-4xl font-bold text-gray-900">
+                    <span class="text-blue-600">@currency</span> <span id="debtAmountDisplay">@debtAmount.ToString("N2")</span>
+                </div>
             </div>
         </div>
 
-        <!-- Loading State -->
-        <div id="loading" class="text-center py-12">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p class="mt-4 text-gray-600">Loading payment options...</p>
+        <!-- Progress Indicator -->
+        <div class="mb-12">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Step 2 of 3</span>
+                    <span class="text-sm font-medium text-gray-700">Choose Payment Plan</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-blue-600 h-2.5 rounded-full progress-bar" style="width: 66%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State with Skeleton -->
+        <div id="loading" class="space-y-6">
+            <div class="grid gap-6 lg:grid-cols-3 md:grid-cols-1">
+                <div class="skeleton bg-white rounded-lg h-96"></div>
+                <div class="skeleton bg-white rounded-lg h-96"></div>
+                <div class="skeleton bg-white rounded-lg h-96"></div>
+            </div>
         </div>
 
         <!-- Payment Plan Options Container -->
-        <div id="planOptions" class="hidden grid gap-6 lg:grid-cols-3 md:grid-cols-1">
-            <!-- Options will be dynamically loaded here -->
+        <div id="planOptions" class="hidden">
+            <!-- Comparison Toggle -->
+            <div class="mb-6 text-center">
+                <button id="toggleComparison" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0h2a2 2 0 012 2v6a2 2 0 002 2h2a2 2 0 002-2v-6a2 2 0 00-2-2h-2a2 2 0 00-2 2z"></path>
+                    </svg>
+                    Compare All Options
+                </button>
+            </div>
+
+            <!-- Comparison Table (Initially Hidden) -->
+            <div id="comparisonTable" class="hidden mb-8 rounded-2xl overflow-hidden shadow-2xl animate-fade-in-up">
+                <div class="comparison-table text-white p-6">
+                    <h3 class="text-2xl font-bold mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Side-by-Side Comparison
+                    </h3>
+                    <div id="comparisonContent" class="bg-white rounded-xl p-6 text-gray-900">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="optionsGrid" class="grid gap-8 lg:grid-cols-3 md:grid-cols-1">
+                <!-- Options will be dynamically loaded here -->
+            </div>
+
+            <!-- Savings Calculator -->
+            <div class="mt-12 bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-8 shadow-lg">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Your Potential Savings
+                </h3>
+                <div id="savingsBreakdown" class="grid md:grid-cols-3 gap-4">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
         </div>
 
         <!-- Error State -->
-        <div id="error" class="hidden text-center py-12">
-            <div class="text-red-600 text-lg">
-                <p>Unable to load payment options. Please try again later.</p>
+        <div id="error" class="hidden text-center py-12 animate-fade-in-up">
+            <div class="inline-block bg-red-50 rounded-full p-4 mb-4">
+                <svg class="w-16 h-16 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
             </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Unable to Load Payment Options</h3>
+            <p class="text-gray-600 mb-6">Please try again later or contact support.</p>
+            <button onclick="location.reload()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                Try Again
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Custom Plan Modal -->
-<div id="customPlanModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Create Custom Payment Schedule</h3>
-            <div id="customScheduleForm">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Installments</label>
-                    <input type="number" id="installmentCount" min="2" max="52" value="6" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+<!-- Enhanced Custom Plan Modal -->
+<div id="customPlanModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden animate-fade-in-up">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6">
+            <h3 class="text-2xl font-bold flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Create Your Custom Payment Schedule
+            </h3>
+            <p class="mt-2 text-purple-100">Design a payment plan that works for your unique situation</p>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 180px);">
+            <!-- Quick Presets -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Quick Presets</label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button class="preset-btn px-4 py-2 bg-gray-100 hover:bg-blue-100 hover:border-blue-500 border-2 border-gray-200 rounded-lg transition" data-count="4">
+                        4 Months
+                    </button>
+                    <button class="preset-btn px-4 py-2 bg-gray-100 hover:bg-blue-100 hover:border-blue-500 border-2 border-gray-200 rounded-lg transition" data-count="6">
+                        6 Months
+                    </button>
+                    <button class="preset-btn px-4 py-2 bg-gray-100 hover:bg-blue-100 hover:border-blue-500 border-2 border-gray-200 rounded-lg transition" data-count="12">
+                        12 Months
+                    </button>
+                    <button class="preset-btn px-4 py-2 bg-gray-100 hover:bg-blue-100 hover:border-blue-500 border-2 border-gray-200 rounded-lg transition" data-count="24">
+                        24 Months
+                    </button>
                 </div>
-                <div id="installmentInputs" class="space-y-3 mb-4 max-h-96 overflow-y-auto">
+            </div>
+
+            <!-- Custom Installment Count -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Number of Installments</label>
+                <div class="flex items-center space-x-4">
+                    <input type="range" id="installmentSlider" min="2" max="52" value="6" 
+                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <input type="number" id="installmentCount" min="2" max="52" value="6" 
+                           class="w-20 px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div class="mt-2 flex justify-between text-xs text-gray-500">
+                    <span>2 payments</span>
+                    <span id="totalDuration">6 months</span>
+                    <span>52 payments (1 year)</span>
+                </div>
+            </div>
+
+            <!-- Live Preview -->
+            <div class="mb-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-semibold text-gray-700">Estimated Payment</span>
+                    <span class="text-2xl font-bold text-blue-600" id="estimatedPayment">@currency 0.00</span>
+                </div>
+                <div class="flex items-center justify-between text-sm text-gray-600">
+                    <span>Total to Pay</span>
+                    <span id="customTotal">@currency @debtAmount.ToString("N2")</span>
+                </div>
+            </div>
+
+            <!-- Installments Table -->
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <label class="text-sm font-semibold text-gray-700">Payment Schedule</label>
+                    <button id="autoFillDates" class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Auto-fill Monthly
+                    </button>
+                </div>
+                <div id="installmentInputs" class="space-y-3 max-h-96 overflow-y-auto border-2 border-gray-200 rounded-lg p-4">
+                    <!-- Installment inputs will be generated here -->
+                </div>
+            </div>
+
+            <!-- Validation Messages -->
+            <div id="validationMessages" class="hidden mb-4"></div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-t">
+            <button id="cancelCustomPlan" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                Cancel
+            </button>
+            <button id="submitCustomPlan" class="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition font-semibold shadow-lg">
+                Submit for Approval
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const debtId = '@debtId';
+        const currency = '@currency';
+        const debtAmount = @debtAmount;
+        let paymentOptions = [];
+        let selectedOptionIndex = null;
+
+        // Load payment plan options
+        async function loadPaymentOptions() {
+            try {
+                const response = await fetch(`/api/payment-plans/options/${debtId}`);
+                if (!response.ok) throw new Error('Failed to load options');
+                
+                const data = await response.json();
+                paymentOptions = data.options;
+                
+                renderPaymentOptions(paymentOptions);
+                renderSavingsBreakdown(paymentOptions);
+                
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('planOptions').classList.remove('hidden');
+
+                // Animate cards in sequence
+                setTimeout(() => animateCardsIn(), 100);
+            } catch (error) {
+                console.error('Error loading payment options:', error);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error').classList.remove('hidden');
+            }
+        }
+
+        function animateCardsIn() {
+            const cards = document.querySelectorAll('.plan-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        card.style.transition = 'all 0.6s ease-out';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 50);
+                }, index * 150);
+            });
+        }
+
+        // Render payment plan options
+        function renderPaymentOptions(options) {
+            const container = document.getElementById('optionsGrid');
+            container.innerHTML = '';
+            
+            options.forEach((option, index) => {
+                const card = createOptionCard(option, index);
+                container.appendChild(card);
+            });
+        }
+
+        // Create enhanced option card
+        function createOptionCard(option, index) {
+            const div = document.createElement('div');
+            div.className = `plan-card bg-white rounded-2xl shadow-xl overflow-hidden ${option.isRecommended ? 'ring-4 ring-blue-400' : ''}`;
+            div.setAttribute('data-index', index);
+            
+            let badgeHtml = '';
+            if (option.isRecommended) {
+                badgeHtml = `<div class="absolute top-4 right-4">
+                    <span class="inline-flex items-center px-3 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-bold rounded-full shadow-lg animate-pulse-subtle">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                        BEST VALUE
+                    </span>
+                </div>`;
+            } else if (option.requiresApproval) {
+                badgeHtml = `<div class="absolute top-4 right-4">
+                    <span class="inline-block px-3 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-full shadow">
+                        APPROVAL REQUIRED
+                    </span>
+                </div>`;
+            }
+
+            const discountHtml = option.discountAmount && option.discountAmount > 0
+                ? `<div class="savings-badge text-white px-4 py-2 rounded-lg inline-block font-bold mb-4">
+                     💰 Save ${currency} ${option.discountAmount.toFixed(2)}
+                   </div>`
+                : '';
+
+            const benefitsHtml = option.benefits && option.benefits.length > 0
+                ? `<ul class="space-y-2 mb-6">
+                     ${option.benefits.map(b => `
+                        <li class="flex items-start text-sm text-gray-700">
+                            <svg class="w-5 h-5 mr-2 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            ${b}
+                        </li>
+                     `).join('')}
+                   </ul>`
+                : '';
+
+            div.innerHTML = `
+                <div class="relative p-6 h-full flex flex-col">
+                    ${badgeHtml}
+                    <div class="mb-4">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">${option.title}</h3>
+                        <p class="text-gray-600">${option.description}</p>
+                    </div>
+                    
+                    ${discountHtml}
+                    
+                    <div class="mb-6">
+                        <div class="text-4xl font-extrabold text-gray-900 mb-1">
+                            ${currency} ${option.totalAmount.toFixed(2)}
+                        </div>
+                        ${option.originalAmount !== option.totalAmount ? 
+                            `<div class="text-lg text-gray-400 line-through">${currency} ${option.originalAmount.toFixed(2)}</div>` 
+                            : ''}
+                        ${option.discountPercentage ? 
+                            `<div class="text-green-600 font-semibold">${option.discountPercentage}% discount applied</div>` 
+                            : ''}
+                    </div>
+                    
+                    ${benefitsHtml}
+                    
+                    ${option.installmentCount > 0 ? 
+                        `<div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            <div class="text-sm text-gray-600 mb-1">Payment Details</div>
+                            <div class="font-semibold text-gray-900">
+                                ${option.installmentCount} × ${currency} ${option.installmentAmount.toFixed(2)}
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">${option.frequency} payments</div>
+                         </div>` 
+                        : ''}
+                    
+                    <div class="mt-auto">
+                        <button onclick="selectPlan(${index})" 
+                                class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
+                            ${option.type === 'Custom' ? '✨ Create Custom Plan' : '→ Choose This Plan'}
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Add click handler for card selection
+            div.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) {
+                    div.classList.toggle('selected');
+                }
+            });
+
+            return div;
+        }
+
+        // Render savings breakdown
+        function renderSavingsBreakdown(options) {
+            const container = document.getElementById('savingsBreakdown');
+            container.innerHTML = '';
+
+            options.forEach(option => {
+                if (option.discountAmount && option.discountAmount > 0) {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-xl p-4 shadow';
+                    card.innerHTML = `
+                        <div class="text-sm text-gray-600 mb-1">${option.title}</div>
+                        <div class="text-2xl font-bold text-green-600">
+                            ${currency} ${option.discountAmount.toFixed(2)}
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">${option.discountPercentage}% savings</div>
+                    `;
+                    container.appendChild(card);
+                }
+            });
+        }
+
+        // Comparison table toggle
+        document.getElementById('toggleComparison').addEventListener('click', () => {
+            const table = document.getElementById('comparisonTable');
+            if (table.classList.contains('hidden')) {
+                renderComparisonTable();
+                table.classList.remove('hidden');
+            } else {
+                table.classList.add('hidden');
+            }
+        });
+
+        function renderComparisonTable() {
+            const content = document.getElementById('comparisonContent');
+            const headers = ['Feature', ...paymentOptions.map(o => o.title)];
+            
+            let html = '<div class="overflow-x-auto"><table class="min-w-full"><thead><tr class="border-b-2 border-gray-200">';
+            headers.forEach(h => {
+                html += `<th class="px-4 py-3 text-left font-semibold">${h}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            const features = [
+                { label: 'Total Amount', getValue: (o) => `${currency} ${o.totalAmount.toFixed(2)}` },
+                { label: 'Discount', getValue: (o) => o.discountAmount ? `${currency} ${o.discountAmount.toFixed(2)}` : 'None' },
+                { label: 'Payments', getValue: (o) => o.installmentCount || '1' },
+                { label: 'Frequency', getValue: (o) => o.frequency },
+                { label: 'Approval', getValue: (o) => o.requiresApproval ? 'Required' : 'Instant' }
+            ];
+
+            features.forEach((feature, idx) => {
+                html += `<tr class="${idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}">`;
+                html += `<td class="px-4 py-3 font-medium text-gray-700">${feature.label}</td>`;
+                paymentOptions.forEach(option => {
+                    html += `<td class="px-4 py-3">${feature.getValue(option)}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+            content.innerHTML = html;
+        }
+
+        // Select a payment plan
+        async function selectPlan(optionIndex) {
+            const option = paymentOptions[optionIndex];
+            selectedOptionIndex = optionIndex;
+            
+            if (option.type === 'Custom') {
+                showCustomPlanModal();
+                return;
+            }
+            
+            // Show confirmation before proceeding
+            if (!confirm(`Confirm selection of "${option.title}"?\n\nTotal: ${currency} ${option.totalAmount.toFixed(2)}`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/payment-plans/accept', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        debtId: debtId,
+                        selectedOption: option,
+                        userId: 'debtor-user'
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to accept plan');
+                }
+                
+                const result = await response.json();
+                window.location.href = `/Payment/PlanConfirmation?paymentPlanId=${result.paymentPlanId}`;
+            } catch (error) {
+                console.error('Error accepting plan:', error);
+                alert('Failed to accept payment plan: ' + error.message);
+            }
+        }
+
+        // Custom plan modal functions
+        function showCustomPlanModal() {
+            document.getElementById('customPlanModal').classList.remove('hidden');
+            generateInstallmentInputs();
+            updateEstimatedPayment();
+        }
+
+        function closeCustomPlanModal() {
+            document.getElementById('customPlanModal').classList.add('hidden');
+        }
+
+        // Installment slider sync
+        const slider = document.getElementById('installmentSlider');
+        const countInput = document.getElementById('installmentCount');
+        
+        slider.addEventListener('input', (e) => {
+            countInput.value = e.target.value;
+            updateTotalDuration();
+            generateInstallmentInputs();
+            updateEstimatedPayment();
+        });
+
+        countInput.addEventListener('input', (e) => {
+            slider.value = e.target.value;
+            updateTotalDuration();
+            generateInstallmentInputs();
+            updateEstimatedPayment();
+        });
+
+        function updateTotalDuration() {
+            const count = parseInt(countInput.value);
+            const months = Math.round(count / 4.33); // Approximate weeks to months
+            document.getElementById('totalDuration').textContent = `${count} payments (~${months} months)`;
+        }
+
+        function updateEstimatedPayment() {
+            const count = parseInt(countInput.value);
+            const perPayment = (debtAmount / count).toFixed(2);
+            document.getElementById('estimatedPayment').textContent = `${currency} ${perPayment}`;
+        }
+
+        // Preset buttons
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const count = parseInt(btn.dataset.count);
+                countInput.value = count;
+                slider.value = count;
+                updateTotalDuration();
+                generateInstallmentInputs();
+                updateEstimatedPayment();
+                
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('bg-blue-100', 'border-blue-500'));
+                btn.classList.add('bg-blue-100', 'border-blue-500');
+            });
+        });
+
+        // Auto-fill dates
+        document.getElementById('autoFillDates').addEventListener('click', () => {
+            const count = parseInt(countInput.value);
+            const perInstallment = (debtAmount / count).toFixed(2);
+            const today = new Date();
+            
+            for (let i = 1; i <= count; i++) {
+                const dateInput = document.querySelector(`input[data-installment="${i}"][data-field="date"]`);
+                const amountInput = document.querySelector(`input[data-installment="${i}"][data-field="amount"]`);
+                
+                if (dateInput && amountInput) {
+                    const dueDate = new Date(today);
+                    dueDate.setMonth(today.getMonth() + i);
+                    dateInput.value = dueDate.toISOString().split('T')[0];
+                    amountInput.value = perInstallment;
+                }
+            }
+        });
+
+        // Generate installment inputs
+        function generateInstallmentInputs() {
+            const count = parseInt(countInput.value);
+            const container = document.getElementById('installmentInputs');
+            container.innerHTML = '';
+            
+            const perInstallment = (debtAmount / count).toFixed(2);
+            const today = new Date();
+            
+            for (let i = 1; i <= count; i++) {
+                const dueDate = new Date(today);
+                dueDate.setDate(today.getDate() + (i * 7));
+                
+                const div = document.createElement('div');
+                div.className = 'grid grid-cols-3 gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition';
+                div.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Payment #${i}</label>
+                        <input type="date" data-installment="${i}" data-field="date" value="${dueDate.toISOString().split('T')[0]}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Amount (${currency})</label>
+                        <input type="number" step="0.01" data-installment="${i}" data-field="amount" value="${perInstallment}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               oninput="validateCustomTotal()">
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function validateCustomTotal() {
+            const inputs = document.querySelectorAll('input[data-field="amount"]');
+            let total = 0;
+            inputs.forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+            
+            document.getElementById('customTotal').textContent = `${currency} ${total.toFixed(2)}`;
+            
+            const msgDiv = document.getElementById('validationMessages');
+            if (Math.abs(total - debtAmount) > 0.01) {
+                msgDiv.className = 'bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded';
+                msgDiv.innerHTML = `
+                    <div class="flex">
+                        <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-yellow-700">Total doesn't match debt amount. Difference: ${currency} ${Math.abs(total - debtAmount).toFixed(2)}</span>
+                    </div>
+                `;
+                msgDiv.classList.remove('hidden');
+            } else {
+                msgDiv.classList.add('hidden');
+            }
+        }
+
+        // Submit custom plan
+        async function submitCustomPlan() {
+            const count = parseInt(countInput.value);
+            const schedule = [];
+            
+            for (let i = 1; i <= count; i++) {
+                const dateInput = document.querySelector(`input[data-installment="${i}"][data-field="date"]`);
+                const amountInput = document.querySelector(`input[data-installment="${i}"][data-field="amount"]`);
+                
+                schedule.push({
+                    sequence: i,
+                    dueDate: dateInput.value,
+                    amount: parseFloat(amountInput.value),
+                    description: `Custom installment ${i}`
+                });
+            }
+            
+            try {
+                const response = await fetch('/api/payment-plans/accept', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        debtId: debtId,
+                        selectedOption: paymentOptions.find(o => o.type === 'Custom'),
+                        customSchedule: schedule,
+                        userId: 'debtor-user'
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to submit custom plan');
+                }
+                
+                const result = await response.json();
+                window.location.href = `/Payment/PlanConfirmation?paymentPlanId=${result.paymentPlanId}`;
+            } catch (error) {
+                console.error('Error submitting custom plan:', error);
+                alert('Failed to submit custom plan: ' + error.message);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('cancelCustomPlan').addEventListener('click', closeCustomPlanModal);
+        document.getElementById('submitCustomPlan').addEventListener('click', submitCustomPlan);
+
+        // Load options on page load
+        loadPaymentOptions();
+    </script>
+}
+
                     <!-- Installment inputs will be generated here -->
                 </div>
                 <div class="flex justify-end space-x-3">
