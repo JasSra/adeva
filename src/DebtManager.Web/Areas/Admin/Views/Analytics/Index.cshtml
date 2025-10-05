@@ -1,0 +1,46 @@
+@model Dictionary<string, decimal>
+@{
+    ViewData["Title"] = "Analytics Dashboard";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Analytics Dashboard</h1>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Filter Metrics</h2>
+        <form method="get" class="flex gap-4 flex-wrap">
+            <div>
+                <label class="block text-sm font-medium mb-1">From Date</label>
+                <input type="date" name="fromDate" value="@ViewBag.FromDate?.ToString("yyyy-MM-dd")" class="border rounded px-3 py-2" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">To Date</label>
+                <input type="date" name="toDate" value="@ViewBag.ToDate?.ToString("yyyy-MM-dd")" class="border rounded px-3 py-2" />
+            </div>
+            <div class="self-end">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Apply Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach (var metric in Model)
+        {
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-2">@metric.Key</h3>
+                <p class="text-3xl font-bold text-blue-600">@metric.Value.ToString("N2")</p>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-6">
+            <p class="text-yellow-800">No metrics available for the selected period.</p>
+        </div>
+    }
+
+    <div class="mt-6">
+        <a href="@Url.Action("InvoiceMetrics")" class="text-blue-600 hover:underline">View Invoice Processing Metrics →</a>
+    </div>
+</div>
