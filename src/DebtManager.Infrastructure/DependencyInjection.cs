@@ -10,6 +10,8 @@ using DebtManager.Contracts.Payments;
 using DebtManager.Infrastructure.Payments;
 using DebtManager.Contracts.Configuration;
 using DebtManager.Infrastructure.Configuration;
+using DebtManager.Contracts.Documents;
+using DebtManager.Infrastructure.Documents;
 
 namespace DebtManager.Infrastructure;
 
@@ -47,6 +49,9 @@ public static class DependencyInjection
         // Payment Services
         services.AddScoped<IPaymentService, StripePaymentService>();
         services.AddScoped<IWebhookProcessor, StripeWebhookProcessor>();
+
+        // Document Generation
+        services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
         
         return services;
     }
