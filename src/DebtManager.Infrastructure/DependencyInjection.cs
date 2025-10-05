@@ -54,6 +54,9 @@ public static class DependencyInjection
         // Payment Services
         services.AddScoped<IPaymentService, StripePaymentService>();
         services.AddScoped<IWebhookProcessor, StripeWebhookProcessor>();
+
+        // Document Generation
+        services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
         
         // Document Processing Services
         services.AddScoped<IInvoiceProcessingService, AzureFormRecognizerInvoiceService>();
