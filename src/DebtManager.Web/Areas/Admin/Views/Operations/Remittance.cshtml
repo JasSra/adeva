@@ -1,0 +1,133 @@
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Remittance Management";
+}
+
+<div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-6 flex justify-between items-center">
+        <div>
+            <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <a href="/Admin/Operations" class="hover:text-gray-900 dark:hover:text-white">Operations</a>
+                <span>/</span>
+                <span>Remittance</span>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Remittance Management</h1>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Process and manage remittances to organizations</p>
+        </div>
+        <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+            Process Remittance
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 p-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                <select name="status" class="w-full px-3 py-2 border dark:border-gray-700 rounded-lg dark:bg-gray-900 dark:text-white">
+                    <option value="">All Statuses</option>
+                    <option value="pending" @(ViewBag.Status == "pending" ? "selected" : "")>Pending</option>
+                    <option value="processed" @(ViewBag.Status == "processed" ? "selected" : "")>Processed</option>
+                    <option value="failed" @(ViewBag.Status == "failed" ? "selected" : "")>Failed</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From Date</label>
+                <input type="date" name="fromDate" value="@ViewBag.FromDate" class="w-full px-3 py-2 border dark:border-gray-700 rounded-lg dark:bg-gray-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To Date</label>
+                <input type="date" name="toDate" value="@ViewBag.ToDate" class="w-full px-3 py-2 border dark:border-gray-700 rounded-lg dark:bg-gray-900 dark:text-white">
+            </div>
+            <div class="md:col-span-3 flex gap-2">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                    Apply Filters
+                </button>
+                <a href="/Admin/Operations/Remittance" class="border dark:border-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Pending Remittance</p>
+                    <p class="text-2xl font-semibold mt-1 text-gray-900 dark:text-white">$0.00</p>
+                </div>
+                <div class="bg-yellow-100 dark:bg-yellow-900 rounded-full p-3">
+                    <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">This Month</p>
+                    <p class="text-2xl font-semibold mt-1 text-gray-900 dark:text-white">$0.00</p>
+                </div>
+                <div class="bg-green-100 dark:bg-green-900 rounded-full p-3">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Total Remitted</p>
+                    <p class="text-2xl font-semibold mt-1 text-gray-900 dark:text-white">$0.00</p>
+                </div>
+                <div class="bg-purple-100 dark:bg-purple-900 rounded-full p-3">
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Remittance Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-6 border-b dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Remittance History</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Organization</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Reference</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                            <p class="text-lg font-medium">No remittances found</p>
+                            <p class="text-sm mt-1">Process your first remittance or adjust filters</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

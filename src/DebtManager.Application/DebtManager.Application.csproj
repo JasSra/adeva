@@ -6,11 +6,13 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../DebtManager.Domain/DebtManager.Domain.csproj" />
+    <ProjectReference Include="../DebtManager.Contracts/DebtManager.Contracts.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
     <PackageReference Include="FluentValidation" Version="11.9.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.0" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
   </ItemGroup>
 </Project>

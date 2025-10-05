@@ -1,0 +1,45 @@
+@{
+    ViewData["Title"] = "Invoice Processing Metrics";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Invoice Processing Metrics</h1>
+
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Filter Period</h2>
+        <form method="get" class="flex gap-4 flex-wrap">
+            <div>
+                <label class="block text-sm font-medium mb-1">From Date</label>
+                <input type="date" name="fromDate" value="@ViewBag.FromDate?.ToString("yyyy-MM-dd")" class="border rounded px-3 py-2" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">To Date</label>
+                <input type="date" name="toDate" value="@ViewBag.ToDate?.ToString("yyyy-MM-dd")" class="border rounded px-3 py-2" />
+            </div>
+            <div class="self-end">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Apply Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-green-50 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-2 text-green-800">Successful Extractions</h3>
+            <p class="text-3xl font-bold text-green-600">@ViewBag.SuccessCount</p>
+        </div>
+        <div class="bg-red-50 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-2 text-red-800">Failed Extractions</h3>
+            <p class="text-3xl font-bold text-red-600">@ViewBag.FailureCount</p>
+        </div>
+        <div class="bg-blue-50 rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-2 text-blue-800">Completed Processing</h3>
+            <p class="text-3xl font-bold text-blue-600">@ViewBag.ProcessingCount</p>
+        </div>
+    </div>
+
+    <div class="mt-6">
+        <a href="@Url.Action("Index", "Analytics")" class="text-blue-600 hover:underline">← Back to All Metrics</a>
+        <span class="mx-2">|</span>
+        <a href="@Url.Action("Index", "InvoiceProcessing")" class="text-blue-600 hover:underline">View Invoice Queue →</a>
+    </div>
+</div>

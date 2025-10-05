@@ -1,0 +1,204 @@
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Job Management";
+}
+
+<div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+            <a href="/Admin/Operations" class="hover:text-gray-900 dark:hover:text-white">Operations</a>
+            <span>/</span>
+            <span>Jobs</span>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Job Management</h1>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage and re-run background jobs and scheduled tasks</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <button class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition text-left">
+            <div class="flex items-start">
+                <div class="bg-yellow-100 dark:bg-yellow-900 rounded-full p-3 mr-4">
+                    <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Retry Failed Payments</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">0 failed</p>
+                </div>
+            </div>
+        </button>
+
+        <button class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition text-left">
+            <div class="flex items-start">
+                <div class="bg-blue-100 dark:bg-blue-900 rounded-full p-3 mr-4">
+                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Send Reminders</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Run now</p>
+                </div>
+            </div>
+        </button>
+
+        <button class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition text-left">
+            <div class="flex items-start">
+                <div class="bg-purple-100 dark:bg-purple-900 rounded-full p-3 mr-4">
+                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Generate Run Sheet</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Run now</p>
+                </div>
+            </div>
+        </button>
+
+        <a href="/hangfire" target="_blank" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition text-left block">
+            <div class="flex items-start">
+                <div class="bg-green-100 dark:bg-green-900 rounded-full p-3 mr-4">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-900 dark:text-white">Hangfire Dashboard</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">View all jobs</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Scheduled Jobs -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+        <div class="p-6 border-b dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Scheduled Jobs</h2>
+        </div>
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            <div class="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <div class="flex items-center gap-4">
+                    <div class="bg-blue-100 dark:bg-blue-900 rounded-lg p-3">
+                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-900 dark:text-white">Payment Reminders</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Nightly at 8:00 PM</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded">Active</span>
+                    <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <div class="flex items-center gap-4">
+                    <div class="bg-purple-100 dark:bg-purple-900 rounded-lg p-3">
+                        <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-900 dark:text-white">Remittance Generation</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Monthly on 1st at 9:00 AM</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded">Active</span>
+                    <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <div class="flex items-center gap-4">
+                    <div class="bg-yellow-100 dark:bg-yellow-900 rounded-lg p-3">
+                        <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-900 dark:text-white">Failed Payment Retries</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Daily at 6:00 AM</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded">Active</span>
+                    <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <div class="flex items-center gap-4">
+                    <div class="bg-indigo-100 dark:bg-indigo-900 rounded-lg p-3">
+                        <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-900 dark:text-white">Payment Reconciliation</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Daily at 11:00 PM</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded">Active</span>
+                    <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Job Runs -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-6 border-b dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Job Executions</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Job Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Run</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Duration</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Next Run</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            <p class="text-lg font-medium">No job executions yet</p>
+                            <p class="text-sm mt-1">Job execution history will appear here</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

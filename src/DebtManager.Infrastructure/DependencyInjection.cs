@@ -12,6 +12,8 @@ using DebtManager.Contracts.Configuration;
 using DebtManager.Infrastructure.Configuration;
 using DebtManager.Contracts.Documents;
 using DebtManager.Infrastructure.Documents;
+using DebtManager.Contracts.Analytics;
+using DebtManager.Infrastructure.Analytics;
 
 namespace DebtManager.Infrastructure;
 
@@ -38,6 +40,9 @@ public static class DependencyInjection
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<IAdminUserRepository, AdminUserRepository>();
         services.AddScoped<IArticleRepository, ArticleRepository>();
+        services.AddScoped<IDocumentRepository, DocumentRepository>();
+        services.AddScoped<IInvoiceDataRepository, InvoiceDataRepository>();
+        services.AddScoped<IMetricRepository, MetricRepository>();
 
         // Config service
         services.AddScoped<IAppConfigService, AppConfigService>();
@@ -52,6 +57,12 @@ public static class DependencyInjection
 
         // Document Generation
         services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
+        
+        // Document Processing Services
+        services.AddScoped<IInvoiceProcessingService, AzureFormRecognizerInvoiceService>();
+        
+        // Analytics Services
+        services.AddScoped<IMetricService, MetricService>();
         
         return services;
     }
