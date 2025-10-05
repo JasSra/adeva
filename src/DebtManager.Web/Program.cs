@@ -26,6 +26,9 @@ builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration
 builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
 builder.Services.AddHttpContextAccessor();
 
+// Maintenance state
+builder.Services.AddSingleton<DebtManager.Web.Services.IMaintenanceState, DebtManager.Web.Services.MaintenanceState>();
+
 // Health checks
 builder.Services.AddHealthChecks();
 
@@ -89,7 +92,8 @@ builder.Services.AddHangfire(cfg => cfg
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
     .UseSqlServerStorage(hangfireCs));
-builder.Services.AddHangfireServer();
+// Remove AddHangfireServer to avoid crashing the host when storage is unavailable
+// builder.Services.AddHangfireServer();
 
 // Branding resolver
 builder.Services.AddScoped<BrandingResolverMiddleware>();
@@ -115,9 +119,22 @@ builder.Services.AddAuthorization(options =>
 var app = builder.Build();
 
 // Initialize database (dev-friendly): drop/create, seed admin/config/articles
-await DebtManager.Web.Data.DbInitializer.InitializeAsync(app.Services, app.Environment);
+var maintenance = app.Services.GetRequiredService<IMaintenanceState>();
+try
+{
+    await DebtManager.Web.Data.DbInitializer.InitializeAsync(app.Services, app.Environment);
+}
+catch (Exception ex)
+{
+    // Enter maintenance mode and log the startup exception. App will stay up and serve 503.
+    maintenance.Enable(ex);
+    Log.ForContext("Startup", true).Error(ex, "Startup initialization failed; entering maintenance mode.");
+}
 
 app.UseSerilogRequestLogging();
+
+// Maintenance mode should be evaluated as early as possible
+app.UseMaintenanceMode();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -167,8 +184,28 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Configure recurring jobs
-DebtManager.Web.Jobs.NightlyJobs.ConfigureRecurringJobs();
+// Configure recurring jobs only if not in maintenance
+if (!maintenance.IsMaintenance)
+{
+    // Start Hangfire server manually to avoid hosted service crash on bad storage during maintenance
+    BackgroundJobServer? server = null;
+    try
+    {
+        server = new BackgroundJobServer();
+        // Configure recurring jobs
+        DebtManager.Web.Jobs.NightlyJobs.ConfigureRecurringJobs();
+
+        // Dispose server gracefully on shutdown
+        var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+        lifetime.ApplicationStopping.Register(() => server.Dispose());
+    }
+    catch (Exception ex)
+    {
+        // If Hangfire server fails to start, enter maintenance mode but keep the app running
+        maintenance.Enable(ex);
+        Log.Error(ex, "Failed to start Hangfire server; entering maintenance mode.");
+    }
+}
 
 app.Run();
 
