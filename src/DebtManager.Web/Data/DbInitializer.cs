@@ -64,6 +64,12 @@ public static class DbInitializer
 
         // Seed articles/content
         await ArticleSeeder.SeedArticlesAsync(db);
+
+        // Seed dummy data for dev/staging
+        if (!env.IsProduction())
+        {
+            await DummyDataSeeder.SeedDummyDataAsync(db);
+        }
     }
 
     private static async Task SeedConfigAsync(IAppConfigService cfg)
