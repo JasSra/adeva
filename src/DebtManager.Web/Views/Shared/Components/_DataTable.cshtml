@@ -1,0 +1,176 @@
+@model DebtManager.Web.Models.DataTable.DataTableViewModel
+@{
+    var storageKey = $"dm.table.{Model.TableKey}.prefs";
+}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900" x-data="dataTable()" x-init="init()" x-cloak>
+    <div class="p-4 md:p-6 border-b dark:border-gray-700">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <h3 class="text-lg font-semibold dark:text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18" /></svg>
+                @Model.Title
+                <span class="text-xs ml-2 text-gray-500 dark:text-gray-400" x-show="selected.size>0">(<span x-text="selected.size"></span> selected)</span>
+            </h3>
+            <div class="flex flex-wrap items-center gap-2">
+                @if (Model.ShowStatusFilter)
+                {
+                    <select class="border dark:border-gray-700 rounded px-3 py-2 text-sm dark:bg-gray-900 dark:text-gray-100">
+                        <option value="">All</option>
+                        @foreach (var opt in Model.StatusOptions)
+                        {
+                            <option value="@opt.Value">@opt.Label</option>
+                        }
+                    </select>
+                }
+                @if (Model.ShowSearch)
+                {
+                    <div class="relative">
+                        <input type="text" placeholder="Search..." class="border dark:border-gray-700 rounded pl-9 pr-3 py-2 text-sm dark:bg-gray-900 dark:text-gray-100" x-model="query">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/></svg>
+                    </div>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm" x-on:click="search()">Search</button>
+                }
+                <div class="relative" x-data="{open:false}" x-on:click.away="open=false">
+                    <button class="px-3 py-2 border dark:border-gray-700 rounded text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2" x-on:click="open=!open">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Columns
+                    </button>
+                    <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 border dark:border-gray-700 rounded shadow z-10" x-show="open">
+                        <div class="p-2 max-h-64 overflow-auto text-sm">
+                            @for (var i=0;i<Model.Columns.Count;i++)
+                            {
+                                <label class="flex items-center gap-2 p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-800">
+                                    <input type="checkbox" :checked="cols[@i].visible" x-on:change="toggleColumn(@i)">
+                                    <span class="dark:text-gray-100">@Model.Columns[i].Title</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+                </div>
+                @if (Model.ShowDensityToggle)
+                {
+                    <div class="flex items-center gap-1 text-sm">
+                        <span class="text-gray-500 dark:text-gray-400">Density</span>
+                        <button class="px-2 py-1 border dark:border-gray-700 rounded-l" :class="{ 'bg-gray-100 dark:bg-gray-700': density==='normal' }" x-on:click="density='normal';save()">Std</button>
+                        <button class="px-2 py-1 border dark:border-gray-700 rounded-r" :class="{ 'bg-gray-100 dark:bg-gray-700': density==='compact' }" x-on:click="density='compact';save()">Compact</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full" :class="{ 'text-sm': density==='compact' }">
+            <thead class="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
+                <tr>
+                    <th class="px-3 md:px-4 py-2 md:py-3">
+                        <input type="checkbox" x-on:change="toggleAll($event)">
+                    </th>
+                    @for (var i=0;i<Model.Columns.Count;i++)
+                    {
+                        var col = Model.Columns[i];
+                        <th class="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" x-show="cols[@i].visible">
+                            <button class="flex items-center gap-1" x-on:click="sort('@col.Id')">
+                                <span>@col.Title</span>
+                                <span x-show="sortBy==='@col.Id'">
+                                    <svg x-show="sortDir==='asc'" class="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M3 12l7-8 7 8H3z"/></svg>
+                                    <svg x-show="sortDir==='desc'" class="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M3 8l7 8 7-8H3z"/></svg>
+                                </span>
+                            </button>
+                        </th>
+                    }
+                    <th class="px-3 md:px-4 py-2 md:py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                @for (var r=0;r<Model.Rows.Count;r++)
+                {
+                    var row = Model.Rows[r];
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700" :class="{ 'bg-blue-50 dark:bg-blue-900/30': selected.has('@row.Key') }">
+                        <td class="px-3 md:px-4 py-2 md:py-3">
+                            <input type="checkbox" value="@row.Key" x-on:change="toggleRow($event)" :checked="selected.has('@row.Key')">
+                        </td>
+                        @for (var c=0;c<Model.Columns.Count;c++)
+                        {
+                            var col = Model.Columns[c];
+                            <td class="px-3 md:px-4 py-2 md:py-3 whitespace-nowrap" x-show="cols[@c].visible">
+                                @Html.Raw(row.Cells.TryGetValue(col.Id, out var val) ? val : "&nbsp;")
+                            </td>
+                        }
+                        <td class="px-3 md:px-4 py-2 md:py-3 text-right whitespace-nowrap">
+                            @Html.Raw(row.ActionsHtml ?? "")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="p-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+            Showing @(((Model.Page-1)*Model.PageSize)+1) to @(Math.Min(Model.Page*Model.PageSize, Model.TotalCount)) of @Model.TotalCount entries
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="px-3 py-1.5 border dark:border-gray-700 rounded text-sm bg-white dark:bg-gray-800 hover:bg-gray-50 disabled:opacity-40" :disabled="page<=1" x-on:click="go(page-1)">Previous</button>
+            <span class="px-3 py-1.5 border dark:border-gray-700 rounded text-sm bg-blue-600 text-white" x-text="page"></span>
+            <button class="px-3 py-1.5 border dark:border-gray-700 rounded text-sm bg-white dark:bg-gray-800 hover:bg-gray-50 disabled:opacity-40" :disabled="page>=totalPages" x-on:click="go(page+1)">Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function dataTable() {
+    return {
+        storageKey: '@storageKey',
+        density: 'normal',
+        query: '',
+        sortBy: '',
+        sortDir: 'asc',
+        page: @Model.Page,
+        pageSize: @Model.PageSize,
+        total: @Model.TotalCount,
+        get totalPages() { return Math.max(1, Math.ceil(this.total / this.pageSize)); },
+        selected: new Set(),
+        cols: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Columns.Select(c => new { id = c.Id, visible = c.Visible }))),
+        init() {
+            const saved = localStorage.getItem(this.storageKey);
+            if (saved) {
+                try {
+                    const prefs = JSON.parse(saved);
+                    if (prefs.cols) this.cols = prefs.cols;
+                    if (prefs.density) this.density = prefs.density;
+                } catch { }
+            }
+        },
+        save() {
+            localStorage.setItem(this.storageKey, JSON.stringify({ cols: this.cols, density: this.density }));
+        },
+        toggleColumn(i) {
+            this.cols[i].visible = !this.cols[i].visible;
+            this.save();
+        },
+        toggleRow(ev) {
+            const id = ev.target.value;
+            if (ev.target.checked) this.selected.add(id); else this.selected.delete(id);
+        },
+        toggleAll(ev) {
+            const checked = ev.target.checked;
+            this.selected = new Set();
+            if (checked) {
+                document.querySelectorAll('tbody input[type=checkbox]').forEach(cb => this.selected.add(cb.value));
+            }
+        },
+        sort(col) {
+            this.sortDir = (this.sortBy === col && this.sortDir === 'asc') ? 'desc' : 'asc';
+            this.sortBy = col;
+            // Emit event or navigate with query params for server-side sort
+        },
+        search() {
+            // Emit event or navigate with query params for server-side search
+        },
+        go(p) {
+            this.page = Math.max(1, Math.min(this.totalPages, p));
+            // Emit event or navigate with query params for server-side paging
+        }
+    }
+}
+</script>

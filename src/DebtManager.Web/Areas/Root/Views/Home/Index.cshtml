@@ -1,0 +1,19 @@
+@{
+    Layout = "/Areas/Root/Views/Shared/_RootLayout.cshtml";
+    ViewBag.Title = "Dashboard";
+}
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white rounded shadow p-4">
+        <h3 class="font-semibold mb-2">Quick Links</h3>
+        <ul class="list-disc ml-5 text-sm space-y-1">
+            <li><a class="text-blue-600" href="/Root/Accounts">Manage Accounts</a></li>
+            <li><a class="text-blue-600" href="/Root/System/Activities">System Activities</a></li>
+            <li><a class="text-blue-600" href="/Admin">Admin Portal</a></li>
+        </ul>
+    </div>
+    <div class="bg-white rounded shadow p-4 md:col-span-2">
+        <h3 class="font-semibold mb-2">Notes</h3>
+        <p class="text-sm text-gray-700">This area is restricted to Super Admins. From here you can grant/revoke Admin role and review system activities.</p>
+    </div>
+</div>

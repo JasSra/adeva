@@ -31,7 +31,7 @@ public static class DbInitializer
         }
 
         // Roles
-        var roles = new[] { "Admin", "Client", "User" };
+        var roles = new[] { "SuperAdmin", "Admin", "Client", "User" };
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -57,6 +57,11 @@ public static class DbInitializer
         if (!await userManager.IsInRoleAsync(admin, "Admin"))
         {
             await userManager.AddToRoleAsync(admin, "Admin");
+        }
+        // Ensure dev admin is SuperAdmin too for local management
+        if (!await userManager.IsInRoleAsync(admin, "SuperAdmin"))
+        {
+            await userManager.AddToRoleAsync(admin, "SuperAdmin");
         }
 
         // Seed config keys with sensible dev defaults

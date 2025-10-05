@@ -1,0 +1,44 @@
+@model DebtManager.Web.Areas.Root.Controllers.AccountsIndexVm
+@{
+    Layout = "/Areas/Root/Views/Shared/_RootLayout.cshtml";
+}
+
+<div class="bg-white rounded shadow">
+    <div class="p-4 border-b flex items-center justify-between">
+        <h3 class="font-semibold">User Accounts</h3>
+        <form method="get" class="flex items-center gap-2" action="/Root/Accounts">
+            <input type="text" name="q" value="@Model.Query" placeholder="Search email or username..." class="border rounded px-3 py-1.5 text-sm" />
+            <button class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm">Search</button>
+        </form>
+    </div>
+    <div class="p-4 overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-left border-b">
+                    <th class="py-2">Email</th>
+                    <th class="py-2">User Name</th>
+                    <th class="py-2 w-64">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var u in Model.Users)
+            {
+                <tr class="border-b">
+                    <td class="py-2">@u.Email</td>
+                    <td class="py-2">@u.UserName</td>
+                    <td class="py-2">
+                        <form method="post" action="/Root/Accounts/GrantAdmin/@u.Id" class="inline">
+                            @Html.AntiForgeryToken()
+                            <button class="px-3 py-1 bg-green-600 text-white rounded">Grant Admin</button>
+                        </form>
+                        <form method="post" action="/Root/Accounts/RevokeAdmin/@u.Id" class="inline ml-2">
+                            @Html.AntiForgeryToken()
+                            <button class="px-3 py-1 bg-red-600 text-white rounded">Revoke Admin</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

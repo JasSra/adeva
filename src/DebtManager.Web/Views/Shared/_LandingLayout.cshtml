@@ -1,3 +1,4 @@
+@using Microsoft.Extensions.Hosting
 @inject Microsoft.Extensions.Hosting.IHostEnvironment Env
 <!DOCTYPE html>
 <html lang="en">
@@ -20,6 +21,10 @@
                         <a href="/User" class="text-gray-700 hover:text-blue-600">My Debts</a>
                         <a href="/Client" class="text-gray-700 hover:text-blue-600">Client Portal</a>
                         <a href="/Admin" class="text-gray-700 hover:text-blue-600">Admin</a>
+                        @if (User.IsInRole("SuperAdmin"))
+                        {
+                            <a href="/Root" class="text-gray-700 hover:text-blue-600">Root</a>
+                        }
                         <span class="text-gray-600">@User.Identity!.Name</span>
                         <a href="/Account/SignOutUser" class="text-gray-700 hover:text-blue-600">Sign out</a>
                     }

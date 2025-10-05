@@ -1,3 +1,4 @@
+using DebtManager.Contracts.Configuration;
 using DebtManager.Contracts.Payments;
 using DebtManager.Contracts.Persistence;
 using DebtManager.Domain.Debts;
@@ -5,7 +6,6 @@ using DebtManager.Domain.Debtors;
 using DebtManager.Domain.Organizations;
 using DebtManager.Domain.Payments;
 using DebtManager.Infrastructure.Payments;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -20,7 +20,7 @@ namespace DebtManager.Tests;
 public class PaymentServiceTests
 {
     private Mock<IDebtRepository> _debtRepositoryMock = null!;
-    private Mock<IConfiguration> _configurationMock = null!;
+    private Mock<IAppConfigService> _configMock = null!;
     private Mock<ILogger<StripePaymentService>> _loggerMock = null!;
     private StripePaymentService _paymentService = null!;
 
@@ -28,15 +28,16 @@ public class PaymentServiceTests
     public void Setup()
     {
         _debtRepositoryMock = new Mock<IDebtRepository>();
-        _configurationMock = new Mock<IConfiguration>();
+        _configMock = new Mock<IAppConfigService>();
         _loggerMock = new Mock<ILogger<StripePaymentService>>();
 
         // Mock configuration
-        _configurationMock.Setup(c => c["Stripe:SecretKey"]).Returns("sk_test_mock_key");
+        _configMock.Setup(c => c.GetAsync("Stripe:SecretKey", It.IsAny<CancellationToken>()))
+                   .ReturnsAsync("sk_test_mock_key");
 
         _paymentService = new StripePaymentService(
             _debtRepositoryMock.Object,
-            _configurationMock.Object,
+            _configMock.Object,
             _loggerMock.Object
         );
     }
@@ -82,7 +83,7 @@ public class PaymentServiceTests
 [TestFixture]
 public class WebhookProcessorTests
 {
-    private Mock<IConfiguration> _configurationMock = null!;
+    private Mock<IAppConfigService> _configMock = null!;
     private Mock<ILogger<StripeWebhookProcessor>> _loggerMock = null!;
     private Mock<Hangfire.IBackgroundJobClient> _backgroundJobClientMock = null!;
     private StripeWebhookProcessor _webhookProcessor = null!;
@@ -90,12 +91,12 @@ public class WebhookProcessorTests
     [SetUp]
     public void Setup()
     {
-        _configurationMock = new Mock<IConfiguration>();
+        _configMock = new Mock<IAppConfigService>();
         _loggerMock = new Mock<ILogger<StripeWebhookProcessor>>();
         _backgroundJobClientMock = new Mock<Hangfire.IBackgroundJobClient>();
 
         _webhookProcessor = new StripeWebhookProcessor(
-            _configurationMock.Object,
+            _configMock.Object,
             _loggerMock.Object,
             _backgroundJobClientMock.Object
         );
@@ -105,7 +106,7 @@ public class WebhookProcessorTests
     public void ProcessStripeWebhookAsync_ThrowsException_WhenWebhookSecretNotConfigured()
     {
         // Arrange
-        _configurationMock.Setup(c => c["Stripe:WebhookSecret"]).Returns((string?)null);
+        _configMock.Setup(c => c.GetAsync("Stripe:WebhookSecret", It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
         var payload = "test_payload";
         var signature = "test_signature";
 

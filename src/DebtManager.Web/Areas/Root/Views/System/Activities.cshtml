@@ -1,0 +1,17 @@
+@{
+    Layout = "/Areas/Root/Views/Shared/_RootLayout.cshtml";
+}
+
+<div class="bg-white rounded shadow">
+    <div class="p-4 border-b">
+        <h3 class="font-semibold">System Activities</h3>
+        <p class="text-sm text-gray-600">Consolidated operations for Super Admins.</p>
+    </div>
+    <div class="p-4">
+        <ul class="list-disc ml-6 text-sm space-y-2">
+            <li>Grant/Revoke Admin role to any user (see Accounts)</li>
+            <li>Review health endpoints: <a class="text-blue-600" href="/health/live">/health/live</a>, <a class="text-blue-600" href="/health/ready">/health/ready</a></li>
+            <li>Access background jobs dashboard: <a class="text-blue-600" href="/hangfire" target="_blank">Hangfire</a></li>
+        </ul>
+    </div>
+</div>
