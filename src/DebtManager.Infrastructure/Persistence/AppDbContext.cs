@@ -6,6 +6,7 @@ using DebtManager.Domain.AdminUsers;
 using DebtManager.Domain.Articles;
 using DebtManager.Domain.Documents;
 using DebtManager.Domain.Configuration;
+using DebtManager.Domain.Analytics;
 using DebtManager.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -24,6 +25,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
     public DbSet<Article> Articles => Set<Article>();
     public DbSet<Document> Documents => Set<Document>();
+    public DbSet<InvoiceData> InvoiceData => Set<InvoiceData>();
+    public DbSet<Metric> Metrics => Set<Metric>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<AppConfigEntry> AppConfigEntries => Set<AppConfigEntry>();
 
@@ -175,6 +178,33 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             builder.HasIndex(d => new { d.OrganizationId, d.DebtorId, d.Type });
             builder.HasOne(d => d.Organization).WithMany(o => o.Documents).HasForeignKey(d => d.OrganizationId).OnDelete(DeleteBehavior.Cascade);
             builder.HasOne(d => d.Debtor).WithMany(de => de.Documents).HasForeignKey(d => d.DebtorId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<InvoiceData>(builder =>
+        {
+            builder.HasIndex(i => i.DocumentId).IsUnique();
+            builder.HasIndex(i => i.Status);
+            builder.Property(i => i.InvoiceNumber).HasMaxLength(100);
+            builder.Property(i => i.Currency).HasMaxLength(10);
+            builder.Property(i => i.VendorName).HasMaxLength(300);
+            builder.Property(i => i.VendorAddress).HasMaxLength(500);
+            builder.Property(i => i.VendorAbn).HasMaxLength(50);
+            builder.Property(i => i.CustomerName).HasMaxLength(300);
+            builder.Property(i => i.CustomerAddress).HasMaxLength(500);
+            builder.Property(i => i.TotalAmount).HasPrecision(18, 2);
+            builder.Property(i => i.ConfidenceScore).HasPrecision(5, 4);
+            builder.Property(i => i.ErrorMessage).HasMaxLength(2000);
+            builder.HasOne(i => i.Document).WithOne().HasForeignKey<InvoiceData>(i => i.DocumentId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Metric>(builder =>
+        {
+            builder.HasIndex(m => m.Key);
+            builder.HasIndex(m => m.RecordedAtUtc);
+            builder.HasIndex(m => new { m.OrganizationId, m.RecordedAtUtc });
+            builder.Property(m => m.Key).HasMaxLength(200).IsRequired();
+            builder.Property(m => m.Value).HasPrecision(18, 4);
+            builder.Property(m => m.Tags).HasMaxLength(1000);
         });
     }
 }
