@@ -58,6 +58,7 @@ public class Debt : Entity
     public decimal? SettlementOfferAmount { get; private set; }
     public DateTime? SettlementOfferExpiresAtUtc { get; private set; }
     public int GraceDays { get; private set; }
+    public string TagsCsv { get; private set; }
 
     public Debtor? Debtor { get; private set; }
     public Organization? Organization { get; private set; }
@@ -70,7 +71,7 @@ public class Debt : Entity
         _transactions = new List<Transaction>();
         ExternalAccountId = ClientReferenceNumber = PortfolioCode = Category = string.Empty;
         Currency = "AUD";
-        Notes = string.Empty;
+        Notes = TagsCsv = string.Empty;
         OpenedAtUtc = DateTime.UtcNow;
         Status = DebtStatus.PendingAssignment;
     }
@@ -288,6 +289,12 @@ public class Debt : Entity
         Notes = string.IsNullOrWhiteSpace(Notes)
             ? note.Trim()
             : $"{Notes}\n{note.Trim()}";
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void SetTags(IEnumerable<string> tags)
+    {
+        TagsCsv = string.Join(',', tags.Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)));
         UpdatedAtUtc = DateTime.UtcNow;
     }
 }
