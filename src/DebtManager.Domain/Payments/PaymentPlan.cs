@@ -60,6 +60,7 @@ public class PaymentPlan : Entity
     public DateTime? DefaultedAtUtc { get; private set; }
     public string? CreatedByUserId { get; private set; }
     public string? ApprovedByUserId { get; private set; }
+    public string TagsCsv { get; private set; }
 
     public Debt? Debt { get; private set; }
     public IReadOnlyCollection<PaymentInstallment> Installments => _installments.AsReadOnly();
@@ -68,7 +69,7 @@ public class PaymentPlan : Entity
     private PaymentPlan()
     {
         Reference = string.Empty;
-        Notes = string.Empty;
+        Notes = TagsCsv = string.Empty;
         _installments = new List<PaymentInstallment>();
         _transactions = new List<Transaction>();
         Status = PaymentPlanStatus.Draft;
@@ -248,6 +249,12 @@ public class PaymentPlan : Entity
         Notes = string.IsNullOrWhiteSpace(Notes)
             ? note.Trim()
             : $"{Notes}\n{note.Trim()}";
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void SetTags(IEnumerable<string> tags)
+    {
+        TagsCsv = string.Join(',', tags.Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)));
         UpdatedAtUtc = DateTime.UtcNow;
     }
 

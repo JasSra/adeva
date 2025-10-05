@@ -36,6 +36,7 @@ public class Organization : Entity
     public DateTime? OnboardedAtUtc { get; private set; }
     public DateTime? NextReconciliationAtUtc { get; private set; }
     public DateTime? LastBrandRefreshAtUtc { get; private set; }
+    public string TagsCsv { get; private set; }
 
     public IReadOnlyCollection<Debtor> Debtors => _debtors.AsReadOnly();
     public IReadOnlyCollection<Debt> Debts => _debts.AsReadOnly();
@@ -46,7 +47,7 @@ public class Organization : Entity
         _debtors = new List<Debtor>();
         _debts = new List<Debt>();
         _documents = new List<Document>();
-        Name = LegalName = Abn = DefaultCurrency = PrimaryColorHex = SecondaryColorHex = SupportEmail = SupportPhone = Timezone = string.Empty;
+        Name = LegalName = Abn = DefaultCurrency = PrimaryColorHex = SecondaryColorHex = SupportEmail = SupportPhone = Timezone = TagsCsv = string.Empty;
     }
 
     public Organization(
@@ -207,6 +208,12 @@ public class Organization : Entity
         if (doc is null) throw new ArgumentNullException(nameof(doc));
         if (_documents.Any(d => d.Id == doc.Id)) return;
         _documents.Add(doc);
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void SetTags(IEnumerable<string> tags)
+    {
+        TagsCsv = string.Join(',', tags.Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)));
         UpdatedAtUtc = DateTime.UtcNow;
     }
 }

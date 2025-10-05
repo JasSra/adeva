@@ -1,0 +1,247 @@
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="bg-white rounded-lg shadow">
+    <div class="p-6 border-b">
+        <h3 class="text-lg font-semibold">Document Generation</h3>
+        <p class="text-sm text-gray-600 mt-2">Generate receipts and invoices for payments and remittances</p>
+    </div>
+
+    <div class="p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Generate Receipt -->
+            <div class="border rounded-lg p-6">
+                <h4 class="text-lg font-semibold mb-4">Generate Payment Receipt</h4>
+                <p class="text-sm text-gray-600 mb-4">Create a receipt for a debtor payment. This will include organization branding and Adeva branding.</p>
+                
+                <form id="receiptForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Debtor Name *</label>
+                        <input type="text" name="debtorName" required class="w-full border rounded px-3 py-2 text-sm" placeholder="John Doe" />
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Amount *</label>
+                            <input type="number" name="amount" step="0.01" required class="w-full border rounded px-3 py-2 text-sm" placeholder="500.00" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Currency</label>
+                            <input type="text" name="currency" value="AUD" class="w-full border rounded px-3 py-2 text-sm" />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Payment Method *</label>
+                        <select name="paymentMethod" required class="w-full border rounded px-3 py-2 text-sm">
+                            <option value="Card">Credit/Debit Card</option>
+                            <option value="BankTransfer">Bank Transfer</option>
+                            <option value="DirectDebit">Direct Debit</option>
+                            <option value="Cash">Cash</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Debt Reference</label>
+                        <input type="text" name="debtReference" class="w-full border rounded px-3 py-2 text-sm" placeholder="D-5001" />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Organization Name</label>
+                        <input type="text" name="organizationName" class="w-full border rounded px-3 py-2 text-sm" placeholder="ABC Company" />
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" name="isPartialPayment" id="isPartialPayment" class="mr-2" />
+                        <label for="isPartialPayment" class="text-sm">Partial Payment</label>
+                    </div>
+                    
+                    <div id="remainingBalanceDiv" style="display: none;">
+                        <label class="block text-sm font-medium mb-1">Remaining Balance</label>
+                        <input type="number" name="remainingBalance" step="0.01" class="w-full border rounded px-3 py-2 text-sm" placeholder="1500.00" />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Notes</label>
+                        <textarea name="notes" rows="2" class="w-full border rounded px-3 py-2 text-sm" placeholder="Additional notes..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email To (Optional)</label>
+                        <input type="email" name="sendToEmail" class="w-full border rounded px-3 py-2 text-sm" placeholder="debtor@example.com" />
+                        <p class="text-xs text-gray-500 mt-1">Leave blank to skip email sending</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Format</label>
+                        <select name="format" class="w-full border rounded px-3 py-2 text-sm">
+                            <option value="html">HTML (Preview)</option>
+                            <option value="pdf">PDF (Download)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Generate Receipt
+                    </button>
+                </form>
+            </div>
+
+            <!-- Generate Invoice -->
+            <div class="border rounded-lg p-6">
+                <h4 class="text-lg font-semibold mb-4">Generate Remittance Invoice</h4>
+                <p class="text-sm text-gray-600 mb-4">Create an invoice for remittance to an organization. This includes platform fees and collected amounts.</p>
+                
+                <form id="invoiceForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Organization Name *</label>
+                        <input type="text" name="organizationName" required class="w-full border rounded px-3 py-2 text-sm" placeholder="ABC Company" />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Organization ABN</label>
+                        <input type="text" name="organizationAbn" class="w-full border rounded px-3 py-2 text-sm" placeholder="12 345 678 901" />
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Subtotal *</label>
+                            <input type="number" name="subtotal" step="0.01" required class="w-full border rounded px-3 py-2 text-sm" placeholder="5000.00" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tax (GST) *</label>
+                            <input type="number" name="taxAmount" step="0.01" required class="w-full border rounded px-3 py-2 text-sm" placeholder="500.00" />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Description</label>
+                        <textarea name="description" rows="2" class="w-full border rounded px-3 py-2 text-sm" placeholder="Remittance for debt collection services for period..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Due Date</label>
+                        <input type="date" name="dueDate" class="w-full border rounded px-3 py-2 text-sm" />
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Payment Instructions</label>
+                        <textarea name="paymentInstructions" rows="2" class="w-full border rounded px-3 py-2 text-sm" placeholder="Please transfer to BSB: 123-456, Account: 12345678"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email To (Optional)</label>
+                        <input type="email" name="sendToEmail" class="w-full border rounded px-3 py-2 text-sm" placeholder="organization@example.com" />
+                        <p class="text-xs text-gray-500 mt-1">Leave blank to skip email sending</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Format</label>
+                        <select name="format" class="w-full border rounded px-3 py-2 text-sm">
+                            <option value="html">HTML (Preview)</option>
+                            <option value="pdf">PDF (Download)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                        Generate Invoice
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('isPartialPayment').addEventListener('change', function() {
+    document.getElementById('remainingBalanceDiv').style.display = this.checked ? 'block' : 'none';
+});
+
+document.getElementById('receiptForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+        debtorName: formData.get('debtorName'),
+        amount: parseFloat(formData.get('amount')),
+        currency: formData.get('currency'),
+        paymentMethod: formData.get('paymentMethod'),
+        debtReference: formData.get('debtReference'),
+        organizationName: formData.get('organizationName'),
+        isPartialPayment: formData.get('isPartialPayment') === 'on',
+        remainingBalance: formData.get('remainingBalance') ? parseFloat(formData.get('remainingBalance')) : null,
+        notes: formData.get('notes'),
+        sendToEmail: formData.get('sendToEmail'),
+        format: formData.get('format')
+    };
+    
+    try {
+        const response = await fetch('/Admin/Documents/GeneratePaymentReceipt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        if (data.sendToEmail) {
+            alert('Receipt generated and sent to ' + data.sendToEmail);
+        }
+        
+        if (data.format === 'pdf') {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'receipt.pdf';
+            a.click();
+        } else {
+            const html = await response.text();
+            const newWindow = window.open();
+            newWindow.document.write(html);
+        }
+    } catch (error) {
+        alert('Error generating receipt: ' + error.message);
+    }
+});
+
+document.getElementById('invoiceForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+        organizationName: formData.get('organizationName'),
+        organizationAbn: formData.get('organizationAbn'),
+        subtotal: parseFloat(formData.get('subtotal')),
+        taxAmount: parseFloat(formData.get('taxAmount')),
+        description: formData.get('description'),
+        dueDate: formData.get('dueDate') || null,
+        paymentInstructions: formData.get('paymentInstructions'),
+        sendToEmail: formData.get('sendToEmail'),
+        format: formData.get('format')
+    };
+    
+    try {
+        const response = await fetch('/Admin/Documents/GenerateRemittanceInvoice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        if (data.sendToEmail) {
+            alert('Invoice generated and sent to ' + data.sendToEmail);
+        }
+        
+        if (data.format === 'pdf') {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'invoice.pdf';
+            a.click();
+        } else {
+            const html = await response.text();
+            const newWindow = window.open();
+            newWindow.document.write(html);
+        }
+    } catch (error) {
+        alert('Error generating invoice: ' + error.message);
+    }
+});
+</script>
