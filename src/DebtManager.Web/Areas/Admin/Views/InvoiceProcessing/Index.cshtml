@@ -1,0 +1,76 @@
+@model IReadOnlyList<DebtManager.Domain.Documents.InvoiceData>
+@{
+    ViewData["Title"] = "Invoice Processing Queue";
+}
+
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Invoice Processing Queue</h1>
+
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        @if (Model.Any())
+        {
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Document ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Retries</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var invoice in Model)
+                    {
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <a href="@Url.Action("Details", new { id = invoice.Id })" class="text-blue-600 hover:underline">
+                                    @invoice.DocumentId.ToString().Substring(0, 8)...
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @switch (invoice.Status)
+                                {
+                                    case DebtManager.Domain.Documents.InvoiceProcessingStatus.Pending:
+                                        <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">Pending</span>
+                                        break;
+                                    case DebtManager.Domain.Documents.InvoiceProcessingStatus.Processing:
+                                        <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">Processing</span>
+                                        break;
+                                    case DebtManager.Domain.Documents.InvoiceProcessingStatus.Completed:
+                                        <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Completed</span>
+                                        break;
+                                    case DebtManager.Domain.Documents.InvoiceProcessingStatus.Failed:
+                                        <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800">Failed</span>
+                                        break;
+                                    case DebtManager.Domain.Documents.InvoiceProcessingStatus.ManualReviewRequired:
+                                        <span class="px-2 py-1 text-xs rounded bg-orange-100 text-orange-800">Review Required</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @invoice.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @invoice.RetryCount
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <a href="@Url.Action("Details", new { id = invoice.Id })" class="text-blue-600 hover:underline mr-2">View</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="p-6 text-center text-gray-500">
+                No pending invoices in queue.
+            </div>
+        }
+    </div>
+
+    <div class="mt-6">
+        <a href="@Url.Action("InvoiceMetrics", "Analytics")" class="text-blue-600 hover:underline">View Invoice Metrics →</a>
+    </div>
+</div>
