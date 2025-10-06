@@ -1,0 +1,25 @@
+@*
+    Inline field validation error display
+    
+    Usage:
+    @await Html.PartialAsync("~/Views/Shared/Partials/_FieldError.cshtml", "FieldName")
+    
+    Requires:
+    - TempData["ValidationErrors"] as Dictionary<string, string[]>
+*@
+
+@model string
+
+@{
+    var fieldName = Model ?? string.Empty;
+    var validationErrors = TempData.Peek("ValidationErrors") as Dictionary<string, string[]> ?? new Dictionary<string, string[]>();
+    var hasError = validationErrors.ContainsKey(fieldName);
+    var errors = hasError ? validationErrors[fieldName] : Array.Empty<string>();
+}
+
+@if (hasError && errors.Any())
+{
+    <p class="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+        @string.Join(", ", errors)
+    </p>
+}

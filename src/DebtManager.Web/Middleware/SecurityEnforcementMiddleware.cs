@@ -45,14 +45,23 @@ public class SecurityEnforcementMiddleware
 
         var profile = await db.UserProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == user.Id);
 
-        // Enforce TOTP and phone setup for all users
-        if (!user.TwoFactorEnabled || !user.PhoneNumberConfirmed)
+        // Allow entire security setup flow through
+        var atSecurityFlow = IsSecuritySetupFlow(path);
+
+        // Enforce: Admins must have TOTP; Clients/Users must have confirmed phone
+        var isAdmin = context.User.IsInRole("Admin");
+        var needsSecuritySetup = isAdmin ? !user.TwoFactorEnabled : !user.PhoneNumberConfirmed;
+
+        if (needsSecuritySetup && !atSecurityFlow)
         {
-            if (!path.StartsWith("/Security/Setup", StringComparison.OrdinalIgnoreCase))
-            {
-                context.Response.Redirect("/Security/Setup");
-                return;
-            }
+            context.Response.Redirect("/Security/Setup");
+            return;
+        }
+
+        if (atSecurityFlow)
+        {
+            await _next(context);
+            return;
         }
 
         // Client org required for client role
@@ -85,5 +94,13 @@ public class SecurityEnforcementMiddleware
     {
         if (string.IsNullOrEmpty(path)) return false;
         return path.StartsWith("/css/") || path.StartsWith("/js/") || path.StartsWith("/images/") || path.StartsWith("/health/") || path.StartsWith("/api/") || path.StartsWith("/Account/") || path.StartsWith("/Dev/") || path.StartsWith("/Article/");
+    }
+
+    private static bool IsSecuritySetupFlow(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return false;
+        return path.StartsWith("/Security/Setup", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/Security/SendSms", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/Security/Complete", StringComparison.OrdinalIgnoreCase);
     }
 }

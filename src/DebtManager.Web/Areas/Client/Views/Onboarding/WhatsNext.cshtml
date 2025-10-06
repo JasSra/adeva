@@ -1,0 +1,192 @@
+@model DebtManager.Web.Areas.Client.Controllers.WhatsNextVm
+@{
+    Layout = "~/Areas/Client/Views/Shared/_ClientLayout.cshtml";
+    ViewBag.Title = "Application Submitted";
+}
+
+<div class="max-w-3xl mx-auto">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Registration Complete!</h2>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Step 3 of 3: What happens next</p>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 bg-green-600 text-white rounded-full font-semibold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <span class="ml-2 text-sm font-medium text-green-600">Verified</span>
+            </div>
+            <div class="flex-1 border-t-2 border-green-600 mx-4"></div>
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 bg-green-600 text-white rounded-full font-semibold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <span class="ml-2 text-sm font-medium text-green-600">Confirmed</span>
+            </div>
+            <div class="flex-1 border-t-2 border-green-600 mx-4"></div>
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 bg-green-600 text-white rounded-full font-semibold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <span class="ml-2 text-sm font-medium text-green-600">Complete</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-400 dark:border-green-600 p-6 rounded-lg mb-8">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-8 w-8 text-green-400 dark:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-semibold text-green-800 dark:text-green-200">
+                    Your application has been submitted successfully!
+                </h3>
+                <p class="mt-2 text-sm text-green-700 dark:text-green-300">
+                    Thank you for registering <strong>@Model.OrganizationName</strong> 
+                    @if (!string.IsNullOrWhiteSpace(Model.TradingName))
+                    {
+                        <span>(trading as @Model.TradingName)</span>
+                    }
+                    with our debt management platform.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- What Happens Next -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">What Happens Next?</h3>
+        </div>
+        
+        <div class="p-6">
+            <div class="space-y-6">
+                <!-- Step 1 -->
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full font-semibold">
+                            1
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Email Confirmation</h4>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            You'll receive a welcome email with your registration details shortly.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full font-semibold">
+                            2
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Account Review</h4>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            Our team will review your application within <strong>1-2 business days</strong>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full font-semibold">
+                            3
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Onboarding Call</h4>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            A member of our team will reach out to schedule an onboarding session and answer any questions.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full font-semibold">
+                            4
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Account Activation</h4>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            Once approved, you'll receive full access to the platform and can start managing your debt portfolio.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Information -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">Need Help?</h3>
+        <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div>
+                <p class="font-medium text-blue-800 dark:text-blue-200">Email Support</p>
+                <a href="mailto:@Model.SupportEmail" class="text-blue-600 dark:text-blue-400 hover:underline">
+                    @Model.SupportEmail
+                </a>
+            </div>
+            <div>
+                <p class="font-medium text-blue-800 dark:text-blue-200">Phone Support</p>
+                <a href="tel:@Model.SupportPhone" class="text-blue-600 dark:text-blue-400 hover:underline">
+                    @Model.SupportPhone
+                </a>
+            </div>
+        </div>
+        <p class="mt-4 text-sm text-blue-700 dark:text-blue-300">
+            Our support team is available Monday to Friday, 9:00 AM - 5:00 PM AEST.
+        </p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mt-8 flex gap-3 justify-center">
+        <a 
+            href="/" 
+            class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition font-medium">
+            Return to Home
+        </a>
+        <a 
+            href="/Client" 
+            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+            Go to Dashboard
+        </a>
+    </div>
+
+    @if (!Model.IsApproved)
+    {
+        <div class="mt-6 text-center">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Pending Approval
+                </span>
+            </p>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                Some features will be limited until your account is approved by our team.
+            </p>
+        </div>
+    }
+</div>

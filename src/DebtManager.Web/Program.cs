@@ -20,10 +20,17 @@ using DebtManager.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Serilog basic setup
+// Serilog basic setup (keep config-driven to avoid eager provider initialization)
+// Tip: Use appsettings to reduce noisy providers at boot (e.g., Microsoft to Warning)
 builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
 
-builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+// MVC + conditionally add runtime compilation only for local dev
+var mvcBuilder = builder.Services.AddControllersWithViews();
+if (builder.Environment.IsDevelopment())
+{
+    mvcBuilder.AddRazorRuntimeCompilation();
+}
+
 builder.Services.AddHttpContextAccessor();
 
 // Maintenance state
@@ -90,7 +97,7 @@ builder.Services.AddScoped<IClaimsTransformation, B2CRoleClaimsTransformation>()
 var hangfireCs = builder.Configuration.GetConnectionString("Hangfire") ?? cs;
 builder.Services.AddHangfire(cfg => cfg
     .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
+    // Avoid forcing Newtonsoft/advanced serializer settings to keep startup lean
     .UseSqlServerStorage(hangfireCs));
 // Remove AddHangfireServer to avoid crashing the host when storage is unavailable
 // builder.Services.AddHangfireServer();
@@ -118,7 +125,7 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// Initialize database (dev-friendly): drop/create, seed admin/config/articles
+// Initialize database (lean): migrate; optional seed is handled inside initializer via config flags
 var maintenance = app.Services.GetRequiredService<IMaintenanceState>();
 try
 {
@@ -184,30 +191,37 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Configure recurring jobs only if not in maintenance
+// Configure recurring jobs only if not in maintenance and server is enabled
 if (!maintenance.IsMaintenance)
 {
-    // Start Hangfire server manually to avoid hosted service crash on bad storage during maintenance
-    BackgroundJobServer? server = null;
-    try
+    var serverEnabled = app.Configuration.GetValue<bool>("Hangfire:ServerEnabled");
+    if (serverEnabled)
     {
-        server = new BackgroundJobServer();
-        // Configure recurring jobs
-        DebtManager.Web.Jobs.NightlyJobs.ConfigureRecurringJobs();
+        BackgroundJobServer? server = null;
+        try
+        {
+            server = new BackgroundJobServer();
+            // Configure recurring jobs
+            DebtManager.Web.Jobs.NightlyJobs.ConfigureRecurringJobs();
 
-        // Dispose server gracefully on shutdown
-        var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-        lifetime.ApplicationStopping.Register(() => server.Dispose());
+            // Dispose server gracefully on shutdown
+            var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+            lifetime.ApplicationStopping.Register(() => server.Dispose());
+        }
+        catch (Exception ex)
+        {
+            maintenance.Enable(ex);
+            Log.Error(ex, "Failed to start Hangfire server; entering maintenance mode.");
+        }
     }
-    catch (Exception ex)
-    {
-        // If Hangfire server fails to start, enter maintenance mode but keep the app running
-        maintenance.Enable(ex);
-        Log.Error(ex, "Failed to start Hangfire server; entering maintenance mode.");
-    }
+    // else: Hangfire server disabled for lean startup
 }
 
 app.Run();
 
 // Expose Program for WebApplicationFactory in tests
 public partial class Program { }
+
+// For convenience: you can bundle lean startup tuning into a helper and call it here.
+// Example (not invoked):
+// LeanStartup.Apply(builder); // Uncomment to apply additional lean settings in one place.

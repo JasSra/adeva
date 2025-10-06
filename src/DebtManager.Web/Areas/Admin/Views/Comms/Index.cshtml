@@ -10,6 +10,9 @@
         <li class="mr-1">
             <a href="/Admin/Comms/Templates" class="inline-block py-2 px-4 text-gray-600 hover:text-blue-600">Templates</a>
         </li>
+        <li class="mr-1">
+            <a href="/Admin/Messages/AllMessages" class="inline-block py-2 px-4 text-gray-600 hover:text-blue-600">All Messages</a>
+        </li>
     </ul>
 </div>
 
@@ -32,45 +35,49 @@
         <h3 class="text-lg font-semibold mb-4">Messages Sent</h3>
         <p class="text-3xl font-bold text-purple-600 mb-2">1,234</p>
         <p class="text-sm text-gray-600">This month</p>
-        <a href="/Admin/Comms/History" class="mt-4 inline-block text-blue-600 hover:underline">View History →</a>
+        <a href="/Admin/Messages/AllMessages" class="mt-4 inline-block text-blue-600 hover:underline">View All →</a>
     </div>
 </div>
 
 <div class="mt-6 bg-white rounded-lg shadow">
-    <div class="p-6 border-b">
-        <h3 class="text-lg font-semibold">Recent Messages</h3>
+    <div class="p-6 border-b flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Quick Actions</h3>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-gray-50 border-b">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Template</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">2024-01-15 14:32</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">john.doe@example.com</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">Email</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">Payment Reminder</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Sent</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">2024-01-15 13:15</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">0412 345 678</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">SMS</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">Payment Confirmation</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Delivered</span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="/Admin/Messages/Inbox" class="p-4 border rounded-lg hover:bg-gray-50 transition">
+            <div class="flex items-center">
+                <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                <div>
+                    <h4 class="font-semibold">My Inbox</h4>
+                    <p class="text-sm text-gray-600">View internal messages</p>
+                </div>
+            </div>
+        </a>
+        
+        <a href="/Admin/Messages/AllMessages" class="p-4 border rounded-lg hover:bg-gray-50 transition">
+            <div class="flex items-center">
+                <svg class="w-8 h-8 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <div>
+                    <h4 class="font-semibold">All Messages</h4>
+                    <p class="text-sm text-gray-600">View queued & sent messages</p>
+                </div>
+            </div>
+        </a>
+        
+        <a href="/Admin/Comms/CreateTemplate" class="p-4 border rounded-lg hover:bg-gray-50 transition">
+            <div class="flex items-center">
+                <svg class="w-8 h-8 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <div>
+                    <h4 class="font-semibold">Create Template</h4>
+                    <p class="text-sm text-gray-600">New email or SMS template</p>
+                </div>
+            </div>
+        </a>
     </div>
 </div>

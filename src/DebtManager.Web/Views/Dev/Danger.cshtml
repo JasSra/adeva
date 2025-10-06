@@ -12,7 +12,7 @@
     }
     <form method="post" action="/Dev/ResetDatabase">
         @Html.AntiForgeryToken()
-        <button class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded" onclick="return confirm('This will DROP and recreate the database. Continue?');">Drop DB + Migrate + Seed</button>
+    <button class="btn-danger" onclick="return confirm('This will DROP and recreate the database. Continue?');">Drop DB + Migrate + Seed</button>
     </form>
 
     <div class="mt-6">

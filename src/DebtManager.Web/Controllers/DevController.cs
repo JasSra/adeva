@@ -65,7 +65,7 @@ public class DevController : Controller
 
     // ===== Development Fake B2C sign-in =====
     [HttpGet]
-    public async Task<IActionResult> FakeSignin(string? returnUrl = null)
+    public async Task<IActionResult> FakeSignin(string? role = null, string? returnUrl = null)
     {
         if (!DevAuthEnabled) return NotFound();
 
@@ -73,21 +73,46 @@ public class DevController : Controller
         if (User?.Identity?.IsAuthenticated ?? false)
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            // Clear the principal for current request as well to avoid showing Sign out in layout
             HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
-            return RedirectToAction(nameof(FakeSignin), new { returnUrl });
         }
 
-        var faker = new Faker("en_AU");
-        var first = faker.Name.FirstName();
-        var last = faker.Name.LastName();
-        var email = faker.Internet.Email(first.ToLowerInvariant(), last.ToLowerInvariant(), "example.dev");
-        var vm = new FakeSigninVm
+        // Auto mode: role provided (client|user) -> immediately issue fake sign-in just like OIDC
+        if (!string.IsNullOrWhiteSpace(role))
         {
-            FirstName = first,
-            LastName = last,
-            Email = email.ToLowerInvariant(),
-            Issuer = "https://b2c.local/fake", // display only
+            var faker = new Faker("en_AU");
+            var first = faker.Name.FirstName();
+            var last = faker.Name.LastName();
+            var email = faker.Internet.Email(first.ToLowerInvariant(), last.ToLowerInvariant(), "example.dev").ToLowerInvariant();
+
+            var vm = new FakeSigninVm
+            {
+                FirstName = first,
+                LastName = last,
+                Email = email,
+                Issuer = "https://b2c.local/fake",
+                IssuerId = Guid.NewGuid().ToString(),
+                ScopeClient = string.Equals(role, "client", StringComparison.OrdinalIgnoreCase),
+                ScopeUser = string.Equals(role, "user", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(role),
+                ScopeAdmin = false,
+                ForceSecuritySetup = false,
+                CreateClientOrganization = false,
+                CreateDebtor = false,
+                ReturnUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl
+            };
+
+            return await PerformFakeSigninAsync(vm);
+        }
+
+        // Manual mode: render the form with prefilled random values
+        var f = new Faker("en_AU");
+        var firstName = f.Name.FirstName();
+        var lastName = f.Name.LastName();
+        var vm2 = new FakeSigninVm
+        {
+            FirstName = firstName,
+            LastName = lastName,
+            Email = f.Internet.Email(firstName.ToLowerInvariant(), lastName.ToLowerInvariant(), "example.dev").ToLowerInvariant(),
+            Issuer = "https://b2c.local/fake",
             IssuerId = Guid.NewGuid().ToString(),
             ScopeClient = false,
             ScopeUser = true,
@@ -98,7 +123,7 @@ public class DevController : Controller
             ReturnUrl = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl
         };
 
-        return View(vm);
+        return View(vm2);
     }
 
     [HttpPost]
@@ -107,6 +132,11 @@ public class DevController : Controller
     {
         if (!DevAuthEnabled) return NotFound();
 
+        return await PerformFakeSigninAsync(vm);
+    }
+
+    private async Task<IActionResult> PerformFakeSigninAsync(FakeSigninVm vm)
+    {
         // Ensure no existing session
         if (User?.Identity?.IsAuthenticated ?? false)
         {
@@ -136,13 +166,11 @@ public class DevController : Controller
         }
         else
         {
-            // keep details fresh for demos
             user.Email = vm.Email;
             user.UserName = vm.Email;
             await _userManager.UpdateAsync(user);
         }
 
-        // Ensure roles exist and assign based on selected scopes
         async Task EnsureRoleAsync(string role)
         {
             if (!await _roleManager.RoleExistsAsync(role))
@@ -180,8 +208,6 @@ public class DevController : Controller
             claims.Add(new Claim(ClaimTypes.Role, "User"));
             if (!string.IsNullOrEmpty(userScope)) claims.Add(new Claim("scp", userScope));
         }
-
-        // Guarded Admin
         if (vm.ScopeAdmin && _config.GetValue<bool>("DevAuth:AllowAdminScope"))
         {
             await EnsureRoleAsync("Admin");
@@ -202,97 +228,34 @@ public class DevController : Controller
             await _db.SaveChangesAsync();
         }
 
-        // Optional org/debtor creation for scopes
-        var faker = new Faker("en_AU");
-        if (vm.ScopeClient && vm.CreateClientOrganization)
-        {
-            var org = new Organization(
-                name: faker.Company.CompanyName(),
-                legalName: faker.Company.CompanyName() + " Pty Ltd",
-                abn: faker.Random.ReplaceNumbers("###########"),
-                defaultCurrency: "AUD",
-                primaryColorHex: "#1e40af",
-                secondaryColorHex: "#3b82f6",
-                supportEmail: faker.Internet.Email("support"),
-                supportPhone: "1300" + faker.Random.ReplaceNumbers("####"),
-                timezone: "Australia/Sydney",
-                subdomain: faker.Internet.DomainWord() + "-dev",
-                tradingName: faker.Company.CompanyName()
-            );
-            org.SetTags(new[] { "dummy", "dev:fake-signin", $"owner:{user.Id}" });
-            _db.Organizations.Add(org);
-            await _db.SaveChangesAsync();
-            profile.OrganizationId = org.Id;
-            await _db.SaveChangesAsync();
-        }
-
-        if (vm.ScopeUser && vm.CreateDebtor)
-        {
-            // ensure there's an org to attach debtor to
-            var orgId = profile.OrganizationId ?? await _db.Organizations
-                .OrderByDescending(o => o.CreatedAtUtc)
-                .Select(o => (Guid?)o.Id)
-                .FirstOrDefaultAsync() ?? Guid.Empty;
-
-            Organization org;
-            if (orgId == Guid.Empty)
-            {
-                org = new Organization(
-                    name: faker.Company.CompanyName(),
-                    legalName: faker.Company.CompanyName() + " Pty Ltd",
-                    abn: faker.Random.ReplaceNumbers("###########"),
-                    defaultCurrency: "AUD",
-                    primaryColorHex: "#059669",
-                    secondaryColorHex: "#10b981",
-                    supportEmail: faker.Internet.Email("support"),
-                    supportPhone: "1300" + faker.Random.ReplaceNumbers("####"),
-                    timezone: "Australia/Sydney",
-                    subdomain: faker.Internet.DomainWord() + "-dev",
-                    tradingName: faker.Company.CompanyName()
-                );
-                org.SetTags(new[] { "dummy", "dev:fake-signin", $"owner:{user.Id}" });
-                _db.Organizations.Add(org);
-                await _db.SaveChangesAsync();
-            }
-            else
-            {
-                org = await _db.Organizations.FindAsync(orgId) ?? throw new InvalidOperationException("Organization not found");
-            }
-
-            var refPrefix = (org.Subdomain ?? org.Id.ToString("N").Substring(0, 8)).ToUpperInvariant();
-            var debtor = new Debtor(org.Id, $"{refPrefix}-USR-{faker.Random.Int(100, 999)}", vm.Email, "+614" + faker.Random.ReplaceNumbers("########"), vm.FirstName, vm.LastName);
-            debtor.SetTags(new[] { "dummy", "dev:fake-signin", $"owner:{user.Id}" });
-            _db.Debtors.Add(debtor);
-            await _db.SaveChangesAsync();
-            profile.DebtorId = debtor.Id;
-            await _db.SaveChangesAsync();
-        }
-
-        // Keep profile names synced if fields exist
         try
         {
             profile.FirstName = vm.FirstName;
             profile.LastName = vm.LastName;
             await _db.SaveChangesAsync();
         }
-        catch { /* ignore if profile doesn't have these columns */ }
+        catch { }
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
-        // Choose landing
         if (vm.ForceSecuritySetup)
         {
             return Redirect("/Security/Setup");
         }
 
-        string landing = "/";
-        if (vm.ScopeAdmin) landing = "/Admin";
-        else if (vm.ScopeClient) landing = "/Client";
-        else if (vm.ScopeUser) landing = "/User";
+        // Mimic OIDC: prefer returnUrl when provided
+        if (!string.IsNullOrWhiteSpace(vm.ReturnUrl))
+        {
+            return Redirect(vm.ReturnUrl);
+        }
 
-        return Redirect(string.IsNullOrWhiteSpace(vm.ReturnUrl) ? landing : vm.ReturnUrl);
+        // Choose landing by role
+        if (vm.ScopeAdmin) return Redirect("/Admin");
+        if (vm.ScopeClient) return Redirect("/Client");
+        if (vm.ScopeUser) return Redirect("/User");
+        return Redirect("/");
     }
 
     [Authorize(Roles = "Admin")]
@@ -365,7 +328,6 @@ public class DevController : Controller
     public async Task<IActionResult> StopImpersonation()
     {
         if (!DevAuthEnabled) return NotFound();
-        // Re-issue dev admin identity
         await IssueDevAdminAsync();
         return Redirect("/");
     }

@@ -4,3 +4,86 @@
  box-shadow: 0 4px 18px rgba(10,77,104,.25), inset 0 1px 4px rgba(255,255,255,.35);
 }
 .brand-circle:after{ content:"AP"; display:flex; align-items:center; justify-content:center; height:100%; font-weight:800; color:white; font-family:'Inter','Segoe UI',Arial,sans-serif; letter-spacing:.5px; }
+
+/* Accessible button system (light + dark) */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.375rem .75rem; border-radius:.5rem; font-weight:600; border:1px solid transparent; background:#2563eb; color:#fff; transition:background .2s ease, color .2s ease, border-color .2s ease; }
+.btn:hover { background:#1e40af; }
+.btn:focus-visible { outline:2px solid #93c5fd; outline-offset:2px; }
+.dark .btn { background:#1d4ed8; }
+.dark .btn:hover { background:#1e40af; }
+
+.btn-outline { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.375rem .75rem; border-radius:.5rem; font-weight:600; border:1px solid #d1d5db; color:#374151; background:transparent; }
+.btn-outline:hover { background:#f3f4f6; }
+.dark .btn-outline { border-color:#4b5563; color:#e5e7eb; }
+.dark .btn-outline:hover { background:#374151; color:#fff; }
+
+.btn-ghost { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.375rem .625rem; border-radius:.5rem; font-weight:600; color:#374151; background:transparent; }
+.btn-ghost:hover { background:#f3f4f6; }
+.dark .btn-ghost { color:#e5e7eb; }
+.dark .btn-ghost:hover { background:#374151; }
+
+.btn-danger { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.375rem .75rem; border-radius:.5rem; font-weight:700; border:1px solid #b91c1c; background:#dc2626; color:#fff; }
+.btn-danger:hover { background:#b91c1c; }
+.dark .btn-danger { background:#ef4444; border-color:#dc2626; color:#111827; }
+.dark .btn-danger:hover { background:#dc2626; color:#fff; }
+
+.btn-danger-outline { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.375rem .75rem; border-radius:.5rem; font-weight:700; border:1px solid #fca5a5; color:#b91c1c; background:transparent; }
+.btn-danger-outline:hover { background:#fee2e2; }
+.dark .btn-danger-outline { border-color:#ef4444; color:#ef4444; }
+.dark .btn-danger-outline:hover { background:#7f1d1d; color:#fff; }
+
+.badge { display:inline-flex; align-items:center; gap:.375rem; padding:.125rem .5rem; border-radius:.375rem; font-size:10px; font-weight:700; border:1px solid transparent; }
+.badge-dev { background:#fef3c7; color:#92400e; border-color:#fcd34d; }
+.dark .badge-dev { background:#78350f; color:#fde68a; border-color:#f59e0b; }
+
+/* Docs / Markdown typography (prose) with dark theme */
+.prose { color:#111827; line-height:1.7; }
+.prose h1,.prose h2,.prose h3,.prose h4 { color:#0f172a; font-weight:800; line-height:1.25; margin-top:1.5em; margin-bottom:.6em; }
+.prose h1 { font-size:2rem; }
+.prose h2 { font-size:1.5rem; }
+.prose h3 { font-size:1.25rem; }
+.prose p { margin:.9em 0; }
+.prose a { color:#2563eb; text-decoration:underline; }
+.prose strong { color:#0f172a; }
+.prose blockquote { border-left:4px solid #e5e7eb; padding-left:1rem; color:#374151; background:#f9fafb; border-radius:.25rem; margin:1em 0; }
+.prose code { background:#f3f4f6; color:#7c3aed; padding:.15rem .35rem; border-radius:.25rem; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:.95em; }
+.prose pre { background:#0b1220; color:#e5e7eb; padding:1rem; border-radius:.5rem; overflow:auto; }
+.prose pre code { background:transparent; padding:0; }
+.prose hr { border:0; border-top:1px solid #e5e7eb; margin:2rem 0; }
+
+.dark .prose { color:#e5e7eb; }
+.dark .prose h1,.dark .prose h2,.dark .prose h3,.dark .prose h4 { color:#e5e7eb; }
+.dark .prose a { color:#93c5fd; }
+.dark .prose strong { color:#f9fafb; }
+.dark .prose blockquote { border-left-color:#4b5563; color:#d1d5db; background:#111827; }
+.dark .prose code { background:#1f2937; color:#fbbf24; }
+.dark .prose pre { background:#111827; color:#e5e7eb; }
+.dark .prose hr { border-top-color:#374151; }
+
+/* Dark-mode remap for legacy utility combos often used in modals/surfaces */
+.dark .bg-white { background-color:#1f2937 !important; } /* gray-800 */
+.dark .text-gray-600 { color:#d1d5db !important; } /* gray-300 */
+.dark .text-gray-700 { color:#e5e7eb !important; } /* gray-200 */
+.dark .text-gray-900 { color:#f9fafb !important; } /* gray-50 */
+.dark .border-gray-200 { border-color:#374151 !important; } /* gray-700 */
+.dark .border-gray-300 { border-color:#4b5563 !important; } /* gray-600 */
+.dark .bg-blue-50 { background-color:#1e3a8a1a !important; } /* faint blue overlay */
+.dark .border-blue-200 { border-color:#1d4ed8 !important; }
+.dark .text-blue-700 { color:#93c5fd !important; }
+.dark .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0,0,0,.8) !important; }
+
+/* Rounded card surfaces used as modals */
+.dark .rounded-2xl { background-image: none !important; }
+
+/* Additional remaps for frequent surface colors */
+.dark .bg-gray-50 { background-color:#0f172a !important; } /* slate-900 */
+.dark .bg-gray-100 { background-color:#111827 !important; } /* gray-900 */
+.dark .text-gray-800 { color:#f3f4f6 !important; }
+
+/* Improve heading contrast inside light-surface containers */
+.dark .bg-white h1,.dark .bg-white h2,.dark .bg-white h3,.dark .bg-white h4 { color:#f9fafb !important; }
+.dark .bg-gray-50 h1,.dark .bg-gray-50 h2,.dark .bg-gray-50 h3,.dark .bg-gray-50 h4 { color:#f9fafb !important; }
+.dark .bg-gray-100 h1,.dark .bg-gray-100 h2,.dark .bg-gray-100 h3,.dark .bg-gray-100 h4 { color:#f9fafb !important; }
+
+/* Ensure notice boxes remain readable */
+.dark .bg-blue-50 { color:#e5e7eb !important; }

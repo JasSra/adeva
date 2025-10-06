@@ -31,10 +31,10 @@
                         <input type="text" placeholder="Search..." class="border dark:border-gray-700 rounded pl-9 pr-3 py-2 text-sm dark:bg-gray-900 dark:text-gray-100" x-model="query">
                         <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/></svg>
                     </div>
-                    <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm" x-on:click="reload()">Search</button>
+                    <button class="btn text-sm" x-on:click="reload()">Search</button>
                 }
                 <div class="relative" x-data="{open:false}" x-on:click.away="open=false">
-                    <button class="px-3 py-2 border dark:border-gray-700 rounded text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2" x-on:click="open=!open">
+                    <button class="btn-outline text-sm flex items-center gap-2" x-on:click="open=!open">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
                         Columns
                     </button>
@@ -54,8 +54,8 @@
                 {
                     <div class="flex items-center gap-1 text-sm">
                         <span class="text-gray-500 dark:text-gray-400">Density</span>
-                        <button class="px-2 py-1 border dark:border-gray-700 rounded-l" :class="{ 'bg-gray-100 dark:bg-gray-700': density==='normal' }" x-on:click="density='normal';save()">Std</button>
-                        <button class="px-2 py-1 border dark:border-gray-700 rounded-r" :class="{ 'bg-gray-100 dark:bg-gray-700': density==='compact' }" x-on:click="density='compact';save()">Compact</button>
+                        <button class="btn-ghost" :class="{ 'bg-gray-100 dark:bg-gray-700': density==='normal' }" x-on:click="density='normal';save()">Std</button>
+                        <button class="btn-ghost" :class="{ 'bg-gray-100 dark:bg-gray-700': density==='compact' }" x-on:click="density='compact';save()">Compact</button>
                     </div>
                 }
             </div>
@@ -114,9 +114,9 @@
             Showing @(((Model.Page-1)*Model.PageSize)+1) to @(Math.Min(Model.Page*Model.PageSize, Model.TotalCount)) of @Model.TotalCount entries
         </div>
         <div class="flex items-center gap-2">
-            <button class="px-3 py-1.5 border dark:border-gray-700 rounded text-sm bg-white dark:bg-gray-800 hover:bg-gray-50 disabled:opacity-40" :disabled="page<=1" x-on:click="go(page-1)">Previous</button>
+            <button class="btn-outline text-sm" :disabled="page<=1" x-on:click="go(page-1)">Previous</button>
             <span class="px-3 py-1.5 border dark:border-gray-700 rounded text-sm bg-blue-600 text-white" x-text="page"></span>
-            <button class="px-3 py-1.5 border dark:border-gray-700 rounded text-sm bg-white dark:bg-gray-800 hover:bg-gray-50 disabled:opacity-40" :disabled="page>=totalPages" x-on:click="go(page+1)">Next</button>
+            <button class="btn-outline text-sm" :disabled="page>=totalPages" x-on:click="go(page+1)">Next</button>
         </div>
     </div>
 </div>

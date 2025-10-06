@@ -1,0 +1,36 @@
+@* Centralized theme handling: auto-sync with OS, optional localStorage override, exposes window.toggleDarkMode *@
+<script>
+  (function () {
+    const root = document.documentElement;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function applyTheme(from) {
+      const stored = localStorage.getItem('theme');
+      const preferDark = mq.matches;
+      const useDark = stored ? stored === 'dark' : preferDark;
+      root.classList.toggle('dark', useDark);
+    }
+
+    // Initial
+    applyTheme('init');
+
+    // React to OS changes when no override
+    mq.addEventListener?.('change', () => {
+      if (!('theme' in localStorage)) applyTheme('os-change');
+    });
+
+    // Expose manual toggle (persists override)
+    window.toggleDarkMode = function () {
+      const isDark = root.classList.contains('dark');
+      const next = isDark ? 'light' : 'dark';
+      root.classList.toggle('dark', next === 'dark');
+      localStorage.setItem('theme', next);
+    }
+
+    // Optional: clear override to return to OS
+    window.resetThemeToSystem = function () {
+      localStorage.removeItem('theme');
+      applyTheme('reset');
+    }
+  })();
+</script>

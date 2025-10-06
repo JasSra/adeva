@@ -10,7 +10,7 @@
 
     <div class="flex items-center gap-4 mb-6">
         <form method="post" action="/Dev/StopImpersonation">
-            <button class="px-4 py-2 bg-gray-700 text-white rounded">Return to Dev Admin</button>
+            <button class="btn-outline">Return to Dev Admin</button>
         </form>
         <a class="px-4 py-2 bg-red-600 text-white rounded" href="/Dev/Danger">Danger Zone</a>
     </div>
@@ -35,7 +35,7 @@
                         <td class="py-2">
                             <form method="post" action="/Dev/ImpersonateById">
                                 <input type="hidden" name="id" value="@u.Id" />
-                                <button class="px-3 py-1 bg-blue-600 text-white rounded">Impersonate</button>
+                                <button class="btn">Impersonate</button>
                             </form>
                         </td>
                     </tr>

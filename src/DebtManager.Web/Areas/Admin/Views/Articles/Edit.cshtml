@@ -3,86 +3,215 @@
     var article = ViewBag.Article as DebtManager.Domain.Articles.Article;
 }
 
-<div class="mb-6">
+<div class="mb-4 flex items-center justify-between">
     <h2 class="text-2xl font-bold">Edit Article</h2>
+    <div class="flex items-center gap-2">
+        <a href="/Article/View/@article.Slug" target="_blank" class="px-3 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Open Public</a>
+        <div id="mdToolbar" class="sticky top-16 z-20 bg-white/90 dark:bg-gray-900/90 backdrop-blur border rounded shadow-sm px-2 py-1 flex gap-1">
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="h1">H1</button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="h2">H2</button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="h3">H3</button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="bold"><strong>B</strong></button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="italic"><em>I</em></button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="link">Link</button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="image">Image</button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="ul">• List</button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="ol">1. List</button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="quote">Quote</button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="code">Code</button>
+            <button class="px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" data-cmd="table">Table</button>
+        </div>
+    </div>
 </div>
 
-<div class="bg-white rounded-lg shadow p-6">
-    <form method="post" action="/Admin/Articles/Edit/@article.Id" enctype="multipart/form-data">
-        <div class="space-y-6">
-            <div>
-                <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                <input type="text" id="title" name="title" required value="@article.Title"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="Enter article title" />
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <!-- Live Preview & AI tools (left) -->
+    <div class="bg-white dark:bg-gray-900 rounded-lg shadow p-0 overflow-hidden order-2 xl:order-1">
+        <div class="px-6 py-3 border-b dark:border-gray-700 flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Live Preview</h3>
+            <span id="readTime" class="text-xs text-gray-500"></span>
+        </div>
+        <div id="preview" class="prose dark:prose-invert max-w-none p-6 min-h-[400px] bg-gray-50 dark:bg-gray-800"></div>
+        <div class="px-6 py-3 border-t dark:border-gray-700">
+            <h4 class="font-medium text-sm mb-2">Checks & Suggestions</h4>
+            <ul id="suggestions" class="list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 space-y-1"></ul>
+        </div>
+        <div class="px-6 py-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <div class="grid sm:grid-cols-2 gap-3">
+                <button type="button" id="btnOutline" class="px-3 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">Generate Outline</button>
+                <button type="button" id="btnHeadline" class="px-3 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">Headline Ideas</button>
+                <button type="button" id="btnSummary" class="px-3 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">Summarize</button>
+                <button type="button" id="btnTags" class="px-3 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">Suggest Tags</button>
+            </div>
+            <div id="aiOutput" class="mt-3 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap"></div>
+        </div>
+    </div>
+
+    <!-- Editor form (right) -->
+    <div class="xl:col-span-1 bg-white dark:bg-gray-900 rounded-lg shadow p-6 order-1 xl:order-2">
+        <form id="articleForm" method="post" action="/Admin/Articles/Edit/@article.Id" enctype="multipart/form-data" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="title" class="block text-sm font-medium mb-1">Title *</label>
+                    <input type="text" id="title" name="title" required value="@article.Title" class="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800" />
+                </div>
+                <div>
+                    <label for="slug" class="block text-sm font-medium mb-1">Slug *</label>
+                    <input type="text" id="slug" name="slug" required value="@article.Slug" class="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="authorName" class="block text-sm font-medium mb-1">Author</label>
+                    <input type="text" id="authorName" name="authorName" value="@(article.AuthorName ?? "")" class="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800" />
+                </div>
+                <div>
+                    <label for="headerImageUrl" class="block text-sm font-medium mb-1">Header Image URL</label>
+                    <input type="text" id="headerImageUrl" name="headerImageUrl" value="@(article.HeaderImageUrl ?? "")" class="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="excerpt" class="block text-sm font-medium mb-1">Excerpt</label>
+                    <textarea id="excerpt" name="excerpt" rows="3" class="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800">@(article.Excerpt ?? "")</textarea>
+                </div>
+                <div>
+                    <label for="headerImage" class="block text-sm font-medium mb-1">Upload Header Image</label>
+                    <input type="file" id="headerImage" name="headerImage" accept="image/*" class="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800" />
+                </div>
             </div>
 
             <div>
-                <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
-                <input type="text" id="slug" name="slug" required value="@article.Slug"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="url-friendly-slug" />
-                <p class="mt-1 text-xs text-gray-500">URL-friendly identifier (e.g., about-us, faq, privacy-policy)</p>
+                <div class="flex items-center justify-between">
+                    <label for="content" class="block text-sm font-medium mb-1">Content (Markdown) *</label>
+                    <div class="flex gap-2 text-xs">
+                        <button type="button" id="fmInsertBtn" class="px-2 py-1 border rounded">Insert Front Matter</button>
+                        <button type="button" id="fmLoadBtn" class="px-2 py-1 border rounded">Load Front Matter</button>
+                    </div>
+                </div>
+                <textarea id="frontMatter" rows="4" class="w-full px-3 py-2 border rounded font-mono text-xs bg-white dark:bg-gray-800" placeholder="---
+# YAML front matter will appear here
+---"></textarea>
+                <textarea id="content" name="content" rows="18" required class="w-full px-3 py-2 border rounded font-mono text-sm bg-white dark:bg-gray-800">@article.Content</textarea>
+                <div class="mt-2 flex gap-2 text-xs">
+                    <button type="button" id="aiImproveBtn" class="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700">AI Improve</button>
+                    <button type="button" id="seoSuggestBtn" class="px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700">Suggest SEO</button>
+                    <button type="button" id="previewBtn" class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-black">Preview</button>
+                </div>
             </div>
 
-            <div>
-                <label for="excerpt" class="block text-sm font-medium text-gray-700 mb-1">Excerpt</label>
-                <textarea id="excerpt" name="excerpt" rows="3"
-                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Brief summary (optional)">@(article.Excerpt ?? "")</textarea>
-            </div>
-
-            <div>
-                <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Content *</label>
-                <textarea id="content" name="content" rows="15" required
-                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Article content (HTML supported)">@article.Content</textarea>
-            </div>
-
-            <div>
-                <label for="headerImageUrl" class="block text-sm font-medium text-gray-700 mb-1">Header Image URL</label>
-                <input type="text" id="headerImageUrl" name="headerImageUrl" value="@(article.HeaderImageUrl ?? "")"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="https://example.com/image.jpg" />
-                <p class="mt-1 text-xs text-gray-500">Or upload an image file below</p>
-            </div>
-
-            <div>
-                <label for="headerImage" class="block text-sm font-medium text-gray-700 mb-1">Upload Header Image</label>
-                <input type="file" id="headerImage" name="headerImage" accept="image/*"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" />
-                <p class="mt-1 text-xs text-gray-500">Supported formats: JPG, PNG, GIF (max 5MB)</p>
-            </div>
-
-            <div>
-                <label for="authorName" class="block text-sm font-medium text-gray-700 mb-1">Author Name</label>
-                <input type="text" id="authorName" name="authorName" value="@(article.AuthorName ?? "")"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="Author name (optional)" />
-            </div>
-
-            <div>
-                <label for="metaDescription" class="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
-                <input type="text" id="metaDescription" name="metaDescription" value="@(article.MetaDescription ?? "")"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="SEO meta description (optional)" />
-            </div>
-
-            <div>
-                <label for="metaKeywords" class="block text-sm font-medium text-gray-700 mb-1">Meta Keywords</label>
-                <input type="text" id="metaKeywords" name="metaKeywords" value="@(article.MetaKeywords ?? "")"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                       placeholder="keyword1, keyword2, keyword3 (optional)" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="metaDescription" class="block text-sm font-medium mb-1">Meta Description</label>
+                    <input type="text" id="metaDescription" name="metaDescription" value="@(article.MetaDescription ?? "")" class="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800" />
+                </div>
+                <div>
+                    <label for="metaKeywords" class="block text-sm font-medium mb-1">Meta Keywords</label>
+                    <input type="text" id="metaKeywords" name="metaKeywords" value="@(article.MetaKeywords ?? "")" class="w-full px-3 py-2 border rounded bg-white dark:bg-gray-800" />
+                </div>
             </div>
 
             <div class="flex gap-3">
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                    Save Changes
-                </button>
-                <a href="/Admin/Articles" class="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
-                    Cancel
-                </a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Changes</button>
+                <a href="/Admin/Articles" class="px-6 py-2 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-100 rounded hover:bg-gray-300">Cancel</a>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
+
+<script src="/js/article-editor.js"></script>
+<script>
+(function(){
+  const title = document.getElementById('title');
+  const slug = document.getElementById('slug');
+  const content = document.getElementById('content');
+  const preview = document.getElementById('preview');
+  const suggestions = document.getElementById('suggestions');
+  const readTime = document.getElementById('readTime');
+  const aiOut = document.getElementById('aiOutput');
+
+  title.addEventListener('input', e => {
+    const s = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    slug.value = s;
+  });
+
+  async function render() {
+    const text = content.value;
+    try {
+      const res = await fetch('/Admin/Articles/RenderMarkdown', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+      const html = await res.text();
+      preview.innerHTML = html;
+    } catch {}
+
+    try {
+      const res = await fetch('/Admin/Articles/AnalyzeMarkdown', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+      const data = await res.json();
+      readTime.textContent = `${data.readTimeMinutes} min read · ${data.wordCount} words · ${data.headings.length} headings`;
+      suggestions.innerHTML = '';
+      data.suggestions.forEach(s => { const li = document.createElement('li'); li.textContent = s; suggestions.appendChild(li); });
+    } catch {}
+  }
+
+  content.addEventListener('input', debounce(render, 250));
+  document.getElementById('previewBtn').addEventListener('click', render);
+
+  document.getElementById('seoSuggestBtn').addEventListener('click', async function(){
+    const text = content.value; const t = title.value; const s = slug.value;
+    const res = await fetch('/Admin/Articles/SuggestSeo', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text, title: t, slug: s }) });
+    const data = await res.json();
+    document.getElementById('metaDescription').value = data.metaDescription || '';
+    document.getElementById('metaKeywords').value = data.metaKeywords || '';
+    if (!slug.value) slug.value = data.slug || '';
+  });
+
+  document.getElementById('aiImproveBtn').addEventListener('click', async function(){
+    const text = content.value; const t = title.value;
+    const res = await fetch('/Admin/Articles/ImproveMarkdown', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text, title: t }) });
+    const data = await res.json();
+    content.value = data.improved || text; render();
+  });
+
+  // AI toolbox
+  document.getElementById('btnOutline').addEventListener('click', async function(){
+    const text = content.value;
+    const res = await fetch('/Admin/Articles/GenerateOutline', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+    const data = await res.json(); aiOut.textContent = data.outline || '';
+  });
+  document.getElementById('btnHeadline').addEventListener('click', async function(){
+    const text = content.value; const titleVal = title.value;
+    const res = await fetch('/Admin/Articles/HeadlineIdeas', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text, title: titleVal }) });
+    const data = await res.json(); aiOut.textContent = (data.ideas || []).join('\n');
+  });
+  document.getElementById('btnSummary').addEventListener('click', async function(){
+    const text = content.value;
+    const res = await fetch('/Admin/Articles/Summarize', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+    const data = await res.json(); aiOut.textContent = data.summary || '';
+  });
+  document.getElementById('btnTags').addEventListener('click', async function(){
+    const text = content.value; const titleVal = title.value;
+    const res = await fetch('/Admin/Articles/SuggestTags', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text, title: titleVal }) });
+    const data = await res.json(); aiOut.textContent = (data.tags || []).join(', ');
+    const mk = document.getElementById('metaKeywords'); if (data.tags) mk.value = data.tags.join(', ');
+  });
+
+  function debounce(fn, ms){ let h; return (...a)=>{ clearTimeout(h); h=setTimeout(()=>fn.apply(this,a), ms); }; }
+
+  ArticleEditor.init({
+    contentId: 'content',
+    titleId: 'title',
+    slugId: 'slug',
+    headerImageUrlId: 'headerImageUrl',
+    metaDescriptionId: 'metaDescription',
+    metaKeywordsId: 'metaKeywords',
+    tagsId: 'metaKeywords',
+    toolbarId: 'mdToolbar',
+    frontMatterTextareaId: 'frontMatter',
+    frontMatterInsertBtnId: 'fmInsertBtn',
+    frontMatterLoadBtnId: 'fmLoadBtn'
+  });
+
+  render();
+})();
+</script>

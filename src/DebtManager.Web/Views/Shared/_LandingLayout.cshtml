@@ -5,6 +5,7 @@
 @inject IHostEnvironment Env
 @{
     var heroEnabled = Context.Request.Path == "/" && (Config.GetSection("Hero").GetValue<bool>("Enabled", true));
+    var devEnabled = Env.IsDevelopment() && Config.GetValue<bool>("DevAuth:EnableFakeSignin");
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -16,18 +17,39 @@
     <link rel="stylesheet" href="/css/hero-bg.css" />
     <link rel="stylesheet" href="/css/brand.css" />
     <script>
-        // Hero theme toggle
-        function setHeroTheme(light) {
-            document.documentElement.classList.toggle('light-hero', !!light);
-            localStorage.heroTheme = light ? 'light' : 'dark';
-        }
-        (function(){
-            const pref = localStorage.heroTheme;
-            if (pref === 'light') document.documentElement.classList.add('light-hero');
+        // Dark mode preference + hero background theme sync (automatic)
+        (function initTheme() {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const stored = localStorage.theme;
+            const useDark = stored ? stored === 'dark' : prefersDark;
+            document.documentElement.classList.toggle('dark', useDark);
+            // hero: light-hero when NOT dark
+            document.documentElement.classList.toggle('light-hero', !useDark);
+
+            // keep hero theme in sync when OS preference changes
+            const mq = window.matchMedia('(prefers-color-scheme: dark)');
+            mq.addEventListener?.('change', e => {
+                const hasStored = 'theme' in localStorage;
+                if (hasStored) return; // user explicitly chose
+                const dark = e.matches;
+                document.documentElement.classList.toggle('dark', dark);
+                document.documentElement.classList.toggle('light-hero', !dark);
+            });
         })();
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            document.documentElement.classList.toggle('light-hero', !isDark);
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu?.classList.toggle('hidden');
+        }
     </script>
 </head>
-<body class="min-h-screen bg-gray-50 relative">
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-gray-100 relative">
     @if (heroEnabled)
     {
         <div id="animated-hero" class="hero-bg" aria-hidden="true">
@@ -50,48 +72,122 @@
         </div>
     }
 
-    <header class="bg-white shadow-sm relative z-10">
-        <div class="container mx-auto px-4 py-4">
-            <nav class="flex items-center justify-between">
+    <header class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 relative z-10">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-14">
                 <div class="flex items-center">
                     @await Html.PartialAsync("~/Views/Shared/Partials/_BrandLogo.cshtml", new BrandLogoModel { Variant = "full", Size = "sm", AsLink = true, LinkHref = "/" })
                 </div>
-                <div class="flex items-center gap-6">
-                    <button class="text-sm border rounded px-2 py-1" onclick="setHeroTheme(!(document.documentElement.classList.contains('light-hero')))">Hero Theme</button>
+                <nav class="hidden md:flex items-center gap-5 text-sm">
                     @if (User?.Identity?.IsAuthenticated ?? false)
                     {
-                        <a href="/User" class="text-gray-700 hover:text-blue-600">My Debts</a>
-                        <a href="/Client" class="text-gray-700 hover:text-blue-600">Client Portal</a>
-                        <a href="/Admin" class="text-gray-700 hover:text-blue-600">Admin</a>
+                        <a href="/User" class="text-gray-700 dark:text-gray-200 hover:text-blue-700">My Debts</a>
+                        <a href="/Client" class="text-gray-700 dark:text-gray-200 hover:text-blue-700">Client Portal</a>
+                        <a href="/Admin" class="text-gray-700 dark:text-gray-200 hover:text-blue-700">Admin</a>
                         @if (User.IsInRole("SuperAdmin"))
                         {
-                            <a href="/Root" class="text-gray-700 hover:text-blue-600">Root</a>
+                            <a href="/Root" class="text-gray-700 dark:text-gray-200 hover:text-blue-700">Root</a>
                         }
-                        <span class="text-gray-600">@User.Identity!.Name</span>
-                        <a href="/Account/SignOutUser" class="text-gray-700 hover:text-blue-600">Sign out</a>
                     }
                     else
                     {
-                        <a href="/Account/SignInClient" class="text-gray-700 hover:text-blue-600">For Business</a>
-                        <a href="/Account/SignInUser" class="text-gray-700 hover:text-blue-600">My Account</a>
-                    }
-
-                    @* Dev-only superuser links *@
-                    @if (Env.IsDevelopment())
-                    {
-                        <span class="text-xs uppercase text-gray-400">Dev</span>
-                        if (User?.Identity?.IsAuthenticated ?? false)
+                        @if (devEnabled)
                         {
-                            <a href="/Dev/Impersonate" class="text-gray-700 hover:text-blue-600">Impersonate</a>
-                            <a href="/Dev/Danger" class="text-red-600 hover:text-red-700">Danger</a>
+                            <a href="/Dev/FakeSignin?role=client" class="text-gray-700 dark:text-gray-200 hover:text-blue-700">For Business</a>
+                            <a href="/Dev/FakeSignin?role=user" class="text-gray-700 dark:text-gray-200 hover:text-blue-700">My Account</a>
                         }
                         else
                         {
-                            <a href="/Dev/Login" class="text-gray-700 hover:text-blue-600">Dev Login</a>
+                            <a href="/Account/SignInClient" class="text-gray-700 dark:text-gray-200 hover:text-blue-700">For Business</a>
+                            <a href="/Account/SignInUser" class="text-gray-700 dark:text-gray-200 hover:text-blue-700">My Account</a>
                         }
                     }
+                </nav>
+                <div class="md:hidden flex items-center gap-2">
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle dark mode">
+                        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    </button>
+                    <button onclick="toggleMobileMenu()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </button>
                 </div>
+            </div>
+            <nav id="mobile-menu" class="mt-2 hidden md:hidden flex-col gap-2 pb-3">
+                @if (User?.Identity?.IsAuthenticated ?? false)
+                {
+                    <a href="/User" class="py-1">My Debts</a>
+                    <a href="/Client" class="py-1">Client Portal</a>
+                    <a href="/Admin" class="py-1">Admin</a>
+                    @if (User.IsInRole("SuperAdmin")) { <a href="/Root" class="py-1">Root</a> }
+                }
+                else
+                {
+                    @if (devEnabled)
+                    {
+                        <a href="/Dev/FakeSignin?role=client" class="py-1">For Business</a>
+                        <a href="/Dev/FakeSignin?role=user" class="py-1">My Account</a>
+                    }
+                    else
+                    {
+                        <a href="/Account/SignInClient" class="py-1">For Business</a>
+                        <a href="/Account/SignInUser" class="py-1">My Account</a>
+                    }
+                }
             </nav>
+        </div>
+        <!-- Secondary context bar below header -->
+        <div class="bg-slate-50 dark:bg-gray-700/60 border-t dark:border-gray-700">
+            <div class="container mx-auto px-4 h-10 flex items-center justify-between text-sm">
+                <div class="flex items-center gap-3">
+                    @if (User?.Identity?.IsAuthenticated ?? false)
+                    {
+                        <span class="text-gray-700 dark:text-gray-200">Signed in as <strong>@User.Identity!.Name</strong></span>
+                    }
+                    else
+                    {
+                        <span class="text-gray-600 dark:text-gray-300">Welcome</span>
+                    }
+                    @if (Env.IsDevelopment())
+                    {
+                        <span class="badge badge-dev">DEV</span>
+                    }
+                    @RenderSection("Context", required: false)
+                </div>
+                <div class="flex items-center gap-2">
+                    @if (User?.Identity?.IsAuthenticated ?? false)
+                    {
+                        <div class="hidden md:flex items-center gap-2">
+                            <a href="/Account/Profile" class="btn-outline">Profile</a>
+                            <a href="/Account/SignOutUser" class="btn-danger-outline">Sign out</a>
+                        </div>
+                    }
+                    else
+                    {
+                        @if (devEnabled)
+                        {
+                            <a href="/Dev/FakeSignin?role=user" class="btn">Sign in</a>
+                        }
+                        else
+                        {
+                            <a href="/Account/SignInUser" class="btn">Sign in</a>
+                        }
+                    }
+                    @if (Env.IsDevelopment())
+                    {
+                        @if (User?.Identity?.IsAuthenticated ?? false)
+                        {
+                            <a href="/Dev/Impersonate" class="btn-outline">Impersonate</a>
+                            <a href="/Dev/Danger" class="btn-danger">Danger</a>
+                        }
+                        else
+                        {
+                            <a href="/Dev/Login" class="btn-outline">Dev Login</a>
+                        }
+                    }
+                    @RenderSection("Actions", required: false)
+                </div>
+            </div>
         </div>
     </header>
     

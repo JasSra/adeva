@@ -17,18 +17,10 @@ public static class DbInitializer
         var userManager = sp.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = sp.GetRequiredService<RoleManager<ApplicationRole>>();
         var appConfig = sp.GetRequiredService<IAppConfigService>();
+        var config = sp.GetRequiredService<IConfiguration>();
 
-        // Dev/Staging: drop and recreate to avoid migrations
-        if (!env.IsProduction())
-        {
-            await db.Database.EnsureDeletedAsync();
-            await db.Database.EnsureCreatedAsync();
-        }
-        else
-        {
-            // Production fallback: ensure created without destructive ops
-            await db.Database.EnsureCreatedAsync();
-        }
+        // Lean: run migrations only
+        await db.Database.MigrateAsync();
 
         // Roles
         var roles = new[] { "SuperAdmin", "Admin", "Client", "User" };
@@ -58,7 +50,6 @@ public static class DbInitializer
         {
             await userManager.AddToRoleAsync(admin, "Admin");
         }
-        // Ensure dev admin is SuperAdmin too for local management
         if (!await userManager.IsInRoleAsync(admin, "SuperAdmin"))
         {
             await userManager.AddToRoleAsync(admin, "SuperAdmin");
@@ -67,11 +58,24 @@ public static class DbInitializer
         // Seed config keys with sensible dev defaults
         await SeedConfigAsync(appConfig);
 
-        // Seed articles/content
-        await ArticleSeeder.SeedArticlesAsync(db);
+        // Minimal runtime flags (admin-console managed)
+        await EnsureDefaultAsync(appConfig, "Security:BypassOtpVerification", env.IsDevelopment() ? "true" : "false");
+        await EnsureDefaultAsync(appConfig, "DevAuth:EnableFakeSignin", env.IsDevelopment() ? "true" : "false");
+        await EnsureDefaultAsync(appConfig, "Security:AutoElevateFirstAdmin", "false");
 
-        // Seed dummy data for dev/staging
-        if (!env.IsProduction())
+        // Seed message templates
+        await MessageTemplateSeeder.SeedTemplatesAsync(db);
+
+        // Optional: seed articles and dummy data via flags (defaults false)
+        var seedArticles = config.GetValue<bool>("Content:SeedArticlesOnStartup");
+        var seedDevData = config.GetValue<bool>("DevData:SeedOnStartup");
+
+        if (seedArticles)
+        {
+            await ArticleSeeder.SeedArticlesAsync(db);
+        }
+
+        if (seedDevData && !env.IsProduction())
         {
             await DummyDataSeeder.SeedDummyDataAsync(db);
         }
@@ -106,5 +110,13 @@ public static class DbInitializer
         // OpenAI (optional)
         if (!await cfg.ExistsAsync("OpenAI:ApiKey"))
             await cfg.SetAsync("OpenAI:ApiKey", "sk-dev-please-change", true);
+    }
+
+    private static async Task EnsureDefaultAsync(IAppConfigService cfg, string key, string value)
+    {
+        if (!await cfg.ExistsAsync(key))
+        {
+            await cfg.SetAsync(key, value);
+        }
     }
 }

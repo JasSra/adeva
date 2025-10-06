@@ -1,0 +1,188 @@
+@model DebtManager.Web.Areas.Admin.Controllers.QueuedMessageDetailVm
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="mb-6">
+    <a href="/Admin/Messages/AllMessages" class="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline mb-4">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to All Messages
+    </a>
+</div>
+
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <!-- Header -->
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2">
+                    @switch (Model.Channel)
+                    {
+                        case DebtManager.Domain.Communications.MessageChannel.Email:
+                            <span class="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 font-medium">
+                                ?? Email
+                            </span>
+                            break;
+                        case DebtManager.Domain.Communications.MessageChannel.Sms:
+                            <span class="px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 font-medium">
+                                ?? SMS
+                            </span>
+                            break;
+                    }
+                    
+                    @switch (Model.Status)
+                    {
+                        case DebtManager.Domain.Communications.QueuedMessageStatus.Pending:
+                            <span class="px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 font-medium">
+                                ? Pending
+                            </span>
+                            break;
+                        case DebtManager.Domain.Communications.QueuedMessageStatus.Processing:
+                            <span class="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 font-medium">
+                                ?? Processing
+                            </span>
+                            break;
+                        case DebtManager.Domain.Communications.QueuedMessageStatus.Sent:
+                            <span class="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 font-medium">
+                                ? Sent
+                            </span>
+                            break;
+                        case DebtManager.Domain.Communications.QueuedMessageStatus.Failed:
+                            <span class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200 font-medium">
+                                ? Failed (Retry: @Model.RetryCount)
+                            </span>
+                            break;
+                        case DebtManager.Domain.Communications.QueuedMessageStatus.Cancelled:
+                            <span class="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 font-medium">
+                                ?? Cancelled
+                            </span>
+                            break;
+                    }
+                </div>
+                
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                    @Model.Subject
+                </h1>
+                
+                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    <div>
+                        <span class="font-medium">Recipient:</span>
+                        <span class="ml-2">
+                            @if (!string.IsNullOrEmpty(Model.RecipientEmail))
+                            {
+                                <text>@Model.RecipientEmail</text>
+                            }
+                            else if (!string.IsNullOrEmpty(Model.RecipientPhone))
+                            {
+                                <text>@Model.RecipientPhone</text>
+                            }
+                        </span>
+                    </div>
+                    <div>
+                        <span class="font-medium">Queued:</span>
+                        <span class="ml-2">@Model.QueuedAtUtc.ToString("MMMM dd, yyyy 'at' HH:mm")</span>
+                    </div>
+                    @if (Model.SentAtUtc.HasValue)
+                    {
+                        <div>
+                            <span class="font-medium">Sent:</span>
+                            <span class="ml-2">@Model.SentAtUtc.Value.ToString("MMMM dd, yyyy 'at' HH:mm")</span>
+                        </div>
+                    }
+                    @if (Model.FailedAtUtc.HasValue)
+                    {
+                        <div>
+                            <span class="font-medium">Failed:</span>
+                            <span class="ml-2">@Model.FailedAtUtc.Value.ToString("MMMM dd, yyyy 'at' HH:mm")</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ProviderMessageId))
+                    {
+                        <div>
+                            <span class="font-medium">Provider ID:</span>
+                            <span class="ml-2 font-mono text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">@Model.ProviderMessageId</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Error Message (if failed) -->
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 bg-red-50 dark:bg-red-900/20">
+            <h3 class="text-sm font-semibold text-red-900 dark:text-red-200 mb-2">Error Details</h3>
+            <pre class="text-xs text-red-800 dark:text-red-300 bg-red-100 dark:bg-red-900/30 p-3 rounded overflow-x-auto">@Model.ErrorMessage</pre>
+        </div>
+    }
+    
+    <!-- Message Body -->
+    <div class="p-6">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Message Content</h3>
+        
+        @if (Model.Channel == DebtManager.Domain.Communications.MessageChannel.Email)
+        {
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50 max-h-96 overflow-auto">
+                @Html.Raw(Model.Body)
+            </div>
+        }
+        else
+        {
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50">
+                <p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">@Model.Body</p>
+                <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    Character count: @Model.Body.Length / 160
+                </div>
+            </div>
+        }
+    </div>
+    
+    <!-- Related Entity -->
+    @if (!string.IsNullOrEmpty(Model.RelatedEntityType) && Model.RelatedEntityId.HasValue)
+    {
+        <div class="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Related Information</h3>
+            <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <span class="font-medium">@Model.RelatedEntityType:</span>
+                <span class="font-mono text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">@Model.RelatedEntityId</span>
+                
+                @if (Model.RelatedEntityType == "Organization")
+                {
+                    <a href="/Admin/Organizations/Details/@Model.RelatedEntityId" class="ml-2 text-blue-600 dark:text-blue-400 hover:underline">
+                        View Organization ?
+                    </a>
+                }
+                else if (Model.RelatedEntityType == "Debt")
+                {
+                    <a href="/Admin/Debts/Details/@Model.RelatedEntityId" class="ml-2 text-blue-600 dark:text-blue-400 hover:underline">
+                        View Debt ?
+                    </a>
+                }
+                else if (Model.RelatedEntityType == "Debtor")
+                {
+                    <a href="/Admin/Debtors/Details/@Model.RelatedEntityId" class="ml-2 text-blue-600 dark:text-blue-400 hover:underline">
+                        View Debtor ?
+                    </a>
+                }
+            </div>
+        </div>
+    }
+    
+    <!-- Metadata -->
+    <div class="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Technical Details</h3>
+        <div class="grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400 font-mono">
+            <div>
+                <span class="font-semibold">Message ID:</span>
+                <span class="ml-2">@Model.Id</span>
+            </div>
+            <div>
+                <span class="font-semibold">Retry Count:</span>
+                <span class="ml-2">@Model.RetryCount</span>
+            </div>
+        </div>
+    </div>
+</div>

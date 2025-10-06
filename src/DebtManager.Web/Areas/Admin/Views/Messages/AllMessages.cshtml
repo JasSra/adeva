@@ -1,0 +1,234 @@
+@model DebtManager.Web.Areas.Admin.Controllers.AllMessagesVm
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">All Messages</h2>
+    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">View all queued and sent messages (emails, SMS, etc.)</p>
+</div>
+
+<!-- Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Queued</h3>
+        <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">@Model.Statistics.TotalQueued</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Sent</h3>
+        <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">@Model.Statistics.TotalSent</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Failed</h3>
+        <p class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">@Model.Statistics.TotalFailed</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Emails</h3>
+        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">@Model.Statistics.EmailCount</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">SMS</h3>
+        <p class="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">@Model.Statistics.SmsCount</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+    <form method="get" class="grid grid-cols-1 md:grid-cols-6 gap-3">
+        <select name="channel" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            <option value="">All Channels</option>
+            <option value="Email" selected="@(Model.ChannelFilter == "Email")">Email</option>
+            <option value="Sms" selected="@(Model.ChannelFilter == "Sms")">SMS</option>
+            <option value="InApp" selected="@(Model.ChannelFilter == "InApp")">In-App</option>
+        </select>
+        
+        <select name="status" class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            <option value="">All Status</option>
+            <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Pending</option>
+            <option value="Processing" selected="@(Model.StatusFilter == "Processing")">Processing</option>
+            <option value="Sent" selected="@(Model.StatusFilter == "Sent")">Sent</option>
+            <option value="Failed" selected="@(Model.StatusFilter == "Failed")">Failed</option>
+            <option value="Cancelled" selected="@(Model.StatusFilter == "Cancelled")">Cancelled</option>
+        </select>
+        
+        <input type="date" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" 
+               class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+               placeholder="From Date" />
+               
+        <input type="date" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" 
+               class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+               placeholder="To Date" />
+        
+        <input type="text" name="search" value="@Model.SearchQuery" 
+               class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+               placeholder="Search recipient..." />
+        
+        <div class="flex gap-2">
+            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium whitespace-nowrap">
+                Search
+            </button>
+            <a href="/Admin/Messages/AllMessages" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-white rounded-lg text-sm font-medium">
+                Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Messages Table -->
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    @if (Model.Messages.Any())
+    {
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date/Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Channel</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Recipient</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subject</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Related To</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    @foreach (var message in Model.Messages)
+                    {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                @message.QueuedAtUtc.ToString("MMM dd, HH:mm")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @switch (message.Channel)
+                                {
+                                    case DebtManager.Domain.Communications.MessageChannel.Email:
+                                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200">
+                                            ?? Email
+                                        </span>
+                                        break;
+                                    case DebtManager.Domain.Communications.MessageChannel.Sms:
+                                        <span class="px-2 py-1 text-xs rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200">
+                                            ?? SMS
+                                        </span>
+                                        break;
+                                    case DebtManager.Domain.Communications.MessageChannel.InApp:
+                                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200">
+                                            ?? In-App
+                                        </span>
+                                        break;
+                                }
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                @if (!string.IsNullOrEmpty(message.RecipientEmail))
+                                {
+                                    <div class="truncate max-w-xs" title="@message.RecipientEmail">@message.RecipientEmail</div>
+                                }
+                                else if (!string.IsNullOrEmpty(message.RecipientPhone))
+                                {
+                                    <div>@message.RecipientPhone</div>
+                                }
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                <div class="truncate max-w-md" title="@message.Subject">@message.Subject</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @switch (message.Status)
+                                {
+                                    case DebtManager.Domain.Communications.QueuedMessageStatus.Pending:
+                                        <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200">
+                                            ? Pending
+                                        </span>
+                                        break;
+                                    case DebtManager.Domain.Communications.QueuedMessageStatus.Processing:
+                                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200">
+                                            ?? Processing
+                                        </span>
+                                        break;
+                                    case DebtManager.Domain.Communications.QueuedMessageStatus.Sent:
+                                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200">
+                                            ? Sent
+                                        </span>
+                                        break;
+                                    case DebtManager.Domain.Communications.QueuedMessageStatus.Failed:
+                                        <span class="px-2 py-1 text-xs rounded-full bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200">
+                                            ? Failed (@message.RetryCount)
+                                        </span>
+                                        break;
+                                    case DebtManager.Domain.Communications.QueuedMessageStatus.Cancelled:
+                                        <span class="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                                            ?? Cancelled
+                                        </span>
+                                        break;
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                @if (!string.IsNullOrEmpty(message.RelatedEntityType))
+                                {
+                                    <span class="font-mono text-xs">@message.RelatedEntityType</span>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400 dark:text-gray-600">-</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <a href="/Admin/Messages/ViewQueued/@message.Id" class="text-blue-600 dark:text-blue-400 hover:underline">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="p-12 text-center">
+            <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Messages Found</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">No messages match the current filters.</p>
+        </div>
+    }
+</div>
+
+<!-- Pagination -->
+@if (Model.TotalPages > 1)
+{
+    <div class="mt-6 flex items-center justify-between">
+        <div class="text-sm text-gray-700 dark:text-gray-300">
+            Showing <span class="font-medium">@((Model.CurrentPage - 1) * Model.PageSize + 1)</span> to 
+            <span class="font-medium">@(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalCount))</span> of 
+            <span class="font-medium">@Model.TotalCount</span> messages
+        </div>
+        
+        <div class="flex gap-2">
+            @if (Model.CurrentPage > 1)
+            {
+                <a href="?page=@(Model.CurrentPage - 1)&channel=@Model.ChannelFilter&status=@Model.StatusFilter&search=@Model.SearchQuery&fromDate=@Model.FromDate?.ToString("yyyy-MM-dd")&toDate=@Model.ToDate?.ToString("yyyy-MM-dd")" 
+                   class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    Previous
+                </a>
+            }
+            
+            @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+            {
+                var activeClass = i == Model.CurrentPage ? "bg-blue-600 text-white" : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600";
+                <a href="?page=@i&channel=@Model.ChannelFilter&status=@Model.StatusFilter&search=@Model.SearchQuery&fromDate=@Model.FromDate?.ToString("yyyy-MM-dd")&toDate=@Model.ToDate?.ToString("yyyy-MM-dd")" 
+                   class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm @activeClass">
+                    @i
+                </a>
+            }
+            
+            @if (Model.CurrentPage < Model.TotalPages)
+            {
+                <a href="?page=@(Model.CurrentPage + 1)&channel=@Model.ChannelFilter&status=@Model.StatusFilter&search=@Model.SearchQuery&fromDate=@Model.FromDate?.ToString("yyyy-MM-dd")&toDate=@Model.ToDate?.ToString("yyyy-MM-dd")" 
+                   class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    Next
+                </a>
+            }
+        </div>
+    </div>
+}

@@ -7,6 +7,7 @@ using DebtManager.Domain.Articles;
 using DebtManager.Domain.Documents;
 using DebtManager.Domain.Configuration;
 using DebtManager.Domain.Analytics;
+using DebtManager.Domain.Communications;
 using DebtManager.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -29,6 +30,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Metric> Metrics => Set<Metric>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<AppConfigEntry> AppConfigEntries => Set<AppConfigEntry>();
+    public DbSet<MessageTemplate> MessageTemplates => Set<MessageTemplate>();
+    public DbSet<QueuedMessage> QueuedMessages => Set<QueuedMessage>();
+    public DbSet<InternalMessage> InternalMessages => Set<InternalMessage>();
+    public DbSet<InternalMessageRecipient> InternalMessageRecipients => Set<InternalMessageRecipient>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -205,6 +210,50 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             builder.Property(m => m.Key).HasMaxLength(200).IsRequired();
             builder.Property(m => m.Value).HasPrecision(18, 4);
             builder.Property(m => m.Tags).HasMaxLength(1000);
+        });
+
+        // Communications
+        modelBuilder.Entity<MessageTemplate>(builder =>
+        {
+            builder.HasIndex(x => x.Code).IsUnique();
+            builder.Property(x => x.Code).HasMaxLength(100).IsRequired();
+            builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            builder.Property(x => x.Subject).HasMaxLength(500);
+            builder.Property(x => x.BodyTemplate).IsRequired();
+            builder.Property(x => x.Description).HasMaxLength(1000);
+        });
+
+        modelBuilder.Entity<QueuedMessage>(builder =>
+        {
+            builder.HasIndex(x => x.Status);
+            builder.HasIndex(x => x.QueuedAtUtc);
+            builder.HasIndex(x => new { x.RelatedEntityType, x.RelatedEntityId });
+            builder.Property(x => x.RecipientEmail).HasMaxLength(256);
+            builder.Property(x => x.RecipientPhone).HasMaxLength(50);
+            builder.Property(x => x.Subject).HasMaxLength(500);
+            builder.Property(x => x.Body).IsRequired();
+            builder.Property(x => x.ErrorMessage).HasMaxLength(2000);
+            builder.Property(x => x.RelatedEntityType).HasMaxLength(100);
+            builder.Property(x => x.ProviderMessageId).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<InternalMessage>(builder =>
+        {
+            builder.HasIndex(x => x.SentAtUtc);
+            builder.HasIndex(x => x.Priority);
+            builder.HasIndex(x => new { x.RelatedEntityType, x.RelatedEntityId });
+            builder.Property(x => x.Title).HasMaxLength(300).IsRequired();
+            builder.Property(x => x.Content).IsRequired();
+            builder.Property(x => x.Category).HasMaxLength(100);
+            builder.Property(x => x.RelatedEntityType).HasMaxLength(100);
+            builder.Navigation(x => x.Recipients).HasField("_recipients").UsePropertyAccessMode(PropertyAccessMode.Field);
+            builder.HasMany(x => x.Recipients).WithOne(x => x.InternalMessage).HasForeignKey(x => x.InternalMessageId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<InternalMessageRecipient>(builder =>
+        {
+            builder.HasIndex(x => new { x.UserId, x.Status });
+            builder.HasIndex(x => x.InternalMessageId);
         });
     }
 }

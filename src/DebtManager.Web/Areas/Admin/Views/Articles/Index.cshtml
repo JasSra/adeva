@@ -46,8 +46,9 @@
                         <td class="px-6 py-4 text-sm text-gray-600">@article.ViewCount</td>
                         <td class="px-6 py-4 text-sm text-gray-600">@article.CreatedAtUtc.ToString("yyyy-MM-dd")</td>
                         <td class="px-6 py-4 text-sm">
-                            <div class="flex gap-2">
+                            <div class="flex flex-wrap gap-2">
                                 <a href="/Admin/Articles/Edit/@article.Id" class="text-blue-600 hover:underline">Edit</a>
+                                <a href="/Article/View/@article.Slug" target="_blank" class="text-gray-600 hover:underline">Preview</a>
                                 @if (article.IsPublished)
                                 {
                                     <form method="post" action="/Admin/Articles/Unpublish/@article.Id" class="inline">

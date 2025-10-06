@@ -32,6 +32,9 @@ public static class DependencyInjection
             return handler;
         });
 
+        // Business Lookup (wraps ABR validator; adds ACN validation)
+        services.AddScoped<IBusinessLookupService, BusinessLookupService>();
+
         // Repositories
         services.AddScoped<IDebtorRepository, DebtorRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();

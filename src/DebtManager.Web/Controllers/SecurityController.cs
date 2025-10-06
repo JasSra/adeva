@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using DebtManager.Contracts.Notifications;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
+using DebtManager.Contracts.Configuration;
 
 namespace DebtManager.Web.Controllers;
 
@@ -17,12 +18,14 @@ public class SecurityController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ISmsSender _smsSender;
     private readonly AppDbContext _db;
+    private readonly IAppConfigService _cfg;
 
-    public SecurityController(UserManager<ApplicationUser> userManager, ISmsSender smsSender, AppDbContext db)
+    public SecurityController(UserManager<ApplicationUser> userManager, ISmsSender smsSender, AppDbContext db, IAppConfigService cfg)
     {
         _userManager = userManager;
         _smsSender = smsSender;
         _db = db;
+        _cfg = cfg;
     }
 
     [HttpGet]
@@ -46,19 +49,37 @@ public class SecurityController : Controller
         }
 
         var (heading, subheading, tips) = BuildCopyForScope(isAdmin);
+        
+        // Dev mode: Check if bypass is enabled
+        var bypass = (await _cfg.GetAsync<bool>("Security:BypassOtpVerification")) == true;
+
+        // Persisted phone from last SendSms
+        var lastSmsPhone = TempData.Peek("SmsPhone") as string;
+
+        // Pre-fill phone: prefer last sent phone > confirmed user phone > dev default
+        var prefillPhone = !string.IsNullOrWhiteSpace(lastSmsPhone)
+            ? lastSmsPhone
+            : (user.PhoneNumber ?? string.Empty);
+
+        if (string.IsNullOrWhiteSpace(prefillPhone) && bypass)
+        {
+            prefillPhone = "+61400000000"; // Dev default
+        }
 
         var vm = new TotpSetupVm
         {
             AuthenticatorKey = showTotp ? FormatKey(key) : string.Empty,
             OtpauthUri = showTotp ? otpauth : string.Empty,
-            PhoneNumber = user.PhoneNumber ?? string.Empty,
+            PhoneNumber = prefillPhone,
             TotpEnabled = user.TwoFactorEnabled,
             QrCodeDataUrl = showTotp ? qrDataUrl : string.Empty,
             ShowTotp = showTotp,
             ShowSms = showSms,
             Heading = heading,
             SubHeading = subheading,
-            Tips = tips
+            Tips = tips,
+            DevMode = bypass,
+            DevSmsCode = bypass ? "000000" : string.Empty
         };
         return View(vm);
     }
@@ -79,8 +100,23 @@ public class SecurityController : Controller
             TempData["Error"] = "Phone number is required.";
             return RedirectToAction(nameof(Setup));
         }
-        var token = await _userManager.GenerateChangePhoneNumberTokenAsync(user, phoneNumber);
-        await _smsSender.SendSmsAsync(phoneNumber, $"Adeva Plus verification code: {token}");
+
+        // Normalize and persist phone for the next step so token matches exactly
+        var normalizedPhone = NormalizePhone(phoneNumber);
+        TempData["SmsPhone"] = normalizedPhone;
+
+        // In dev, allow bypass via IAppConfig toggle
+        var bypass = (await _cfg.GetAsync<bool>("Security:BypassOtpVerification")) == true;
+        if (!bypass)
+        {
+            var token = await _userManager.GenerateChangePhoneNumberTokenAsync(user, normalizedPhone);
+            await _smsSender.SendSmsAsync(normalizedPhone, $"Adeva Plus verification code: {token}");
+        }
+        else
+        {
+            await _smsSender.SendSmsAsync(normalizedPhone, "Adeva Plus verification code: 000000");
+        }
+
         TempData["Message"] = "Verification code sent via SMS.";
         return RedirectToAction(nameof(Setup));
     }
@@ -91,68 +127,175 @@ public class SecurityController : Controller
     {
         var user = await GetCurrentUserAsync();
         var isAdmin = User.IsInRole("Admin");
+        var isClient = User.IsInRole("Client");
+        var isUser = User.IsInRole("User");
         var showTotp = isAdmin;    // Admins: TOTP only
         var showSms = !isAdmin;    // Client/User: SMS OTP only
 
-        // Conditional validation
+        var bypass = (await _cfg.GetAsync<bool>("Security:BypassOtpVerification")) == true;
+
+        bool phoneVerified = false;
+        bool totpVerified = false;
+
+        // Conditional validation for SMS
         if (showSms)
         {
-            if (string.IsNullOrWhiteSpace(vm.PhoneNumber))
-                ModelState.AddModelError("PhoneNumber", "Phone number is required.");
+            // Prefer the last phone number we sent the SMS to
+            var persistedPhone = TempData.Peek("SmsPhone") as string;
+            var postedPhone = vm.PhoneNumber;
+            var phoneToVerify = NormalizePhone(!string.IsNullOrWhiteSpace(persistedPhone) ? persistedPhone : postedPhone);
 
-            if (string.IsNullOrWhiteSpace(vm.SmsCode))
-                ModelState.AddModelError("SmsCode", "SMS verification code is required.");
-
-            if (ModelState.IsValid)
+            if (string.IsNullOrWhiteSpace(phoneToVerify))
             {
-                var validSms = await _userManager.VerifyChangePhoneNumberTokenAsync(user, vm.SmsCode!, vm.PhoneNumber!);
-                if (!validSms)
+                ModelState.AddModelError("PhoneNumber", "Phone number is required.");
+            }
+            else if (!bypass && string.IsNullOrWhiteSpace(vm.SmsCode))
+            {
+                ModelState.AddModelError("SmsCode", "SMS verification code is required.");
+            }
+            else
+            {
+                if (!bypass)
                 {
-                    ModelState.AddModelError("SmsCode", "Invalid SMS verification code.");
+                    // Atomically set + confirm phone using Identity helper
+                    var result = await _userManager.ChangePhoneNumberAsync(user, phoneToVerify, vm.SmsCode!);
+                    if (!result.Succeeded)
+                    {
+                        foreach (var err in result.Errors)
+                        {
+                            ModelState.AddModelError("SmsCode", err.Description);
+                        }
+                    }
+                    else
+                    {
+                        phoneVerified = true;
+                        vm.PhoneNumber = phoneToVerify;
+                    }
                 }
                 else
                 {
-                    user.PhoneNumber = vm.PhoneNumber;
+                    // Bypass mode - auto-verify
+                    user.PhoneNumber = phoneToVerify;
                     user.PhoneNumberConfirmed = true;
+                    phoneVerified = true;
+                    vm.PhoneNumber = phoneToVerify;
                 }
             }
         }
 
+        // Conditional validation for TOTP
         if (showTotp)
         {
-            if (string.IsNullOrWhiteSpace(vm.TotpCode))
-                ModelState.AddModelError("TotpCode", "Authenticator app code is required.");
-
-            if (ModelState.IsValid)
+            if (!bypass && string.IsNullOrWhiteSpace(vm.TotpCode))
             {
-                var verified = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, vm.TotpCode!);
-                if (!verified)
+                ModelState.AddModelError("TotpCode", "Authenticator app code is required.");
+            }
+            else
+            {
+                if (!bypass)
                 {
-                    ModelState.AddModelError("TotpCode", "Invalid authenticator code.");
+                    var verified = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, vm.TotpCode!);
+                    if (!verified)
+                    {
+                        ModelState.AddModelError("TotpCode", "Invalid authenticator code.");
+                    }
+                    else
+                    {
+                        totpVerified = true;
+                    }
                 }
                 else
                 {
-                    await _userManager.SetTwoFactorEnabledAsync(user, true);
+                    // Bypass mode - auto-verify
+                    totpVerified = true;
                 }
             }
         }
 
+        // Check for any validation errors
         if (!ModelState.IsValid)
         {
-            TempData["Error"] = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            // Store validation errors in TempData for display
+            TempData["ValidationErrors"] = ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+            
             return RedirectToAction(nameof(Setup));
         }
 
+        // Apply changes if verified (for bypass path, Identity helper already saved in normal path)
+        if (phoneVerified && bypass)
+        {
+            await _userManager.UpdateAsync(user);
+            TempData["SmsPhone"] = vm.PhoneNumber;
+        }
+
+        if (totpVerified)
+        {
+            await _userManager.SetTwoFactorEnabledAsync(user, true);
+        }
+
+        // Persist any remaining changes
         await _userManager.UpdateAsync(user);
+        
         TempData["Message"] = isAdmin
             ? "Authenticator app set up successfully. TOTP is now required for admin sign-in."
             : "Phone verified successfully. We'll use SMS one-time codes to keep your account secure.";
 
-        // Redirect by role
-        if (User.IsInRole("Admin")) return Redirect("/Admin");
-        if (User.IsInRole("Client")) return Redirect("/Client");
-        if (User.IsInRole("User")) return Redirect("/User");
+        // Route to appropriate onboarding after security setup
+        if (isAdmin) 
+            return Redirect("/Admin");
+        
+        if (isClient)
+        {
+            // Client scope ? Organization onboarding
+            var profile = await _db.UserProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
+            if (profile?.OrganizationId == null)
+            {
+                TempData["Message"] = "Phone verified! Let's set up your organization.";
+                return Redirect("/Client/Onboarding");
+            }
+            TempData["Message"] = "Phone verified! Welcome back.";
+            return Redirect("/Client");
+        }
+        
+        if (isUser)
+        {
+            // User scope ? Debtor onboarding
+            var profile = await _db.UserProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id);
+            if (profile?.DebtorId == null)
+            {
+                TempData["Message"] = "Phone verified! Let's complete your profile.";
+                return Redirect("/User/Onboarding");
+            }
+            TempData["Message"] = "Phone verified! Welcome back.";
+            return Redirect("/User");
+        }
+
+        // Fallback - if no role matched
+        TempData["Error"] = $"Unable to determine user role. Admin: {isAdmin}, Client: {isClient}, User: {isUser}";
         return Redirect("/");
+    }
+
+    private static string NormalizePhone(string? phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone)) return string.Empty;
+        var p = phone.Trim();
+        // Remove spaces, dashes, and parentheses
+        p = new string(p.Where(c => char.IsDigit(c) || c == '+').ToArray());
+        // Ensure it starts with '+' for E.164 if it looks like AU number
+        if (!p.StartsWith("+") && p.StartsWith("0"))
+        {
+            // naive AU normalization 04xxxxxxxx -> +614xxxxxxxx
+            if (p.StartsWith("04") && p.Length == 10)
+            {
+                p = "+61" + p.Substring(1);
+            }
+        }
+        return p;
     }
 
     private async Task<ApplicationUser> GetCurrentUserAsync()
@@ -219,18 +362,18 @@ public class SecurityController : Controller
         {
             return (
                 heading: "Secure your admin account with an Authenticator App",
-                subheading: "Admins must use Time?based One?Time Passwords (TOTP). Scan the QR code and enter the 6?digit code from your app to finish.",
+                subheading: "Admins must use Time–based One–Time Passwords (TOTP). Scan the QR code and enter the 6–digit code from your app to finish.",
                 tips: new List<string>
                 {
                     "Use any authenticator app (Microsoft, Google, Authy).",
                     "Back up your recovery codes in your password manager.",
-                    "TOTP will be required on every admin sign?in."
+                    "TOTP will be required on every admin sign–in."
                 }
             );
         }
         return (
             heading: "Verify your phone number",
-            subheading: "We send a one?time SMS code to confirm it's you. This keeps your account secure without needing an authenticator app.",
+            subheading: "We send a one–time SMS code to confirm it's you. This keeps your account secure without needing an authenticator app.",
             tips: new List<string>
             {
                 "Enter a mobile number where you can receive SMS messages.",
@@ -257,6 +400,10 @@ public class TotpSetupVm
     public string Heading { get; set; } = string.Empty;
     public string SubHeading { get; set; } = string.Empty;
     public List<string> Tips { get; set; } = new();
+    
+    // Dev mode
+    public bool DevMode { get; set; }
+    public string DevSmsCode { get; set; } = string.Empty;
 }
 
 public class TotpCompleteVm

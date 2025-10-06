@@ -39,19 +39,23 @@ public static class TokenValidatedHandler
             await userManager.CreateAsync(user);
         }
 
-        // Auto-admin if no admins exist yet
-        var anyAdmins = await db.UserRoles
-            .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur, r })
-            .AnyAsync(x => x.r.Name == "Admin");
-        if (!anyAdmins)
+        // Optional: Auto-admin only when explicitly enabled
+        var autoElevate = config.GetValue<bool>("Security:AutoElevateFirstAdmin");
+        if (autoElevate)
         {
-            if (!await roleManager.RoleExistsAsync("Admin"))
+            var anyAdmins = await db.UserRoles
+                .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur, r })
+                .AnyAsync(x => x.r.Name == "Admin");
+            if (!anyAdmins)
             {
-                await roleManager.CreateAsync(new ApplicationRole("Admin"));
-            }
-            if (!await userManager.IsInRoleAsync(user, "Admin"))
-            {
-                await userManager.AddToRoleAsync(user, "Admin");
+                if (!await roleManager.RoleExistsAsync("Admin"))
+                {
+                    await roleManager.CreateAsync(new ApplicationRole("Admin"));
+                }
+                if (!await userManager.IsInRoleAsync(user, "Admin"))
+                {
+                    await userManager.AddToRoleAsync(user, "Admin");
+                }
             }
         }
 

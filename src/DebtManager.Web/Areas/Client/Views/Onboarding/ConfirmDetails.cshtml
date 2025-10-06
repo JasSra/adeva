@@ -1,0 +1,214 @@
+@model DebtManager.Web.Areas.Client.Controllers.ClientOnboardingVm
+@{
+    Layout = "~/Areas/Client/Views/Shared/_ClientLayout.cshtml";
+    ViewBag.Title = "Organization Onboarding - Step 2";
+}
+
+<div class="max-w-2xl mx-auto">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Confirm Your Details</h2>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Step 2 of 3: Review and confirm business information</p>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 bg-green-600 text-white rounded-full font-semibold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <span class="ml-2 text-sm font-medium text-green-600">Verified</span>
+            </div>
+            <div class="flex-1 border-t-2 border-blue-600 mx-4"></div>
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-semibold">2</div>
+                <span class="ml-2 text-sm font-medium text-blue-600">Confirm Details</span>
+            </div>
+            <div class="flex-1 border-t-2 border-gray-300 dark:border-gray-600 mx-4"></div>
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full font-semibold">3</div>
+                <span class="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">Complete</span>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post" class="space-y-6">
+        @Html.AntiForgeryToken()
+        
+        <!-- Hidden fields to preserve ABN/ACN -->
+        <input type="hidden" name="Abn" value="@Model.Abn" />
+        <input type="hidden" name="Acn" value="@Model.Acn" />
+        <input type="hidden" name="IsValidAbn" value="@Model.IsValidAbn" />
+        <input type="hidden" name="IsValidAcn" value="@Model.IsValidAcn" />
+        <input type="hidden" name="ExtractedBusinessName" value="@Model.ExtractedBusinessName" />
+        <input type="hidden" name="ExtractedLegalName" value="@Model.ExtractedLegalName" />
+        <input type="hidden" name="ExtractedTradingName" value="@Model.ExtractedTradingName" />
+        <input type="hidden" name="ExtractedAbn" value="@Model.ExtractedAbn" />
+        <input type="hidden" name="ExtractedAcn" value="@Model.ExtractedAcn" />
+
+        <!-- Extracted Business Information -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Business Information</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Retrieved from Australian Business Register</p>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Legal Name</label>
+                        <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">@(Model.ExtractedLegalName ?? "Not available")</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Trading Name</label>
+                        <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">@(Model.ExtractedTradingName ?? Model.ExtractedBusinessName ?? "Not available")</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">ABN</label>
+                        <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">@Model.Abn</p>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Acn))
+                    {
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">ACN</label>
+                            <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white">@Model.Acn</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Person Details -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Your Contact Information</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">This will be used as the primary contact for your organization</p>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            First Name <span class="text-red-600">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            name="ContactFirstName" 
+                            value="@Model.ContactFirstName" 
+                            class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                            required 
+                        />
+                        <span class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("ContactFirstName")</span>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Last Name <span class="text-red-600">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            name="ContactLastName" 
+                            value="@Model.ContactLastName" 
+                            class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                            required 
+                        />
+                        <span class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("ContactLastName")</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Email Address <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input 
+                        type="email" 
+                        name="ContactEmail" 
+                        value="@Model.ContactEmail" 
+                        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Organization Details -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Additional Settings</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Optional: Customize your organization settings</p>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Subdomain <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <div class="flex items-center">
+                        <input 
+                            type="text" 
+                            name="Subdomain" 
+                            value="@Model.Subdomain" 
+                            placeholder="yourcompany"
+                            class="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-l-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                        />
+                        <span class="px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-l-0 border-gray-300 dark:border-gray-600 rounded-r-lg text-sm text-gray-600 dark:text-gray-300">
+                            .debtmanager.local
+                        </span>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Lowercase letters, numbers, and hyphens only</p>
+                    <span class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("Subdomain")</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Support Email</label>
+                        <input 
+                            type="email" 
+                            name="SupportEmail" 
+                            value="@Model.SupportEmail" 
+                            placeholder="support@yourcompany.com"
+                            class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Support Phone</label>
+                        <input 
+                            type="tel" 
+                            name="SupportPhone" 
+                            value="@Model.SupportPhone" 
+                            placeholder="1300 123 456"
+                            class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Timezone</label>
+                    <select 
+                        name="Timezone" 
+                        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="Australia/Sydney" selected>Australia/Sydney (AEST/AEDT)</option>
+                        <option value="Australia/Melbourne">Australia/Melbourne (AEST/AEDT)</option>
+                        <option value="Australia/Brisbane">Australia/Brisbane (AEST)</option>
+                        <option value="Australia/Perth">Australia/Perth (AWST)</option>
+                        <option value="Australia/Adelaide">Australia/Adelaide (ACST/ACDT)</option>
+                        <option value="Australia/Darwin">Australia/Darwin (ACST)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <a 
+                href="@Url.Action("Index")" 
+                class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition font-medium">
+                Back
+            </a>
+            <button 
+                type="submit" 
+                class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Complete Registration
+            </button>
+        </div>
+    </form>
+</div>

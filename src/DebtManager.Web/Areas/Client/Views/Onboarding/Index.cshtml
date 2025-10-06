@@ -1,80 +1,122 @@
 @model DebtManager.Web.Areas.Client.Controllers.ClientOnboardingVm
 @{
     Layout = "~/Areas/Client/Views/Shared/_ClientLayout.cshtml";
-    ViewBag.Title = "Organization Onboarding";
-}
-<h2 class="text-xl font-semibold mb-4">Organization Onboarding</h2>
-
-@if (TempData["Message"] != null)
-{
-    <div class="p-3 bg-green-100 border border-green-300 text-green-800 rounded mb-3">@TempData["Message"]</div>
+    ViewBag.Title = "Organization Onboarding - Step 1";
 }
 
-<form asp-action="ValidateAbn" method="post" class="space-y-4">
-    <div class="grid md:grid-cols-2 gap-4">
-        <div>
-            <label class="block text-sm">ABN</label>
-            <input name="Abn" value="@Model.Abn" placeholder="Enter ABN (11 digits)" class="border p-2 w-full" />
-            <span class="text-red-700 text-sm">@Html.ValidationMessage("Abn")</span>
-            @if (Model.IsValidAbn.HasValue)
-            {
-                <p class="mt-1 text-sm @(Model.IsValidAbn.Value ? "text-green-700" : "text-red-700")">
-                    @(Model.IsValidAbn.Value ? "ABN looks valid ?" : "Invalid ABN ?")
-                </p>
-            }
-        </div>
-        <div>
-            <label class="block text-sm">ACN (optional)</label>
-            <input name="Acn" value="@Model.Acn" placeholder="Enter ACN (9 digits)" class="border p-2 w-full" />
-            <span class="text-red-700 text-sm">@Html.ValidationMessage("Acn")</span>
-            @if (Model.IsValidAcn.HasValue)
-            {
-                <p class="mt-1 text-sm @(Model.IsValidAcn.Value ? "text-green-700" : "text-red-700")">
-                    @(Model.IsValidAcn.Value ? "ACN looks valid ?" : "Invalid ACN ?")
-                </p>
-            }
+<div class="max-w-2xl mx-auto">
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Register Your Business</h2>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Step 1 of 3: Verify your business details</p>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-semibold">1</div>
+                <span class="ml-2 text-sm font-medium text-blue-600">Verify Business</span>
+            </div>
+            <div class="flex-1 border-t-2 border-gray-300 dark:border-gray-600 mx-4"></div>
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full font-semibold">2</div>
+                <span class="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">Confirm Details</span>
+            </div>
+            <div class="flex-1 border-t-2 border-gray-300 dark:border-gray-600 mx-4"></div>
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-10 h-10 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full font-semibold">3</div>
+                <span class="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">Complete</span>
+            </div>
         </div>
     </div>
-    <button class="bg-blue-600 text-white px-4 py-2">Validate</button>
-    @Html.AntiForgeryToken()
-</form>
 
-@if (Model.IsValidAbn == true)
-{
-    <form asp-action="Create" method="post" class="space-y-4 mt-6 border-t pt-4">
-        <div>
-            <label class="block text-sm">Organization Name</label>
-            <input name="Name" value="@Model.Name" placeholder="e.g. Contoso Pty Ltd" class="border p-2 w-full" />
-            <span class="text-red-700 text-sm">@Html.ValidationMessage("Name")</span>
+    @if (TempData["Message"] != null)
+    {
+        <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 rounded-lg">
+            @TempData["Message"]
         </div>
-        <div>
-            <label class="block text-sm">Trading Name (optional)</label>
-            <input name="TradingName" value="@Model.TradingName" class="border p-2 w-full" />
+    }
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Business Verification</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Enter your ABN to verify your business registration</p>
         </div>
-        <div>
-            <label class="block text-sm">Subdomain (optional)</label>
-            <input name="Subdomain" value="@Model.Subdomain" placeholder="e.g. contoso" class="border p-2 w-full" />
-            <span class="text-red-700 text-sm">@Html.ValidationMessage("Subdomain")</span>
+        
+        <div class="p-6">
+            <form asp-action="ValidateBusiness" method="post" class="space-y-6">
+                @Html.AntiForgeryToken()
+                
+                <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 dark:border-blue-600 p-4 rounded">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400 dark:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                We'll use your ABN to automatically retrieve your registered business information from the Australian Business Register.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Australian Business Number (ABN) <span class="text-red-600">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        name="Abn" 
+                        value="@Model.Abn" 
+                        placeholder="Enter 11-digit ABN (e.g., 12345678901)" 
+                        maxlength="11"
+                        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required 
+                    />
+                    <span class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("Abn")</span>
+                    @if (Model.IsValidAbn.HasValue)
+                    {
+                        <p class="mt-2 text-sm @(Model.IsValidAbn.Value ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")">
+                            @(Model.IsValidAbn.Value ? "? ABN is valid" : "? ABN is invalid")
+                        </p>
+                    }
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Australian Company Number (ACN) <span class="text-gray-500">(Optional)</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        name="Acn" 
+                        value="@Model.Acn" 
+                        placeholder="Enter 9-digit ACN (optional)" 
+                        maxlength="9"
+                        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <span class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("Acn")</span>
+                    @if (Model.IsValidAcn.HasValue)
+                    {
+                        <p class="mt-2 text-sm @(Model.IsValidAcn.Value ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")">
+                            @(Model.IsValidAcn.Value ? "? ACN is valid" : "? ACN is invalid")
+                        </p>
+                    }
+                </div>
+
+                <div class="flex gap-3">
+                    <button 
+                        type="submit" 
+                        class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Verify Business Details
+                    </button>
+                </div>
+            </form>
         </div>
-        <div class="grid md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm">Support Email (optional)</label>
-                <input name="SupportEmail" value="@Model.SupportEmail" class="border p-2 w-full" />
-            </div>
-            <div>
-                <label class="block text-sm">Support Phone (optional)</label>
-                <input name="SupportPhone" value="@Model.SupportPhone" class="border p-2 w-full" />
-            </div>
-        </div>
-        <div>
-            <label class="block text-sm">Timezone (optional)</label>
-            <input name="Timezone" value="@Model.Timezone" placeholder="Australia/Sydney" class="border p-2 w-full" />
-        </div>
-        <input type="hidden" name="Abn" value="@Model.Abn" />
-        <input type="hidden" name="Acn" value="@Model.Acn" />
-        <input type="hidden" name="IsValidAbn" value="@Model.IsValidAbn" />
-        <input type="hidden" name="IsValidAcn" value="@Model.IsValidAcn" />
-        <button class="bg-emerald-600 text-white px-4 py-2">Create Organization</button>
-        @Html.AntiForgeryToken()
-    </form>
-}
+    </div>
+
+    <div class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+        <p>Don't have an ABN? <a href="https://www.abr.business.gov.au/Tools/AbnLookup" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">Look up your ABN</a></p>
+    </div>
+</div>
