@@ -46,10 +46,17 @@ public class AcceptControllerTests
         var identity = new ClaimsIdentity(claims, "TestAuth");
         var principal = new ClaimsPrincipal(identity);
         
+        var httpContext = new DefaultHttpContext { User = principal };
         _controller.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext { User = principal }
+            HttpContext = httpContext
         };
+        
+        // Initialize TempData
+        _controller.TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(
+            httpContext,
+            Mock.Of<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>()
+        );
     }
 
     [TearDown]
@@ -76,6 +83,38 @@ public class AcceptControllerTests
     {
         // Arrange
         var invalidId = Guid.NewGuid();
+        
+        // Setup user and debtor profile to avoid onboarding redirect
+        var userId = Guid.NewGuid();
+        var user = new ApplicationUser
+        {
+            Id = userId,
+            UserName = "testuser",
+            Email = "test@test.com",
+            ExternalAuthId = "test-external-id"
+        };
+        await _dbContext.Users.AddAsync(user);
+
+        var org = Organization.CreatePending(
+            "Test Org", "Test Legal", "12345678901", "AUD", 
+            "#000000", "#ffffff", "test@test.com", "+1234567890", "UTC"
+        );
+        await _dbContext.Organizations.AddAsync(org);
+
+        var debtor = new Debtor(
+            org.Id, "DEBTOR-001", "john@test.com", "+1234567890", 
+            "John", "Doe"
+        );
+        await _dbContext.Debtors.AddAsync(debtor);
+
+        var profile = new DebtManager.Infrastructure.Identity.UserProfile
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DebtorId = debtor.Id
+        };
+        await _dbContext.UserProfiles.AddAsync(profile);
+        await _dbContext.SaveChangesAsync();
 
         // Act
         var result = await _controller.Index(invalidId, CancellationToken.None);
@@ -88,6 +127,17 @@ public class AcceptControllerTests
     public async Task Index_WithSettledDebt_RedirectsWithError()
     {
         // Arrange
+        // Setup user and debtor profile to avoid onboarding redirect
+        var userId = Guid.NewGuid();
+        var user = new ApplicationUser
+        {
+            Id = userId,
+            UserName = "testuser",
+            Email = "test@test.com",
+            ExternalAuthId = "test-external-id"
+        };
+        await _dbContext.Users.AddAsync(user);
+        
         var org = Organization.CreatePending(
             "Test Org", "Test Legal", "12345678901", "AUD", 
             "#000000", "#ffffff", "test@test.com", "+1234567890", "UTC"
@@ -100,6 +150,14 @@ public class AcceptControllerTests
         );
         debtor.UpdateAddress("123 Test St", null, "Test City", "TS", "12345", "AU");
         await _dbContext.Debtors.AddAsync(debtor);
+
+        var profile = new DebtManager.Infrastructure.Identity.UserProfile
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DebtorId = debtor.Id
+        };
+        await _dbContext.UserProfiles.AddAsync(profile);
 
         var debt = new Debt(
             org.Id, debtor.Id, 1000m, "AUD", "ACC-001", "REF-001"
@@ -121,6 +179,17 @@ public class AcceptControllerTests
     public async Task Index_WithDisputedDebt_RedirectsWithError()
     {
         // Arrange
+        // Setup user and debtor profile to avoid onboarding redirect
+        var userId = Guid.NewGuid();
+        var user = new ApplicationUser
+        {
+            Id = userId,
+            UserName = "testuser",
+            Email = "test@test.com",
+            ExternalAuthId = "test-external-id"
+        };
+        await _dbContext.Users.AddAsync(user);
+        
         var org = Organization.CreatePending(
             "Test Org", "Test Legal", "12345678901", "AUD", 
             "#000000", "#ffffff", "test@test.com", "+1234567890", "UTC"
@@ -133,6 +202,14 @@ public class AcceptControllerTests
         );
         debtor.UpdateAddress("123 Test St", null, "Test City", "TS", "12345", "AU");
         await _dbContext.Debtors.AddAsync(debtor);
+
+        var profile = new DebtManager.Infrastructure.Identity.UserProfile
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DebtorId = debtor.Id
+        };
+        await _dbContext.UserProfiles.AddAsync(profile);
 
         var debt = new Debt(
             org.Id, debtor.Id, 1000m, "AUD", "ACC-001", "REF-001"
