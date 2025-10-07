@@ -5,6 +5,29 @@
 }
 
 <div class="max-w-3xl mx-auto">
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div class="flex items-start gap-2">
+                <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                </svg>
+                <div class="flex-1">
+                    <h4 class="font-semibold text-red-800 dark:text-red-300">Please correct the following errors:</h4>
+                    <ul class="mt-1 text-sm text-red-700 dark:text-red-400 list-disc list-inside">
+                        @foreach (var state in ViewData.ModelState.Values)
+                        {
+                            @foreach (var error in state.Errors)
+                            {
+                                <li>@error.ErrorMessage</li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
         <div class="p-6 border-b dark:border-gray-700 flex items-center justify-between" style="border-top: 4px solid var(--primary)">
             <div class="flex items-center gap-3">
@@ -31,7 +54,7 @@
                 </div>
                 <div class="bg-gray-50 dark:bg-gray-900/40 rounded p-3">
                     <div class="text-gray-500 dark:text-gray-400">Due Date</div>
-                    <div class="font-medium dark:text-white">@(Model.DueDateUtc?.ToLocalTime().ToString("MMM d, yyyy") ?? "—")</div>
+                    <div class="font-medium dark:text-white">@(Model.DueDateUtc?.ToLocalTime().ToString("MMM d, yyyy") ?? "ï¿½")</div>
                 </div>
             </div>
 
@@ -56,56 +79,67 @@
             </div>
 
             <div class="border-t dark:border-gray-700 pt-4">
-                <form method="post" asp-action="Index" asp-controller="Accept" asp-area="User">
+                <form method="post" asp-action="Index" asp-controller="Accept" asp-area="User" id="acceptForm">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="DebtId" value="@Model.DebtId" />
 
                     <div class="space-y-4">
-                        <div class="font-medium dark:text-white">Choose an option</div>
+                        <div>
+                            <div class="font-medium dark:text-white mb-2">Choose an option</div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Select how you would like to proceed with this debt</p>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <label class="border rounded p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <input type="radio" name="SelectedOption" value="PayInFull" class="mr-2" />
-                                <span class="font-medium">Pay in full</span>
-                                <div class="text-xs text-gray-500">Pay today and finish</div>
+                            <label class="border-2 rounded-lg p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors option-card dark:border-gray-600">
+                                <input type="radio" name="SelectedOption" value="PayInFull" class="mr-2" required />
+                                <span class="font-medium dark:text-white">Pay in full</span>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pay today and finish</div>
                             </label>
-                            <label class="border rounded p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <input type="radio" name="SelectedOption" value="Installments" class="mr-2" />
-                                <span class="font-medium">Set up installments</span>
-                                <div class="text-xs text-gray-500">Pay over time</div>
+                            <label class="border-2 rounded-lg p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors option-card dark:border-gray-600">
+                                <input type="radio" name="SelectedOption" value="Installments" class="mr-2" required />
+                                <span class="font-medium dark:text-white">Set up installments</span>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pay over time</div>
                             </label>
-                            <label class="border rounded p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <input type="radio" name="SelectedOption" value="Dispute" class="mr-2" />
-                                <span class="font-medium">Dispute</span>
-                                <div class="text-xs text-gray-500">I don't recognize or disagree</div>
+                            <label class="border-2 rounded-lg p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors option-card dark:border-gray-600">
+                                <input type="radio" name="SelectedOption" value="Dispute" class="mr-2" required />
+                                <span class="font-medium dark:text-white">Dispute</span>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">I don't recognize or disagree</div>
                             </label>
                         </div>
 
-                        <div id="installmentOptions" class="hidden border rounded p-3">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div id="installmentOptions" class="hidden border rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+                            <h4 class="font-medium text-sm mb-3 dark:text-white">Installment Options</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Frequency</label>
-                                    <select name="Frequency" class="w-full border rounded px-3 py-2 text-sm">
+                                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Payment Frequency</label>
+                                    <select name="Frequency" class="w-full border rounded px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         <option value="Weekly">Weekly</option>
                                         <option value="Fortnightly">Fortnightly</option>
                                         <option value="Monthly" selected>Monthly</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Installments</label>
-                                    <input type="number" name="InstallmentCount" min="2" max="48" value="6" class="w-full border rounded px-3 py-2 text-sm" />
+                                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Number of Installments</label>
+                                    <input type="number" name="InstallmentCount" min="2" max="48" value="6" class="w-full border rounded px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Between 2 and 48 installments</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="disputeOptions" class="hidden border rounded p-3">
+                        <div id="disputeOptions" class="hidden border rounded-lg p-4 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800">
+                            <h4 class="font-medium text-sm mb-2 dark:text-white">Dispute Information</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Please provide details about why you are disputing this debt</p>
                             <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Reason (optional)</label>
-                            <textarea name="DisputeReason" rows="3" class="w-full border rounded px-3 py-2 text-sm" placeholder="Briefly describe the dispute..."></textarea>
+                            <textarea name="DisputeReason" rows="3" maxlength="500" class="w-full border rounded px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Briefly describe the dispute..."></textarea>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Maximum 500 characters</p>
                         </div>
                     </div>
 
                     <div class="mt-6 flex items-center justify-between">
-                        <a href="/User" class="px-4 py-2 border rounded text-sm">Cancel</a>
-                        <button type="submit" class="px-4 py-2 text-white rounded text-sm" style="background: var(--primary)">Continue</button>
+                        <a href="/User" class="px-4 py-2 border rounded text-sm dark:border-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</a>
+                        <button type="submit" id="submitBtn" class="px-6 py-2 text-white rounded text-sm font-medium transition-colors" style="background: var(--primary)">
+                            <span id="submitText">Continue</span>
+                            <span id="submitLoader" class="hidden">Processing...</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -117,11 +151,47 @@
     const radioInputs = document.querySelectorAll('input[name="SelectedOption"]');
     const inst = document.getElementById('installmentOptions');
     const disp = document.getElementById('disputeOptions');
+    const form = document.getElementById('acceptForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const submitLoader = document.getElementById('submitLoader');
+    const optionCards = document.querySelectorAll('.option-card');
+
     function updateUI(){
         const val = document.querySelector('input[name="SelectedOption"]:checked')?.value;
         inst.classList.toggle('hidden', val !== 'Installments');
         disp.classList.toggle('hidden', val !== 'Dispute');
+        
+        // Update card styles to show selected state
+        optionCards.forEach(card => {
+            const radio = card.querySelector('input[type="radio"]');
+            if (radio.checked) {
+                card.style.borderColor = 'var(--primary)';
+                card.style.backgroundColor = 'var(--primary-light, rgba(59, 130, 246, 0.1))';
+            } else {
+                card.style.borderColor = '';
+                card.style.backgroundColor = '';
+            }
+        });
     }
+
     radioInputs.forEach(r => r.addEventListener('change', updateUI));
+    
+    // Add form submission handler for loading state
+    form.addEventListener('submit', function(e) {
+        // Basic client-side validation
+        const selectedOption = document.querySelector('input[name="SelectedOption"]:checked');
+        if (!selectedOption) {
+            e.preventDefault();
+            alert('Please select an option to continue');
+            return;
+        }
+
+        // Show loading state
+        submitBtn.disabled = true;
+        submitText.classList.add('hidden');
+        submitLoader.classList.remove('hidden');
+    });
+
     updateUI();
 </script>

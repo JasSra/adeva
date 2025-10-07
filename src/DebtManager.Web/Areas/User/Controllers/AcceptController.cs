@@ -127,6 +127,42 @@ public class AcceptController : Controller
             return View(reVm);
         }
 
+        // Additional validation for installments option
+        if (vm.SelectedOption == AcceptOption.Installments)
+        {
+            if (!vm.Frequency.HasValue)
+            {
+                ModelState.AddModelError(nameof(vm.Frequency), "Please select a payment frequency");
+            }
+            if (!vm.InstallmentCount.HasValue || vm.InstallmentCount.Value < 2 || vm.InstallmentCount.Value > 48)
+            {
+                ModelState.AddModelError(nameof(vm.InstallmentCount), "Please enter a valid number of installments (2-48)");
+            }
+            
+            if (!ModelState.IsValid)
+            {
+                // reload summary to render again with errors
+                var debt0 = await _db.Debts.Include(d => d.Organization).FirstOrDefaultAsync(d => d.Id == vm.DebtId, ct);
+                if (debt0 == null) return NotFound();
+                var cfg0 = await _db.OrganizationFeeConfigurations.FirstOrDefaultAsync(c => c.OrganizationId == debt0.OrganizationId, ct);
+                var discPct0 = cfg0?.FullPaymentDiscountPercentage ?? 0m;
+                var discAmt0 = discPct0 > 0 ? Math.Round(debt0.OutstandingPrincipal * (1 - (discPct0 / 100m)), 2) : debt0.OutstandingPrincipal;
+                var reVm = new AcceptDebtVm
+                {
+                    DebtId = debt0.Id,
+                    Reference = string.IsNullOrWhiteSpace(debt0.ClientReferenceNumber) ? ("D-" + debt0.Id.ToString().Substring(0, 8)) : debt0.ClientReferenceNumber!,
+                    Outstanding = debt0.OutstandingPrincipal,
+                    OriginalAmount = debt0.OriginalPrincipal,
+                    DueDateUtc = debt0.DueDateUtc,
+                    Status = debt0.Status.ToString(),
+                    OrganizationName = debt0.Organization?.TradingName ?? debt0.Organization?.Name ?? (theme?.Name ?? "Organization"),
+                    FullPaymentSuggested = discAmt0,
+                    FullPaymentDiscountPercent = discPct0
+                };
+                return View(reVm);
+            }
+        }
+
         var debtorId = await GetCurrentDebtorIdAsync(ct);
         if (debtorId == null)
         {
