@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using DebtManager.Domain.Communications;
 using DebtManager.Domain.Debts;
+using DebtManager.Domain.Organizations;
 using DebtManager.Domain.Payments;
 using DebtManager.Infrastructure.Persistence;
 using DebtManager.Web.Services;
@@ -64,10 +65,20 @@ public class AcceptController : Controller
         }
 
         // Debt must belong to current debtor
-        if (debt.DebtorId != debtorId.Value)
+        var debtorIdCurrent = debtorId.Value;
+        if (debt.DebtorId != debtorIdCurrent)
         {
             TempData["Error"] = "This debt is associated with a different account.";
             return Redirect("/User");
+        }
+
+        // Compute full-payment discounted suggestion
+        var cfg = await _db.OrganizationFeeConfigurations.FirstOrDefaultAsync(c => c.OrganizationId == debt.OrganizationId, ct);
+        decimal? fullDiscountPct = cfg?.FullPaymentDiscountPercentage;
+        decimal discounted = debt.OutstandingPrincipal;
+        if (fullDiscountPct.HasValue && fullDiscountPct.Value > 0)
+        {
+            discounted = Math.Round(debt.OutstandingPrincipal * (1 - (fullDiscountPct.Value / 100m)), 2, MidpointRounding.AwayFromZero);
         }
 
         var vm = new AcceptDebtVm
@@ -79,6 +90,8 @@ public class AcceptController : Controller
             DueDateUtc = debt.DueDateUtc,
             Status = debt.Status.ToString(),
             OrganizationName = debt.Organization?.TradingName ?? debt.Organization?.Name ?? (theme?.Name ?? "Organization"),
+            FullPaymentSuggested = discounted,
+            FullPaymentDiscountPercent = fullDiscountPct ?? 0
         };
         return View(vm);
     }
@@ -96,6 +109,9 @@ public class AcceptController : Controller
             // reload summary to render again
             var debt0 = await _db.Debts.Include(d => d.Organization).FirstOrDefaultAsync(d => d.Id == vm.DebtId, ct);
             if (debt0 == null) return NotFound();
+            var cfg0 = await _db.OrganizationFeeConfigurations.FirstOrDefaultAsync(c => c.OrganizationId == debt0.OrganizationId, ct);
+            var discPct0 = cfg0?.FullPaymentDiscountPercentage ?? 0m;
+            var discAmt0 = discPct0 > 0 ? Math.Round(debt0.OutstandingPrincipal * (1 - (discPct0 / 100m)), 2) : debt0.OutstandingPrincipal;
             var reVm = new AcceptDebtVm
             {
                 DebtId = debt0.Id,
@@ -105,6 +121,8 @@ public class AcceptController : Controller
                 DueDateUtc = debt0.DueDateUtc,
                 Status = debt0.Status.ToString(),
                 OrganizationName = debt0.Organization?.TradingName ?? debt0.Organization?.Name ?? (theme?.Name ?? "Organization"),
+                FullPaymentSuggested = discAmt0,
+                FullPaymentDiscountPercent = discPct0
             };
             return View(reVm);
         }
@@ -136,7 +154,6 @@ public class AcceptController : Controller
 
         if (vm.SelectedOption == AcceptOption.Dispute)
         {
-            // Redirect to dispute flow, stash reason if provided
             if (!string.IsNullOrWhiteSpace(vm.DisputeReason))
             {
                 debt.FlagDispute(vm.DisputeReason);
@@ -152,15 +169,23 @@ public class AcceptController : Controller
         var startDate = DateTime.UtcNow.Date.AddDays(1);
         if (vm.SelectedOption == AcceptOption.PayInFull)
         {
-            var amount = debt.OutstandingPrincipal; // TODO: apply org discount if any
+            // Apply org-configured discount if present
+            var cfg = await _db.OrganizationFeeConfigurations.FirstOrDefaultAsync(c => c.OrganizationId == debt.OrganizationId, ct);
+            var pct = cfg?.FullPaymentDiscountPercentage ?? 0m;
+            var discounted = pct > 0 ? Math.Round(debt.OutstandingPrincipal * (1 - (pct / 100m)), 2, MidpointRounding.AwayFromZero) : debt.OutstandingPrincipal;
+
             plan = new PaymentPlan(
                 debt.Id,
                 reference: $"PLAN-{Guid.NewGuid():N}".Substring(0, 12),
                 type: PaymentPlanType.FullSettlement,
                 frequency: PaymentFrequency.OneOff,
                 startDateUtc: startDate,
-                installmentAmount: amount,
+                installmentAmount: discounted,
                 installmentCount: 1);
+            if (pct > 0)
+            {
+                plan.ApplyDiscount(debt.OutstandingPrincipal - discounted);
+            }
         }
         else // Installments
         {
@@ -296,6 +321,8 @@ public class AcceptDebtVm
     public DateTime? DueDateUtc { get; set; }
     public string Status { get; set; } = string.Empty;
     public string OrganizationName { get; set; } = string.Empty;
+    public decimal FullPaymentSuggested { get; set; }
+    public decimal FullPaymentDiscountPercent { get; set; }
 }
 
 public class AcceptDebtPostVm

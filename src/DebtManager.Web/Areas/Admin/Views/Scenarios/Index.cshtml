@@ -6,7 +6,7 @@
 <div class="mb-6">
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Test Scenarios</h2>
     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-        Manage dummy data for development, testing, and demonstration purposes
+        Create realistic orgs, debtors, debts and users for end-to-end testing. All records are tagged as dummy and can be cleared.
     </p>
 </div>
 
@@ -59,226 +59,123 @@
             <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">@ViewBag.TransactionCount</p>
         </div>
     </div>
-
-    <!-- Scenarios Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <!-- Organization Scenarios -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Organization Scenarios</h3>
-            </div>
-            <div class="p-4">
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Pending Approval</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.PendingOrgCount</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Rejected</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.RejectedOrgCount</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Active & Established</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.ActiveOrgCount</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Customer Scenarios -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Customer Scenarios</h3>
-            </div>
-            <div class="p-4">
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">New Customer</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.NewCustomerCount</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Active & Paying</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.ActiveCustomerCount</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Delinquent</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.DelinquentCustomerCount</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Settled</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.SettledCustomerCount</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Debt Scenarios -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Debt Scenarios</h3>
-            </div>
-            <div class="p-4">
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">New Debt</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.NewDebtCount</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Active on Plan</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.ActiveDebtCount</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">In Arrears</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.ArrearsDebtCount</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Disputed</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.DisputedDebtCount</span>
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Settled</span>
-                        </div>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-white">@ViewBag.SettledDebtCount</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Actions</h3>
-        <div class="flex flex-wrap gap-3 items-center">
-            <form method="post" asp-action="Clear" onsubmit="return confirm('Are you sure you want to clear all dummy data? This action cannot be undone.');">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                    Clear All Dummy Data
-                </button>
-            </form>
-            <a href="/Admin/Organizations?search=&status=" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                View Organizations
-            </a>
-            <a href="/Admin/Debtors" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                View Debtors
-            </a>
-            <a href="/Admin/Debts" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                View Debts
-            </a>
-        </div>
-    </div>
 }
-else
-{
-    <!-- Empty State -->
+
+<!-- Quick Actions: always visible -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div class="p-12 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full mb-4">
-                <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Dummy Data Found</h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                Generate realistic test data including organizations, customers, debts, and payment plans for development and testing purposes.
-            </p>
-
-            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-6 max-w-2xl mx-auto">
-                <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Quick Generate</h4>
-                <form method="post" asp-action="Generate" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-                    @Html.AntiForgeryToken()
-                    <div>
-                        <label class="block text-sm">Pack Name</label>
-                        <input name="PackName" class="border p-2 w-full rounded" placeholder="e.g. Demo Pack" />
-                        <input type="hidden" name="Currency" value="AUD" />
-                    </div>
-                    <div>
-                        <label class="block text-sm">Active Orgs</label>
-                        <input name="ActiveOrganizations" type="number" value="1" class="border p-2 w-full rounded" />
-                    </div>
-                    <div>
-                        <label class="block text-sm">Recent Orgs</label>
-                        <input name="RecentOrganizations" type="number" value="1" class="border p-2 w-full rounded" />
-                    </div>
-                    <div>
-                        <label class="block text-sm">New/Invited/Active/Delinq/Settled per Org</label>
-                        <div class="grid grid-cols-5 gap-2">
-                            <input name="NewCustomersPerOrg" type="number" value="2" class="border p-2 w-full rounded" />
-                            <input name="InvitedCustomersPerOrg" type="number" value="2" class="border p-2 wfull rounded" />
-                            <input name="ActiveCustomersPerOrg" type="number" value="3" class="border p-2 w-full rounded" />
-                            <input name="DelinquentCustomersPerOrg" type="number" value="2" class="border p-2 w-full rounded" />
-                            <input name="SettledCustomersPerOrg" type="number" value="1" class="border p-2 w-full rounded" />
-                        </div>
-                    </div>
-                    <div class="flex items-end gap-3">
-                        <label class="inline-flex items-center text-sm">
-                            <input type="checkbox" name="IncludePaymentPlans" checked class="mr-2" /> Plans
-                        </label>
-                        <label class="inline-flex items-center text-sm">
-                            <input type="checkbox" name="IncludeTransactions" checked class="mr-2" /> Transactions
-                        </label>
-                    </div>
-                    <div class="md:col-span-3">
-                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Generate Pack</button>
-                    </div>
-                </form>
-                <p class="text-xs text-gray-500 mt-3">All records will be tagged with dummy + a pack id for easy cleanup and filtering.</p>
-            </div>
-
-            <form method="post" asp-action="Seed">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Quick Debtor Case</h3>
+            <p class="text-xs text-gray-500">Creates org (if needed), debtor, debt, and user accounts. Then impersonate to test UX.</p>
+        </div>
+        <div class="p-4">
+            <form method="post" asp-action="QuickDebtorCase" class="space-y-3">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                    Generate Legacy Dummy Data
-                </button>
+                <div>
+                    <label class="block text-sm">Organization Name</label>
+                    <input name="orgName" class="border p-2 w-full rounded" placeholder="@ViewBag.QuickOrg" value="@ViewBag.QuickOrg" />
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm">Debtor First Name</label>
+                        <input name="debtorFirstName" class="border p-2 w-full rounded" placeholder="@ViewBag.QuickFirst" value="@ViewBag.QuickFirst" />
+                    </div>
+                    <div>
+                        <label class="block text-sm">Debtor Last Name</label>
+                        <input name="debtorLastName" class="border p-2 w-full rounded" placeholder="@ViewBag.QuickLast" value="@ViewBag.QuickLast" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm">Debtor Email</label>
+                        <input name="debtorEmail" class="border p-2 w-full rounded" placeholder="@ViewBag.QuickEmail" value="@ViewBag.QuickEmail" />
+                    </div>
+                    <div>
+                        <label class="block text-sm">Phone</label>
+                        <input name="phone" class="border p-2 w-full rounded" placeholder="@ViewBag.QuickPhone" value="@ViewBag.QuickPhone" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm">Debt Amount (AUD)</label>
+                    <input name="amount" type="number" step="0.01" value="@ViewBag.QuickAmount" class="border p-2 w-full rounded" />
+                </div>
+                <div class="flex items-center justify-between">
+                    <a href="/Dev/Impersonate" class="text-sm text-blue-600">Go to Impersonate</a>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Create</button>
+                </div>
             </form>
-
-            <p class="text-xs text-gray-500 dark:text-gray-500 mt-4">
-                All generated data will be tagged as "dummy" for easy identification and removal
-            </p>
         </div>
     </div>
 
-    <!-- Documentation -->
-    <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Documentation</h3>
-        <div class="prose dark:prose-invert max-w-none">
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                The scenario generator creates realistic packs of organizations, customers, debts, plans and transactions. Each run is uniquely tagged so you can share pack details (ids, counts) with testers.
-            </p>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Generate Scenario Pack</h3>
+            <p class="text-xs text-gray-500">Creates multiple orgs, customers, debts, plans and transactions.</p>
+        </div>
+        <div class="p-4">
+            <form method="post" asp-action="Generate" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                @Html.AntiForgeryToken()
+                <div class="md:col-span-2">
+                    <label class="block text-sm">Pack Name</label>
+                    <input name="PackName" class="border p-2 w-full rounded" placeholder="e.g. Demo Pack" />
+                    <input type="hidden" name="Currency" value="AUD" />
+                </div>
+                <div>
+                    <label class="block text-sm">Active Orgs</label>
+                    <input name="ActiveOrganizations" type="number" value="1" class="border p-2 w-full rounded" />
+                </div>
+                <div>
+                    <label class="block text-sm">Recent Orgs</label>
+                    <input name="RecentOrganizations" type="number" value="1" class="border p-2 w-full rounded" />
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm">Customers per Org (New/Inv/Active/Delinq/Settled)</label>
+                    <div class="grid grid-cols-5 gap-2">
+                        <input name="NewCustomersPerOrg" type="number" value="2" class="border p-2 w-full rounded" />
+                        <input name="InvitedCustomersPerOrg" type="number" value="2" class="border p-2 w-full rounded" />
+                        <input name="ActiveCustomersPerOrg" type="number" value="3" class="border p-2 w-full rounded" />
+                        <input name="DelinquentCustomersPerOrg" type="number" value="2" class="border p-2 w-full rounded" />
+                        <input name="SettledCustomersPerOrg" type="number" value="1" class="border p-2 w-full rounded" />
+                    </div>
+                </div>
+                <div class="flex items-end gap-3 md:col-span-2">
+                    <label class="inline-flex items-center text-sm">
+                        <input type="checkbox" name="IncludePaymentPlans" checked class="mr-2" /> Plans
+                    </label>
+                    <label class="inline-flex items-center text-sm">
+                        <input type="checkbox" name="IncludeTransactions" checked class="mr-2" /> Transactions
+                    </label>
+                </div>
+                <div class="md:col-span-2">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Generate Pack</button>
+                </div>
+            </form>
+            <p class="text-xs text-gray-500 mt-3">Impersonation users are created automatically for quick testing.</p>
         </div>
     </div>
-}
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Maintenance</h3>
+        </div>
+        <div class="p-4 space-y-3">
+            <form method="post" asp-action="Clear" onsubmit="return confirm('Clear all dummy data?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 w-full">Clear All Dummy Data</button>
+            </form>
+            <a href="/Dev/Impersonate" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded w-full inline-block text-center">Impersonate Users</a>
+            <div class="text-xs text-gray-500">Tip: Impersonate client to see Client dashboard; impersonate debtor to see debts in User area.</div>
+        </div>
+    </div>
+</div>
+
+<!-- Links -->
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Explore Data</h3>
+    <div class="flex flex-wrap gap-3 items-center">
+        <a href="/Admin/Organizations?search=&status=" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">View Organizations</a>
+        <a href="/Admin/Debtors" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">View Debtors</a>
+        <a href="/Admin/Debts" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">View Debts</a>
+        <a href="/Admin/Payments" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">View Payments</a>
+    </div>
+</div>

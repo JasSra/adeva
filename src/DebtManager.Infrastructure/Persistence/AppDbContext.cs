@@ -18,6 +18,7 @@ namespace DebtManager.Infrastructure.Persistence;
 public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options)
 {
     public DbSet<Organization> Organizations => Set<Organization>();
+    public DbSet<OrganizationFeeConfiguration> OrganizationFeeConfigurations => Set<OrganizationFeeConfiguration>();
     public DbSet<Debtor> Debtors => Set<Debtor>();
     public DbSet<Debt> Debts => Set<Debt>();
     public DbSet<PaymentPlan> PaymentPlans => Set<PaymentPlan>();
@@ -85,6 +86,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             builder.Navigation(x => x.Documents).HasField("_documents").UsePropertyAccessMode(PropertyAccessMode.Field);
             builder.HasMany(x => x.Debtors).WithOne(x => x.Organization).HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
             builder.HasMany(x => x.Debts).WithOne(x => x.Organization).HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<OrganizationFeeConfiguration>(builder =>
+        {
+            builder.HasIndex(x => x.OrganizationId).IsUnique();
+            builder.Property(x => x.FullPaymentDiscountPercentage).HasPrecision(9, 4);
+            builder.Property(x => x.SystemPlanDiscountPercentage).HasPrecision(9, 4);
+            builder.Property(x => x.CustomPlanAdminFeeFlat).HasPrecision(18, 2);
+            builder.Property(x => x.CustomPlanAdminFeePercentage).HasPrecision(9, 4);
+            builder.Property(x => x.PaymentProcessingFeePercentage).HasPrecision(9, 4);
+            builder.Property(x => x.LateFeeFlat).HasPrecision(18, 2);
+            builder.Property(x => x.LateFeePercentage).HasPrecision(9, 4);
+            builder.Property(x => x.MinimumInstallmentAmount).HasPrecision(18, 2);
+            builder.Property(x => x.MinimumPayoutThreshold).HasPrecision(18, 2);
+            builder.HasOne<Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Debtor>(builder =>
