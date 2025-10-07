@@ -17,6 +17,7 @@ using DebtManager.Web.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using DebtManager.Web.Middleware;
+using DebtManager.Web.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -106,6 +107,17 @@ builder.Services.AddHangfire(cfg => cfg
 builder.Services.AddScoped<BrandingResolverMiddleware>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 
+// Messaging services (generic + onboarding orchestration)
+builder.Services.AddScoped<IMessageQueueService, MessageQueueService>();
+builder.Services.AddScoped<IOnboardingNotificationService, OnboardingNotificationService>();
+builder.Services.AddScoped<MessageDispatchJob>();
+builder.Services.AddScoped<IBusinessLookupService>(x =>
+{
+    var logger = x.GetRequiredService<ILogger<AbrBusinessLookupService>>();
+    var key = builder.Configuration["AbrApi:ApiKey"];
+    return new AbrBusinessLookupService(builder.Configuration["AbrApi:ApiKey"] ?? string.Empty , logger);
+});
+
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
@@ -191,6 +203,20 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// Simple API for recipient search (admin)
+app.MapGet("/api/admin/usersearch", async ([FromQuery] string q, AppDbContext db) =>
+{
+    if (string.IsNullOrWhiteSpace(q) || q.Length < 2) return Results.Json(Array.Empty<object>());
+    q = q.ToLowerInvariant();
+    var results = await db.Users
+        .Where(u => (u.Email ?? "").ToLower().Contains(q) || (u.UserName ?? "").ToLower().Contains(q))
+        .OrderBy(u => u.Email)
+        .Take(10)
+        .Select(u => new { id = u.Id, name = u.UserName ?? u.Email ?? "Unknown", email = u.Email ?? string.Empty })
+        .ToListAsync();
+    return Results.Json(results);
+}).RequireAuthorization(new AuthorizeAttribute { Policy = "RequireAdminScope" });
+
 // Configure recurring jobs only if not in maintenance and server is enabled
 if (!maintenance.IsMaintenance)
 {
@@ -203,7 +229,7 @@ if (!maintenance.IsMaintenance)
             server = new BackgroundJobServer();
             // Configure recurring jobs
             DebtManager.Web.Jobs.NightlyJobs.ConfigureRecurringJobs();
-
+            RecurringJob.AddOrUpdate("dispatch-queued-messages-di", () => app.Services.GetRequiredService<MessageDispatchJob>().RunAsync(CancellationToken.None), Cron.Minutely);
             // Dispose server gracefully on shutdown
             var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
             lifetime.ApplicationStopping.Register(() => server.Dispose());
@@ -214,7 +240,6 @@ if (!maintenance.IsMaintenance)
             Log.Error(ex, "Failed to start Hangfire server; entering maintenance mode.");
         }
     }
-    // else: Hangfire server disabled for lean startup
 }
 
 app.Run();

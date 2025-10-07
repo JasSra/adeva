@@ -1,34 +1,101 @@
+@model DebtManager.Web.Areas.User.Controllers.DashboardVm
 @{
     Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
-    var themeName = ViewBag.ThemeName as string ?? "Default";
 }
 
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-800">@err</div>
+}
+
+<!-- Account Health Banner -->
+@if (!string.IsNullOrWhiteSpace(Model.AccountHealth))
+{
+    var tone = Model.HealthTone;
+    var bg = tone == "danger" ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200" :
+             tone == "warning" ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200" :
+             tone == "success" ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200" :
+             "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200";
+    var iconPath = tone == "danger" ? "M12 9v2m0 4h.01M12 5a7 7 0 100 14 7 7 0 000-14z" :
+                   tone == "warning" ? "M12 8v4m0 4h.01M12 2a10 10 0 110 20 10 10 0 010-20z" :
+                   tone == "success" ? "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" :
+                   "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z";
+    <div class="mb-6 border rounded p-4 @bg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-start">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="@iconPath" />
+                </svg>
+                <div>
+                    <p class="font-semibold">@Model.AccountHealth</p>
+                    <p class="text-sm opacity-90">@Model.HealthMessage</p>
+                </div>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.PrimaryCtaUrl) && !string.IsNullOrWhiteSpace(Model.PrimaryCtaText))
+            {
+                <a href="@Model.PrimaryCtaUrl" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">@Model.PrimaryCtaText</a>
+            }
+        </div>
+    </div>
+}
+
+<!-- KPIs row with mini sparkline -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900 p-4 md:p-6">
-        <div class="flex items-center">
-            <div class="flex-shrink-0 bg-red-100 dark:bg-red-900/30 rounded-md p-3">
-                <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-red-100 dark:bg-red-900/30 rounded-md p-3">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Owed</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white">$@Model.TotalOwed.ToString("N2")</p>
+                </div>
+            </div>
+            @if (Model.OutstandingSparkline?.Count > 1)
+            {
+                <svg viewBox="0 0 100 24" class="h-8 w-24 text-blue-500">
+                    @{
+                        var vals = Model.OutstandingSparkline;
+                        var min = vals.Min();
+                        var max = vals.Max();
+                        var range = Math.Max(1m, max - min);
+                        var step = 100m / Math.Max(1, vals.Count - 1);
+                        string? path = null;
+                        for (var i = 0; i < vals.Count; i++)
+                        {
+                            var x = step * i;
+                            var y = 24m - ((vals[i] - min) / range) * 24m;
+                            path += (i == 0 ? $"M{x:F2},{y:F2}" : $" L{x:F2},{y:F2}");
+                        }
+                    }
+                    <path d="@path" fill="none" stroke="currentColor" stroke-width="2" />
                 </svg>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Owed</p>
-                <p class="text-2xl font-semibold text-gray-900 dark:text-white">$3,250.00</p>
-            </div>
+            }
         </div>
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900 p-4 md:p-6">
-        <div class="flex items-center">
-            <div class="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900/30 rounded-md p-3">
-                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-yellow-100 dark:bg-yellow-900/30 rounded-md p-3">
+                    <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Next Payment Due</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white">@(Model.NextPaymentAmount.HasValue ? "$" + Model.NextPaymentAmount.Value.ToString("N2") : "—")</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">@(Model.NextPaymentDueDateUtc.HasValue ? $"Due: {Model.NextPaymentDueDateUtc.Value.ToLocalTime():MMM d, yyyy}" : "No upcoming payment")</p>
+                </div>
             </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Next Payment Due</p>
-                <p class="text-2xl font-semibold text-gray-900 dark:text-white">$500.00</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Due: Jan 15, 2025</p>
+            <div>
+                @if (Model.NextPaymentDebtId.HasValue)
+                {
+                    <a href="/User/Payments/MakePayment?debtId=@Model.NextPaymentDebtId" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Pay Now</a>
+                }
             </div>
         </div>
     </div>
@@ -37,121 +104,223 @@
         <div class="flex items-center">
             <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-md p-3">
                 <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
             </div>
             <div class="ml-4">
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Active Debts</p>
-                <p class="text-2xl font-semibold text-gray-900 dark:text-white">2</p>
+                <p class="text-2xl font-semibold text-gray-900 dark:text-white">@Model.ActiveDebts</p>
             </div>
         </div>
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900 p-4 md:p-6">
-        <div class="flex items-center">
-            <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-md p-3">
-                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-md p-3">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Account Status</p>
+                    <p class="text-lg font-semibold @(Model.AccountStatus == "Active" || Model.AccountStatus == "Verified" ? "text-green-600 dark:text-green-400" : "text-gray-700 dark:text-gray-300")">@Model.AccountStatus</p>
+                </div>
             </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Account Status</p>
-                <p class="text-lg font-semibold text-green-600 dark:text-green-400">Active</p>
+            <div class="text-right">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Unread Messages</p>
+                <p class="text-xl font-semibold text-gray-900 dark:text-white">@Model.UnreadMessages</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900">
-        <div class="p-4 md:p-6 border-b dark:border-gray-700">
-            <h3 class="text-lg font-semibold dark:text-white">Quick Actions</h3>
-        </div>
-        <div class="p-4 md:p-6">
-            <div class="space-y-3">
-                <a href="/User/Payments/MakePayment" class="flex items-center p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                    <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                    <div>
-                        <p class="font-medium dark:text-white">Make a Payment</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Pay off your debt or installment</p>
-                    </div>
-                </a>
-                <a href="/User/Payments" class="flex items-center p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <div>
-                        <p class="font-medium dark:text-white">View Payment Plan</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Review upcoming payments and schedule</p>
-                    </div>
-                </a>
-                <a href="/User/Debts" class="flex items-center p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    <div>
-                        <p class="font-medium dark:text-white">View My Debts</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">See all debt details and status</p>
-                    </div>
-                </a>
-                <a href="/User/Contact" class="flex items-center p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                    <svg class="w-5 h-5 text-orange-600 dark:text-orange-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <div>
-                        <p class="font-medium dark:text-white">Contact Support</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Get help or update contact details</p>
-                    </div>
-                </a>
-            </div>
+<!-- Notifications panel -->
+<div class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900">
+    <div class="p-4 md:p-6 border-b dark:border-gray-700 flex items-center justify-between">
+        <h3 class="text-lg font-semibold dark:text-white">Notifications</h3>
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+            @{
+                var totalNotices = (Model.OverdueInstallments > 0 ? 1 : 0) + (Model.DueSoonCount > 0 ? 1 : 0) + (Model.FailedPayments.Count > 0 ? 1 : 0) + (Model.UnreadMessages > 0 ? 1 : 0);
+            }
+            @(totalNotices > 0 ? $"{totalNotices} alert(s)" : "All clear")
         </div>
     </div>
+    <div class="p-4 md:p-6">
+        @if (Model.OverdueInstallments <= 0 && Model.DueSoonCount <= 0 && Model.FailedPayments.Count == 0 && Model.UnreadMessages <= 0)
+        {
+            <p class="text-sm text-gray-500 dark:text-gray-400">You're all set. No notifications.</p>
+        }
+        else
+        {
+            <div class="space-y-3">
+                @if (Model.OverdueInstallments > 0)
+                {
+                    <div class="flex items-center justify-between p-3 border rounded bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 5a7 7 0 100 14 7 7 0 000-14z" />
+                            </svg>
+                            <span class="text-sm dark:text-white">@Model.OverdueInstallments installment(s) overdue</span>
+                        </div>
+                        <a href="/User/Payments" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs">Resolve</a>
+                    </div>
+                }
+                @if (Model.DueSoonCount > 0)
+                {
+                    <div class="flex items-center justify-between p-3 border rounded bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-sm dark:text-white">@Model.DueSoonCount payment(s) due within 7 days</span>
+                        </div>
+                        <a href="/User/Payments" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs">Review</a>
+                    </div>
+                }
+                @if (Model.FailedPayments.Count > 0)
+                {
+                    <div class="flex items-center justify-between p-3 border rounded bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 5a7 7 0 100 14 7 7 0 000-14z" />
+                            </svg>
+                            <span class="text-sm dark:text-white">Recent payment failed</span>
+                        </div>
+                        <a href="/User/Payments" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs">Retry</a>
+                    </div>
+                }
+                @if (Model.UnreadMessages > 0)
+                {
+                    <div class="flex items-center justify-between p-3 border rounded bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <span class="text-sm dark:text-white">@Model.UnreadMessages unread message(s)</span>
+                        </div>
+                        <a href="/User/Communications" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs">Open</a>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
 
+<!-- Upcoming with deep link to plan -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
+    <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900">
+        <div class="p-4 md:p-6 border-b dark:border-gray-700 flex items-center justify-between">
+            <h3 class="text-lg font-semibold dark:text-white">Upcoming Payments</h3>
+            <a href="/User/Payments" class="text-sm text-blue-600 hover:underline">View all</a>
+        </div>
+        <div class="p-4 md:p-6">
+            @if (Model.Upcoming.Count == 0)
+            {
+                <p class="text-sm text-gray-500 dark:text-gray-400">No upcoming payments.</p>
+            }
+            else
+            {
+                <div class="space-y-3">
+                    @foreach (var u in Model.Upcoming)
+                    {
+                        <div class="flex items-center justify-between p-3 border rounded dark:border-gray-700 @(u.Overdue ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800" : "")">
+                            <div>
+                                <p class="font-medium dark:text-white">Debt @u.DebtReference</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Due @u.DueAtUtc.ToLocalTime(): MMM d, yyyy</p>
+                                <a class="text-xs text-blue-600 hover:underline" href="/User/Payments/ViewPlan/@u.DebtId">View Plan</a>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold">$@u.AmountRemaining.ToString("N2")</p>
+                                <a href="/User/Payments/MakePayment?debtId=@u.DebtId" class="inline-block mt-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs">Pay Now</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900">
+        <div class="p-4 md:p-6 border-b dark:border-gray-700">
+            <h3 class="text-lg font-semibold dark:text-white">Overdue</h3>
+        </div>
+        <div class="p-4 md:p-6">
+            @if (Model.OverdueInstallments <= 0)
+            {
+                <p class="text-sm text-gray-500 dark:text-gray-400">You're up to date.</p>
+            }
+            else
+            {
+                <div class="flex items-center justify-between">
+                    <p class="text-sm dark:text-white">@Model.OverdueInstallments installment(s) overdue</p>
+                    <a href="/User/Payments" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs">Resolve</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Activity and failed payments -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900">
         <div class="p-4 md:p-6 border-b dark:border-gray-700">
             <h3 class="text-lg font-semibold dark:text-white">Recent Activity</h3>
         </div>
         <div class="p-4 md:p-6">
-            <div class="space-y-4">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-green-100 dark:bg-green-900/30 rounded-full p-2">
-                        <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
+            @if (Model.Activities.Count == 0)
+            {
+                <p class="text-sm text-gray-500 dark:text-gray-400">No recent activity yet.</p>
+            }
+            else
+            {
+                <div class="space-y-4">
+                @foreach (var a in Model.Activities)
+                {
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 rounded-full p-2 @(a.Kind == "payment" ? "bg-green-100 dark:bg-green-900/30" : "bg-gray-100 dark:bg-gray-700")">
+                            <svg class="w-4 h-4 @(a.Kind == "payment" ? "text-green-600 dark:text-green-400" : "text-gray-600 dark:text-gray-300")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium dark:text-white">@a.Title</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">@a.Description</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">@a.TimestampUtc.ToLocalTime()</p>
+                        </div>
                     </div>
-                    <div class="ml-3 flex-1">
-                        <p class="text-sm font-medium dark:text-white">Payment Received</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Debt #D-5001 - $500.00</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">2 hours ago</p>
-                    </div>
+                }
                 </div>
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 rounded-full p-2">
-                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                    <div class="ml-3 flex-1">
-                        <p class="text-sm font-medium dark:text-white">Email Reminder</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Payment due in 7 days</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">1 day ago</p>
-                    </div>
+            }
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900">
+        <div class="p-4 md:p-6 border-b dark:border-gray-700">
+            <h3 class="text-lg font-semibold dark:text-white">Failed Payments</h3>
+        </div>
+        <div class="p-4 md:p-6">
+            @if (Model.FailedPayments.Count == 0)
+            {
+                <p class="text-sm text-gray-500 dark:text-gray-400">No failed payments in the last 30 days.</p>
+            }
+            else
+            {
+                <div class="space-y-3">
+                    @foreach (var f in Model.FailedPayments)
+                    {
+                        <div class="flex items-center justify-between p-3 border rounded dark:border-gray-700">
+                            <div>
+                                <p class="font-medium dark:text-white">Debt @f.DebtReference</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">@f.ProcessedAtUtc.ToLocalTime()</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold">@f.Currency @f.Amount.ToString("N2")</p>
+                                <a href="/User/Payments/MakePayment" class="inline-block mt-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs">Retry</a>
+                            </div>
+                        </div>
+                    }
                 </div>
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 bg-purple-100 dark:bg-purple-900/30 rounded-full p-2">
-                        <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </div>
-                    <div class="ml-3 flex-1">
-                        <p class="text-sm font-medium dark:text-white">Receipt Generated</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Receipt for payment #P-1234</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">2 days ago</p>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
     </div>
 </div>
@@ -170,3 +339,18 @@
         </div>
     </div>
 </div>
+
+@if (!string.IsNullOrWhiteSpace(Model.StickyPayUrl))
+{
+    <div class="md:hidden fixed bottom-0 inset-x-0 z-40">
+        <div class="m-3 p-3 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-blue-200 dark:border-gray-700 flex items-center justify-between">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1" />
+                </svg>
+                <span class="text-sm font-medium">@Model.StickyPayText</span>
+            </div>
+            <a href="@Model.StickyPayUrl" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Pay now</a>
+        </div>
+    </div>
+}

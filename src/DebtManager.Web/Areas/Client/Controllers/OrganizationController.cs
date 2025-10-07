@@ -1,26 +1,18 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using DebtManager.Web.Services;
+using DebtManager.Web.Filters;
 
 namespace DebtManager.Web.Areas.Client.Controllers;
 
 [Area("Client")]
 [Authorize(Policy = "RequireClientScope")]
+[RequireOrganizationOnboarded]
 public class OrganizationController : Controller
 {
+    [HttpGet]
     public IActionResult Index()
     {
-        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
-        ViewBag.ThemeName = theme?.Name ?? "Default";
         ViewBag.Title = "Organization Profile";
-        return View();
-    }
-
-    public IActionResult Edit()
-    {
-        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
-        ViewBag.ThemeName = theme?.Name ?? "Default";
-        ViewBag.Title = "Edit Organization Profile";
         return View();
     }
 }

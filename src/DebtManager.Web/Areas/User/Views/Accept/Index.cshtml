@@ -1,0 +1,106 @@
+@model DebtManager.Web.Areas.User.Controllers.AcceptDebtVm
+@{
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+}
+
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-6 border-b dark:border-gray-700 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold dark:text-white">Review & Accept Debt</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">@Model.OrganizationName</p>
+            </div>
+        </div>
+        <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <div class="text-gray-500 dark:text-gray-400">Reference</div>
+                    <div class="font-medium dark:text-white">@Model.Reference</div>
+                </div>
+                <div>
+                    <div class="text-gray-500 dark:text-gray-400">Current Status</div>
+                    <div class="font-medium dark:text-white">@Model.Status</div>
+                </div>
+                <div>
+                    <div class="text-gray-500 dark:text-gray-400">Original Amount</div>
+                    <div class="font-medium dark:text-white">$@Model.OriginalAmount.ToString("N2")</div>
+                </div>
+                <div>
+                    <div class="text-gray-500 dark:text-gray-400">Outstanding</div>
+                    <div class="text-xl font-semibold text-red-600 dark:text-red-400">$@Model.Outstanding.ToString("N2")</div>
+                </div>
+                <div>
+                    <div class="text-gray-500 dark:text-gray-400">Due Date</div>
+                    <div class="font-medium dark:text-white">@(Model.DueDateUtc?.ToLocalTime().ToString("MMM d, yyyy") ?? "—")</div>
+                </div>
+            </div>
+
+            <div class="border-t dark:border-gray-700 pt-4">
+                <form method="post" asp-action="Index" asp-controller="Accept" asp-area="User">
+                    <input type="hidden" name="DebtId" value="@Model.DebtId" />
+
+                    <div class="space-y-4">
+                        <div class="font-medium dark:text-white">Choose an option</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <label class="border rounded p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <input type="radio" name="SelectedOption" value="PayInFull" class="mr-2" />
+                                <span class="font-medium">Pay in full</span>
+                                <div class="text-xs text-gray-500">Pay the full outstanding today (discounts may apply)</div>
+                            </label>
+                            <label class="border rounded p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <input type="radio" name="SelectedOption" value="Installments" class="mr-2" />
+                                <span class="font-medium">Set up installments</span>
+                                <div class="text-xs text-gray-500">Pick a plan and pay over time</div>
+                            </label>
+                            <label class="border rounded p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <input type="radio" name="SelectedOption" value="Dispute" class="mr-2" />
+                                <span class="font-medium">Dispute</span>
+                                <div class="text-xs text-gray-500">I don't recognize or disagree with this debt</div>
+                            </label>
+                        </div>
+
+                        <div id="installmentOptions" class="hidden border rounded p-3">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Frequency</label>
+                                    <select name="Frequency" class="w-full border rounded px-3 py-2 text-sm">
+                                        <option value="Weekly">Weekly</option>
+                                        <option value="Fortnightly">Fortnightly</option>
+                                        <option value="Monthly" selected>Monthly</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Installments</label>
+                                    <input type="number" name="InstallmentCount" min="2" max="48" value="6" class="w-full border rounded px-3 py-2 text-sm" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="disputeOptions" class="hidden border rounded p-3">
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Reason (optional)</label>
+                            <textarea name="DisputeReason" rows="3" class="w-full border rounded px-3 py-2 text-sm" placeholder="Briefly describe the dispute..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex items-center justify-end gap-3">
+                        <a href="/User" class="px-4 py-2 border rounded text-sm">Cancel</a>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Continue</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const radioInputs = document.querySelectorAll('input[name="SelectedOption"]');
+    const inst = document.getElementById('installmentOptions');
+    const disp = document.getElementById('disputeOptions');
+    function updateUI(){
+        const val = document.querySelector('input[name="SelectedOption"]:checked')?.value;
+        inst.classList.toggle('hidden', val !== 'Installments');
+        disp.classList.toggle('hidden', val !== 'Dispute');
+    }
+    radioInputs.forEach(r => r.addEventListener('change', updateUI));
+    updateUI();
+</script>

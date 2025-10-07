@@ -1,0 +1,31 @@
+@model DebtManager.Web.Areas.User.Controllers.UserMessageDetailVm
+@{
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+    ViewBag.Title = "Message";
+}
+
+<div class="max-w-3xl mx-auto">
+    <a href="@Url.Action("Inbox")" class="text-blue-600 hover:underline">Back to Inbox</a>
+    <div class="bg-white dark:bg-gray-800 rounded shadow border border-gray-200 dark:border-gray-700 mt-4">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h1 class="text-xl font-bold">@Model.Title</h1>
+            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Sent: @Model.SentAtUtc
+            </div>
+        </div>
+        <div class="p-6">
+            <div class="prose prose-sm dark:prose-invert max-w-none">@Html.Raw(Model.Content.Replace("\n","<br/>"))</div>
+        </div>
+        <div class="p-6 border-t border-gray-200 dark:border-gray-700">
+            <form method="post" asp-action="Reply">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" value="@Model.Id" />
+                <label class="block text-sm font-medium mb-1">Reply</label>
+                <textarea name="Content" rows="4" class="w-full border rounded p-2"></textarea>
+                <div class="mt-2">
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded">Send Reply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

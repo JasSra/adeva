@@ -21,20 +21,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration? configuration = null)
     {
-        // ABR Http Client (no config here; validator will use DB-backed config)
-        services.AddHttpClient<AbrHttpValidator>();
-
-        // Choose implementation based on presence of BaseUrl; fall back to stub
-        services.AddScoped<IAbrValidator>(sp =>
-        {
-            // Decide dynamically at runtime in validator using config values
-            var handler = sp.GetRequiredService<AbrHttpValidator>();
-            return handler;
-        });
-
-        // Business Lookup (wraps ABR validator; adds ACN validation)
-        services.AddScoped<IBusinessLookupService, BusinessLookupService>();
-
+       
         // Repositories
         services.AddScoped<IDebtorRepository, DebtorRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();

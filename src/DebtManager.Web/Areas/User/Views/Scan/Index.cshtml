@@ -1,0 +1,95 @@
+@model DebtManager.Web.Areas.User.Controllers.ScanIndexVm
+@{
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+}
+
+<div class="max-w-5xl mx-auto">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Upload Documents</h3>
+        </div>
+        <div class="p-6">
+            @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+            {
+                <div class="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-800">@err</div>
+            }
+            @if (TempData["Message"] is string msg && !string.IsNullOrWhiteSpace(msg))
+            {
+                <div class="mb-4 p-3 rounded border border-green-200 bg-green-50 text-green-800">@msg</div>
+            }
+
+            <form action="/User/Scan/Upload" method="post" enctype="multipart/form-data" class="space-y-3">
+                @Html.AntiForgeryToken()
+                <div>
+                    <label class="block text-sm font-medium mb-1">Document Type</label>
+                    <select name="DocumentType" class="border rounded px-3 py-2 text-sm">
+                        <option value="2">Receipt</option>
+                        <option value="5">Identity</option>
+                        <option value="6">Evidence</option>
+                        <option value="3">Statement</option>
+                    </select>
+                    <div class="text-xs text-gray-500 mt-1">Invoices are uploaded by clients; users can upload identity/evidence/receipts.</div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Select file</label>
+                    <input type="file" name="file" accept="application/pdf,image/*" class="border rounded px-3 py-2 w-full" />
+                    <p class="text-xs text-gray-500 mt-1">PDF, JPG, PNG, HEIC up to 15MB</p>
+                </div>
+                <div>
+                    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Upload</button>
+                </div>
+            </form>
+
+            <hr class="my-6" />
+
+            <h4 class="font-semibold mb-3">Recent uploads</h4>
+            @if (Model.Items.Count == 0)
+            {
+                <div class="text-sm text-gray-600">No documents uploaded yet. Use the form above to upload identity documents or evidence for disputes.</div>
+            }
+            else
+            {
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="text-left p-2">File</th>
+                                <th class="text-left p-2">Type</th>
+                                <th class="text-left p-2">Size</th>
+                                <th class="text-left p-2">Uploaded</th>
+                                <th class="text-left p-2">Status</th>
+                                <th class="text-left p-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var i in Model.Items)
+                        {
+                            <tr class="border-t">
+                                <td class="p-2">@i.FileName</td>
+                                <td class="p-2">@i.Type</td>
+                                <td class="p-2">@String.Format("{0:N0} KB", i.SizeBytes / 1024)</td>
+                                <td class="p-2">@i.CreatedAtUtc.ToLocalTime()</td>
+                                <td class="p-2"><span id="st-@i.DocumentId">@(string.IsNullOrWhiteSpace(i.InvoiceStatus) ? "Stored" : i.InvoiceStatus)</span></td>
+                                <td class="p-2 space-x-3">
+                                    <a class="text-blue-600 text-xs underline" href="@i.StorageUrl" target="_blank" rel="noopener noreferrer">Download</a>
+                                    <button type="button" class="text-blue-600 text-xs underline" onclick="refreshStatus('@i.DocumentId')">Refresh</button>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+async function refreshStatus(id) {
+    try {
+        const res = await fetch(`/User/Scan/Status?documentId=${id}`);
+        const data = await res.json();
+        document.getElementById(`st-${id}`).textContent = data.status || 'Stored';
+    } catch (e) { console.error(e); }
+}
+</script>

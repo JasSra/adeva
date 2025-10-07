@@ -133,4 +133,24 @@
             </div>
         </div>
     }
+
+    <!-- Reply Box -->
+    <div class="p-6 border-t border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Reply to Message</h3>
+        <form method="post" asp-action="Reply" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" value="@Model.Id" />
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="Content">Your Reply</label>
+                <textarea id="Content" name="Content" rows="4" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500" placeholder="Type your reply here..." required></textarea>
+            </div>
+            
+            <div class="flex justify-end gap-2">
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm">
+                    Send Reply
+                </button>
+            </div>
+        </form>
+    </div>
 </div>

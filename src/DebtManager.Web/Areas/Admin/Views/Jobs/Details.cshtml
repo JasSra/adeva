@@ -1,0 +1,87 @@
+@model DebtManager.Web.Areas.Admin.Controllers.RecurringJobDetailVm
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="mb-4">
+    <a href="@Url.Action("Index")" class="text-blue-600 hover:underline">Back to Jobs</a>
+</div>
+
+<h2 class="text-2xl font-bold mb-2">@Model.Id</h2>
+<p class="text-sm text-gray-600">@Model.Method</p>
+
+@if (TempData["Message"] is string ok)
+{
+    <div class="p-3 my-4 bg-green-100 text-green-800 rounded">@ok</div>
+}
+@if (TempData["Error"] is string err)
+{
+    <div class="p-3 my-4 bg-red-100 text-red-800 rounded">@err</div>
+}
+
+<div class="grid grid-cols-2 gap-6">
+    <div class="border rounded p-4">
+        <h3 class="font-semibold mb-2">Schedule</h3>
+        <dl class="text-sm">
+            <dt class="text-gray-500">CRON</dt>
+            <dd class="mb-2">@Model.Cron</dd>
+            <dt class="text-gray-500">Next Execution</dt>
+            <dd class="mb-2">@Model.NextExecution</dd>
+            <dt class="text-gray-500">Last Execution</dt>
+            <dd class="mb-2">@Model.LastExecution</dd>
+            <dt class="text-gray-500">Time Zone</dt>
+            <dd class="mb-2">@Model.TimeZoneId</dd>
+            <dt class="text-gray-500">Queue</dt>
+            <dd class="mb-2">@Model.Queue</dd>
+        </dl>
+
+        <form method="post" asp-action="UpdateCron" class="mt-4 flex items-end gap-2">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div>
+                <label class="block text-sm font-medium mb-1">Update CRON</label>
+                <input type="text" name="cron" value="@Model.Cron" class="border p-2 rounded w-64 font-mono text-xs" />
+            </div>
+            <button class="px-4 py-2 bg-blue-600 text-white rounded">Save</button>
+        </form>
+
+        <form method="post" asp-action="Trigger" class="mt-2">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button class="px-4 py-2 bg-emerald-600 text-white rounded">Trigger Now</button>
+        </form>
+
+        <form method="post" asp-action="RequeueFailedDispatches" class="mt-2">
+            @Html.AntiForgeryToken()
+            <button class="px-4 py-2 bg-orange-600 text-white rounded" title="Requeue all failed email/SMS dispatches">Requeue Failed Dispatches</button>
+        </form>
+    </div>
+    <div class="border rounded p-4">
+        <h3 class="font-semibold mb-2">Recent Runs</h3>
+        <div class="overflow-x-auto">
+        <table class="min-w-full text-sm divide-y">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-3 py-2 text-left">Job Id</th>
+                    <th class="px-3 py-2 text-left">State</th>
+                    <th class="px-3 py-2 text-left">Created</th>
+                    <th class="px-3 py-2 text-left">Duration</th>
+                    <th class="px-3 py-2 text-left">Result/Error</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.RecentRuns)
+            {
+                <tr>
+                    <td class="px-3 py-2 font-mono text-xs">@r.JobId</td>
+                    <td class="px-3 py-2">@r.State</td>
+                    <td class="px-3 py-2">@r.CreatedAt</td>
+                    <td class="px-3 py-2">@r.Duration</td>
+                    <td class="px-3 py-2 text-xs">@(r.ExceptionMessage ?? r.Result)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>

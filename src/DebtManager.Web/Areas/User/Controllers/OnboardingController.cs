@@ -23,8 +23,23 @@ public class OnboardingController : Controller
     [HttpGet]
     public IActionResult Index()
     {
-        return View(new DebtorOnboardingVm());
+        if (TempData.TryGetValue("OnboardingInfo", out var msg) && msg is string s && !string.IsNullOrWhiteSpace(s))
+            ViewBag.OnboardingInfo = s;
+
+        // Pre-fill from claims for convenience
+        var model = new DebtorOnboardingVm
+        {
+            FirstName = User.FindFirstValue(ClaimTypes.GivenName) ?? string.Empty,
+            LastName = User.FindFirstValue(ClaimTypes.Surname) ?? string.Empty
+        };
+        return View(model);
     }
+
+    // Safety net: handle posts mistakenly hitting Index to prevent 405
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> Index(DebtorOnboardingVm vm, CancellationToken ct)
+        => Create(vm, ct);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -44,28 +59,13 @@ public class OnboardingController : Controller
             _db.UserProfiles.Add(profile);
         }
 
-        // Update profile name
         profile.FirstName = vm.FirstName;
         profile.LastName = vm.LastName;
 
-        // Create a Debtor entity for this user
-        // Note: Debtor requires an OrganizationId. For user-initiated debtor creation (self-service),
-        // we need a "default" or "platform" organization, OR wait for a debt to be assigned.
-        // For now, we'll create a debtor without org (org will be set when debt is created by admin/client).
-        // However, Debtor domain model requires OrganizationId. We need to handle this properly.
-
-        // Strategy: Create a platform-level "Self-Service" organization for user-initiated debtors
-        // OR: Only create Debtor when first debt is assigned (handled by admin/client workflows)
-        // For this fix, let's assume there's a "platform" org or we create a stub debtor record.
-
-        // TEMPORARY FIX: Create a Debtor linked to the first available organization (or create a platform org)
-        // Ideally, debtor should only exist when a debt is assigned by a creditor organization.
-        // But to unblock onboarding, we'll create a minimal debtor profile.
-
+        // Ensure a platform org exists
         var platformOrg = await _db.Organizations.FirstOrDefaultAsync(o => o.Subdomain == "platform" || o.Name == "Platform", ct);
         if (platformOrg == null)
         {
-            // Create a platform organization for self-service debtors
             platformOrg = new DebtManager.Domain.Organizations.Organization(
                 name: "Platform",
                 legalName: "Adeva Plus Platform",
@@ -85,26 +85,33 @@ public class OnboardingController : Controller
             await _db.SaveChangesAsync(ct);
         }
 
-        // Create Debtor for this user
-        var debtor = new Debtor(
-            organizationId: platformOrg.Id,
-            referenceId: $"USR-{user.Id.ToString("N")[..8].ToUpperInvariant()}",
-            email: user.Email ?? $"user-{user.Id}@platform.local",
-            phone: user.PhoneNumber ?? "+61000000000",
-            firstName: vm.FirstName,
-            lastName: vm.LastName
-        );
-        debtor.UpdatePersonalDetails(vm.FirstName, vm.LastName, vm.FirstName, null, null);
-        debtor.SetStatus(DebtorStatus.New);
-        debtor.EnablePortalAccess();
+        // Create Debtor for this user if not exists
+        var existingDebtor = await _db.Debtors.FirstOrDefaultAsync(d => d.Email == (user.Email ?? "") && d.OrganizationId == platformOrg.Id, ct);
+        if (existingDebtor == null)
+        {
+            var debtor = new Debtor(
+                organizationId: platformOrg.Id,
+                referenceId: $"USR-{user.Id.ToString("N")[..8].ToUpperInvariant()}",
+                email: user.Email ?? $"user-{user.Id}@platform.local",
+                phone: user.PhoneNumber ?? "+61000000000",
+                firstName: vm.FirstName,
+                lastName: vm.LastName
+            );
+            debtor.UpdatePersonalDetails(vm.FirstName, vm.LastName, vm.FirstName, null, null);
+            debtor.SetStatus(DebtorStatus.New);
+            debtor.EnablePortalAccess();
+            await _db.Debtors.AddAsync(debtor, ct);
+            await _db.SaveChangesAsync(ct);
+            profile.DebtorId = debtor.Id;
+        }
+        else
+        {
+            existingDebtor.UpdatePersonalDetails(vm.FirstName, vm.LastName, vm.FirstName, null, null);
+            await _db.SaveChangesAsync(ct);
+            profile.DebtorId = existingDebtor.Id;
+        }
 
-        await _db.Debtors.AddAsync(debtor, ct);
         await _db.SaveChangesAsync(ct);
-
-        // Link Debtor to UserProfile
-        profile.DebtorId = debtor.Id;
-        await _db.SaveChangesAsync(ct);
-
         TempData["Message"] = "Profile created successfully.";
         return Redirect("/User");
     }

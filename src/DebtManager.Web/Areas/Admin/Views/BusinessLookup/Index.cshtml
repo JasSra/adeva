@@ -1,0 +1,368 @@
+@model DebtManager.Web.Areas.Admin.Controllers.BusinessLookupVm
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Business Lookup";
+}
+@functions {
+    string FormatDate(DateTime? dt)
+    {
+        if (!dt.HasValue || dt.Value == default) return "Present";
+        return dt.Value.ToShortDateString();
+    }
+}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Business Lookup</h1>
+
+    <!-- Inputs -->
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+            <h2 class="font-semibold mb-2">Lookup by ABN</h2>
+            <form action="/Admin/BusinessLookup/LookupByAbn" method="post" class="space-y-3">
+                @Html.AntiForgeryToken()
+                <input type="text" name="Abn" value="@Model.Abn" placeholder="11-digit ABN" maxlength="11" class="w-full border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+                <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" type="submit">Search</button>
+                <div class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("Abn")</div>
+            </form>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+            <h2 class="font-semibold mb-2">Lookup by ACN</h2>
+            <form action="/Admin/BusinessLookup/LookupByAcn" method="post" class="space-y-3">
+                @Html.AntiForgeryToken()
+                <input type="text" name="Acn" value="@Model.Acn" placeholder="9-digit ACN" maxlength="9" class="w-full border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+                <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" type="submit">Search</button>
+                <div class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("Acn")</div>
+            </form>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+            <h2 class="font-semibold mb-2">Lookup by Name</h2>
+            <form action="/Admin/BusinessLookup/LookupByName" method="post" class="space-y-3">
+                @Html.AntiForgeryToken()
+                <input type="text" name="Name" value="@Model.Name" placeholder="Business or Trading name" class="w-full border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+                <input type="text" name="Postcode" value="@Model.Postcode" placeholder="Postcode (optional)" maxlength="4" class="w-full border rounded px-3 py-2 dark:bg-gray-900 dark:border-gray-700" />
+                <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded" type="submit">Search</button>
+                <div class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("Name")</div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Result != null)
+    {
+        var primaryAbn = Model.Result.Abns?.FirstOrDefault();
+        var mainName = Model.Result.MainNames?.FirstOrDefault()?.OrganisationName ?? Model.Result.EntityNames?.FirstOrDefault();
+        var isActive = Model.Result.EntityStatuses?.Any(s => string.Equals(s.StatusCode, "Active", System.StringComparison.OrdinalIgnoreCase) && (s.EffectiveTo == null || s.EffectiveTo == default)) ?? false;
+        var gstActive = Model.Result.GoodsAndServicesTaxes?.Any(g => g.EffectiveTo == null || g.EffectiveTo == default) ?? false;
+        var exceeds = Model.Result.ExceedsMaximum;
+        <div class="mt-8 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
+            <!-- Summary header -->
+            <div class="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <div class="text-sm text-gray-600 dark:text-gray-300">Entity</div>
+                        <div class="text-xl font-semibold">@(!string.IsNullOrWhiteSpace(mainName) ? mainName : "Unknown")</div>
+                        <div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                            @if (!string.IsNullOrWhiteSpace(primaryAbn))
+                            {
+                                <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 font-mono">ABN: @primaryAbn</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Result.Acn))
+                            {
+                                <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200 font-mono">ACN: @Model.Result.Acn</span>
+                            }
+                            <span class="px-2 py-0.5 rounded @(isActive ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200" : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200")">@(isActive ? "Active" : "Inactive")</span>
+                            <span class="px-2 py-0.5 rounded @(gstActive ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200" : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200")">GST @(gstActive ? "Registered" : "Not Registered")</span>
+                        </div>
+                    </div>
+                    <div class="text-xs flex flex-col items-end text-gray-600 dark:text-gray-300">
+                        <div>Retrieved: @Model.Result.DateTimeRetrieved</div>
+                        @if (exceeds)
+                        {
+                            <div class="mt-1 px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">Exceeds maximum</div>
+                        }
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.Result.UsageStatement))
+                {
+                    <div class="mt-3 text-xs text-gray-700 dark:text-gray-300">@Model.Result.UsageStatement</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Result.Exception))
+                {
+                    <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-900/40 dark:text-yellow-200 rounded">
+                        <div class="font-semibold">Service Message</div>
+                        <div>@Model.Result.Exception</div>
+                    </div>
+                }
+            </div>
+
+            <!-- Key sections -->
+            <div class="p-4 sm:p-6 space-y-6 text-gray-900 dark:text-gray-100">
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <section class="min-h-[8rem]">
+                        <header class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold">Identifiers</h4>
+                            @if (!string.IsNullOrWhiteSpace(primaryAbn))
+                            {
+                                <button type="button" class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200" onclick="navigator.clipboard.writeText('@primaryAbn')">Copy ABN</button>
+                            }
+                        </header>
+                        <div class="max-h-40 overflow-auto pr-2">
+                            <ul class="space-y-1">
+                                @foreach (var abn in Model.Result.Abns)
+                                {
+                                    <li class="flex items-center gap-2"><span class="font-mono">@abn</span><span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">Found</span></li>
+                                }
+                                @if (Model.Result.Abns.Count == 0)
+                                {
+                                    <li class="text-sm text-gray-600 dark:text-gray-300">None</li>
+                                }
+                            </ul>
+                            @if (!string.IsNullOrWhiteSpace(Model.Result.Acn))
+                            {
+                                <div class="mt-2 flex items-center gap-2"><span class="font-mono">@Model.Result.Acn</span><span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">ACN</span></div>
+                            }
+                            @if (Model.Result.Asics?.Count > 0)
+                            {
+                                <div class="mt-2">
+                                    <div class="text-xs text-gray-600 dark:text-gray-300">ASICs</div>
+                                    <ul class="list-disc ml-5 space-y-1">
+                                        @foreach (var asic in Model.Result.Asics)
+                                        {
+                                            <li class="font-mono">@asic</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                    <section class="min-h-[8rem]">
+                        <header class="mb-2"><h4 class="font-semibold">Entity Types</h4></header>
+                        @if (Model.Result.EntityTypes?.Count > 0)
+                        {
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (var et in Model.Result.EntityTypes)
+                                {
+                                    <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">@et</span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-sm text-gray-600 dark:text-gray-300">No entity type information</div>
+                        }
+                    </section>
+                    <section class="min-h-[8rem]">
+                        <header class="mb-2"><h4 class="font-semibold">Status History</h4></header>
+                        @if (Model.Result.EntityStatuses?.Count > 0)
+                        {
+                            <div class="max-h-40 overflow-auto pr-2">
+                                <ul class="space-y-1">
+                                    @foreach (var st in Model.Result.EntityStatuses)
+                                    {
+                                        var activeRow = string.Equals(st.StatusCode, "Active", System.StringComparison.OrdinalIgnoreCase);
+                                        <li class="flex items-center gap-2">
+                                            <span>@st.StatusCode</span>
+                                            <span class="text-xs px-2 py-0.5 rounded-full @(activeRow ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200" : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200")">@(activeRow ? "Active" : "Inactive")</span>
+                                            <span class="text-xs text-gray-600 dark:text-gray-300">@FormatDate(st.EffectiveFrom) - @FormatDate(st.EffectiveTo)</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-sm text-gray-600 dark:text-gray-300">No status information</div>
+                        }
+                    </section>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <section>
+                        <header class="mb-2"><h4 class="font-semibold">GST Registration</h4></header>
+                        @if (Model.Result.GoodsAndServicesTaxes?.Count > 0)
+                        {
+                            <div class="max-h-40 overflow-auto pr-2">
+                                <table class="min-w-full text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-50 dark:bg-gray-900/40">
+                                            <th class="text-left p-1">Effective From</th>
+                                            <th class="text-left p-1">Effective To</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var gst in Model.Result.GoodsAndServicesTaxes)
+                                        {
+                                            <tr class="border-t border-gray-200 dark:border-gray-700">
+                                                <td class="p-1">@FormatDate(gst.EffectiveFrom)</td>
+                                                <td class="p-1">@FormatDate(gst.EffectiveTo)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-sm text-gray-600 dark:text-gray-300">No GST information</div>
+                        }
+                    </section>
+                    <section>
+                        <header class="mb-2"><h4 class="font-semibold">Main Business Physical Addresses</h4></header>
+                        @if (Model.Result.MainBusinessPhysicalAddresses?.Count > 0)
+                        {
+                            <div class="max-h-40 overflow-auto pr-2">
+                                <table class="min-w-full text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-50 dark:bg-gray-900/40">
+                                            <th class="text-left p-1">State</th>
+                                            <th class="text-left p-1">Postcode</th>
+                                            <th class="text-left p-1">From</th>
+                                            <th class="text-left p-1">To</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var a in Model.Result.MainBusinessPhysicalAddresses)
+                                        {
+                                            <tr class="border-t border-gray-200 dark:border-gray-700">
+                                                <td class="p-1">@a.StateCode</td>
+                                                <td class="p-1">@a.Postcode</td>
+                                                <td class="p-1">@FormatDate(a.EffectiveFrom)</td>
+                                                <td class="p-1">@FormatDate(a.EffectiveTo)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-sm text-gray-600 dark:text-gray-300">No address information</div>
+                        }
+                    </section>
+                </div>
+
+                <details class="border border-gray-200 dark:border-gray-700 rounded">
+                    <summary class="cursor-pointer select-none px-3 py-2 font-semibold">Names</summary>
+                    <div class="p-3 grid lg:grid-cols-2 gap-6">
+                        <section>
+                            <h5 class="font-medium mb-2">All Names</h5>
+                            @if (Model.Result.EntityNames?.Count > 0)
+                            {
+                                <div class="max-h-40 overflow-auto pr-2">
+                                    <ul class="list-disc ml-5 space-y-1">
+                                        @foreach (var n in Model.Result.EntityNames)
+                                        {
+                                            <li>@n</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-sm text-gray-600 dark:text-gray-300">No names</div>
+                            }
+                        </section>
+                        <section>
+                            <h5 class="font-medium mb-2">Main Names & Trading</h5>
+                            @if (Model.Result.MainNames?.Count > 0)
+                            {
+                                <ul class="list-disc ml-5 space-y-1">
+                                    @foreach (var mn in Model.Result.MainNames)
+                                    {
+                                        <li>@mn.OrganisationName (@FormatDate(mn.EffectiveFrom))</li>
+                                    }
+                                </ul>
+                            }
+                            <h6 class="font-medium mt-3">Trading Names</h6>
+                            @if (Model.Result.TradingNames?.Count > 0)
+                            {
+                                <ul class="list-disc ml-5 space-y-1">
+                                    @foreach (var tn in Model.Result.TradingNames)
+                                    {
+                                        <li>@tn</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <div class="text-sm text-gray-600 dark:text-gray-300">No trading names</div>
+                            }
+                        </section>
+                    </div>
+                </details>
+
+                @if (Model.Result.SearchResults?.Count > 0)
+                {
+                    <section>
+                        <header class="mb-2"><h4 class="font-semibold">Search Results</h4></header>
+                        <div class="max-h-80 overflow-auto pr-2 border border-gray-200 dark:border-gray-700 rounded">
+                            <table class="min-w-full text-sm">
+                                <thead class="bg-gray-50 dark:bg-gray-900/40 sticky top-0">
+                                    <tr>
+                                        <th class="text-left p-2">ABN</th>
+                                        <th class="text-left p-2">Name</th>
+                                        <th class="text-left p-2">Type</th>
+                                        <th class="text-left p-2">State</th>
+                                        <th class="text-left p-2">Postcode</th>
+                                        <th class="text-left p-2">Score</th>
+                                        <th class="text-left p-2">Current</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var r in Model.Result.SearchResults)
+                                    {
+                                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                                            <td class="p-2 font-mono">@r.Abn</td>
+                                            <td class="p-2">@r.Name</td>
+                                            <td class="p-2">@r.NameType</td>
+                                            <td class="p-2">@r.StateCode</td>
+                                            <td class="p-2">@r.Postcode</td>
+                                            <td class="p-2">@r.Score</td>
+                                            <td class="p-2"><span class="text-xs px-2 py-0.5 rounded-full @(r.IsCurrentIndicator == true ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200" : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200")">@(r.IsCurrentIndicator == true ? "Yes" : "No")</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                }
+
+                <section class="text-xs text-gray-600 dark:text-gray-300">
+                    <div>Register Updated: @Model.Result.DateRegisterLastUpdated</div>
+                </section>
+
+                <section>
+                    <details class="bg-gray-50 dark:bg-gray-900/40 rounded border border-gray-200 dark:border-gray-700">
+                        <summary class="cursor-pointer select-none px-3 py-2 font-semibold">Raw JSON (for audit)</summary>
+                        <div class="p-3">
+                            <div class="flex gap-2 mb-2">
+                                <button type="button" class="px-3 py-1 text-xs rounded bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100" onclick="copyRawJson()">Copy JSON</button>
+                                <button type="button" class="px-3 py-1 text-xs rounded bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100" onclick="downloadRawJson()">Download JSON</button>
+                            </div>
+                            <pre id="raw-json" class="text-xs overflow-x-auto whitespace-pre-wrap">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Result, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }))</pre>
+                        </div>
+                    </details>
+                </section>
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+function copyRawJson() {
+    const el = document.getElementById('raw-json');
+    const text = el?.innerText || '';
+    navigator.clipboard.writeText(text);
+}
+function downloadRawJson() {
+    const el = document.getElementById('raw-json');
+    const text = el?.innerText || '';
+    const blob = new Blob([text], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'business-lookup.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>

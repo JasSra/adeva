@@ -10,6 +10,7 @@
     <ProjectReference Include="../DebtManager.Application/DebtManager.Application.csproj" />
     <ProjectReference Include="../DebtManager.Domain/DebtManager.Domain.csproj" />
     <ProjectReference Include="../DebtManager.Infrastructure/DebtManager.Infrastructure.csproj" />
+    <ProjectReference Include="../Services.AbrValidation/Services.AbrValidation.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.6.4" />

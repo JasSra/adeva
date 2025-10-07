@@ -8,6 +8,7 @@
     <ProjectReference Include="../DebtManager.Contracts/DebtManager.Contracts.csproj" />
     <ProjectReference Include="../DebtManager.Application/DebtManager.Application.csproj" />
     <ProjectReference Include="../DebtManager.Domain/DebtManager.Domain.csproj" />
+    <ProjectReference Include="..\Services.AbrValidation\Services.AbrValidation.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.7" />

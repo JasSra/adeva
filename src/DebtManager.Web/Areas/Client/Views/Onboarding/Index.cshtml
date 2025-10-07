@@ -10,6 +10,11 @@
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Step 1 of 3: Verify your business details</p>
     </div>
 
+    @if (ViewBag.OnboardingInfo is string info && !string.IsNullOrWhiteSpace(info))
+    {
+        <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded">@info</div>
+    }
+
     <!-- Progress Indicator -->
     <div class="mb-8">
         <div class="flex items-center justify-between">
@@ -44,8 +49,10 @@
         </div>
         
         <div class="p-6">
-            <form asp-action="ValidateBusiness" method="post" class="space-y-6">
+            <form action="/Client/Onboarding/ValidateBusiness" method="post" class="space-y-6" novalidate>
                 @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="mb-3 p-3 rounded bg-red-50 border border-red-200 text-red-800"></div>
                 
                 <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 dark:border-blue-600 p-4 rounded">
                     <div class="flex">
@@ -76,6 +83,7 @@
                         required 
                     />
                     <span class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("Abn")</span>
+                    <partial name="~/Views/Shared/Partials/_FieldError.cshtml" model="ViewData.ModelState[nameof(Model.Abn)]" />
                     @if (Model.IsValidAbn.HasValue)
                     {
                         <p class="mt-2 text-sm @(Model.IsValidAbn.Value ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")">
@@ -97,6 +105,7 @@
                         class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     <span class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("Acn")</span>
+                    <partial name="~/Views/Shared/Partials/_FieldError.cshtml" model="ViewData.ModelState[nameof(Model.Acn)]" />
                     @if (Model.IsValidAcn.HasValue)
                     {
                         <p class="mt-2 text-sm @(Model.IsValidAcn.Value ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")">

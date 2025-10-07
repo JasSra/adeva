@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../DebtManager.Contracts/DebtManager.Contracts.csproj" />
@@ -16,9 +17,5 @@
     <PackageReference Include="System.ServiceModel.Http" Version="8.*" />
     <PackageReference Include="System.ServiceModel.NetTcp" Version="8.*" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="8.*" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 </Project>

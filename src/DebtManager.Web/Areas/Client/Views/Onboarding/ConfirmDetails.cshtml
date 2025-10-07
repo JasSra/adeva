@@ -10,6 +10,11 @@
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Step 2 of 3: Review and confirm business information</p>
     </div>
 
+    @if (ViewBag.OnboardingInfo is string info && !string.IsNullOrWhiteSpace(info))
+    {
+        @await Html.PartialAsync("~/Views/Shared/Partials/_OnboardingInfo.cshtml", (string)info)
+    }
+
     <!-- Progress Indicator -->
     <div class="mb-8">
         <div class="flex items-center justify-between">
@@ -34,8 +39,9 @@
         </div>
     </div>
 
-    <form asp-action="Create" method="post" class="space-y-6">
+    <form action="/Client/Onboarding/Create" method="post" class="space-y-6">
         @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="mb-3 p-3 rounded bg-red-50 border border-red-200 text-red-800"></div>
         
         <!-- Hidden fields to preserve ABN/ACN -->
         <input type="hidden" name="Abn" value="@Model.Abn" />
@@ -100,7 +106,7 @@
                             class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
                             required 
                         />
-                        <span class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("ContactFirstName")</span>
+                        <partial name="~/Views/Shared/Partials/_FieldError.cshtml" model="ViewData.ModelState[nameof(Model.ContactFirstName)]" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -113,7 +119,7 @@
                             class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
                             required 
                         />
-                        <span class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("ContactLastName")</span>
+                        <partial name="~/Views/Shared/Partials/_FieldError.cshtml" model="ViewData.ModelState[nameof(Model.ContactLastName)]" />
                     </div>
                 </div>
 
@@ -156,7 +162,7 @@
                         </span>
                     </div>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Lowercase letters, numbers, and hyphens only</p>
-                    <span class="text-red-600 dark:text-red-400 text-sm">@Html.ValidationMessage("Subdomain")</span>
+                    <partial name="~/Views/Shared/Partials/_FieldError.cshtml" model="ViewData.ModelState[nameof(Model.Subdomain)]" />
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">

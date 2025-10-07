@@ -1,3 +1,4 @@
+@model DebtManager.Web.Areas.User.Controllers.DebtsIndexVm
 @{
     Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
 }
@@ -5,17 +6,17 @@
 <div class="bg-white rounded-lg shadow">
     <div class="p-6 border-b flex items-center justify-between">
         <h3 class="text-lg font-semibold">My Debts</h3>
-        <div class="flex gap-2">
+        <form method="get" class="flex gap-2">
             <select name="status" class="border rounded px-3 py-2 text-sm">
-                <option value="">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="in_arrears">In Arrears</option>
-                <option value="settled">Settled</option>
-                <option value="disputed">Disputed</option>
+                <option value="" @(string.IsNullOrEmpty(ViewBag.Status) ? "selected" : "")>All Statuses</option>
+                <option value="active" @(ViewBag.Status=="active"?"selected":"")>Active</option>
+                <option value="in_arrears" @(ViewBag.Status=="in_arrears"?"selected":"")>In Arrears</option>
+                <option value="settled" @(ViewBag.Status=="settled"?"selected":"")>Settled</option>
+                <option value="disputed" @(ViewBag.Status=="disputed"?"selected":"")>Disputed</option>
             </select>
             <input type="text" name="search" value="@ViewBag.Search" placeholder="Search debts..." class="border rounded px-3 py-2 text-sm" />
             <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Search</button>
-        </div>
+        </form>
     </div>
     
     <div class="overflow-x-auto">
@@ -31,43 +32,53 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">#D-5001</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">$5,000.00</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">$3,250.00</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025-01-15</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Active</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                        <a href="/User/Debts/Details/5001" class="text-blue-600 hover:underline">View</a>
-                        <a href="/User/Payments/MakePayment/5001" class="text-green-600 hover:underline">Pay</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">#D-5002</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">$2,500.00</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">$0.00</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-12-10</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Settled</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                        <a href="/User/Debts/Details/5002" class="text-blue-600 hover:underline">View</a>
-                    </td>
-                </tr>
+                @if (Model.Items.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">No debts found.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var d in Model.Items)
+                    {
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">#@d.Reference</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">$@d.OriginalAmount.ToString("N2")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">$@d.Outstanding.ToString("N2")</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@(d.DueDateUtc?.ToLocalTime().ToString("yyyy-MM-dd") ?? "—")</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @{ var badge = d.Status switch { 
+                                    DebtManager.Domain.Debts.DebtStatus.Active => ("bg-green-100","text-green-800","Active"),
+                                    DebtManager.Domain.Debts.DebtStatus.Settled => ("bg-blue-100","text-blue-800","Settled"),
+                                    DebtManager.Domain.Debts.DebtStatus.InArrears => ("bg-yellow-100","text-yellow-800","In Arrears"),
+                                    DebtManager.Domain.Debts.DebtStatus.Disputed => ("bg-purple-100","text-purple-800","Disputed"),
+                                    _ => ("bg-gray-100","text-gray-800", d.Status.ToString())}; }
+                                <span class="px-2 py-1 text-xs rounded-full @badge.Item1 @badge.Item2">@badge.Item3</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                <a href="/User/Debts/Details/@d.Id" class="text-blue-600 hover:underline">View</a>
+                                @if (d.Status == DebtManager.Domain.Debts.DebtStatus.Active || d.Status == DebtManager.Domain.Debts.DebtStatus.InArrears)
+                                {
+                                    <a href="/User/Payments/MakePayment?debtId=@d.Id" class="text-green-600 hover:underline">Pay</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
             </tbody>
         </table>
     </div>
     
     <div class="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
         <div class="text-sm text-gray-700">
-            Showing <span class="font-medium">1</span> to <span class="font-medium">2</span> of <span class="font-medium">2</span> results
+            @{ var start = (int)Math.Min((Model.Page - 1) * Model.PageSize + 1, Math.Max(Model.Total,1)); var end = Math.Min(Model.Page * Model.PageSize, Model.Total); }
+            Showing <span class="font-medium">@start</span> to <span class="font-medium">@end</span> of <span class="font-medium">@Model.Total</span> results
         </div>
         <div class="flex gap-2">
-            <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Previous</button>
-            <button class="px-3 py-1 border rounded text-sm bg-blue-600 text-white">1</button>
-            <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Next</button>
+            <a class="px-3 py-1 border rounded text-sm @(Model.Page == 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "")" href="?page=@(Model.Page-1)&pageSize=@Model.PageSize&status=@ViewBag.Status&search=@ViewBag.Search">Previous</a>
+            <span class="px-3 py-1 border rounded text-sm bg-blue-600 text-white">@Model.Page</span>
+            <a class="px-3 py-1 border rounded text-sm @((Model.Page * Model.PageSize) >= Model.Total ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "")" href="?page=@(Model.Page+1)&pageSize=@Model.PageSize&status=@ViewBag.Status&search=@ViewBag.Search">Next</a>
         </div>
     </div>
 </div>

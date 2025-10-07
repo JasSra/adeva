@@ -1,0 +1,58 @@
+@model DebtManager.Web.Areas.Admin.Controllers.JobsIndexVm
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Background Jobs";
+}
+
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold">Background Jobs</h2>
+    <div class="text-sm text-gray-600">
+        <span class="mr-4">Queued: <strong>@Model.Stats.Enqueued</strong></span>
+        <span class="mr-4">Processing: <strong>@Model.Stats.Processing</strong></span>
+        <span class="mr-4">Scheduled: <strong>@Model.Stats.Scheduled</strong></span>
+        <span class="mr-4">Succeeded: <strong>@Model.Stats.Succeeded</strong></span>
+        <span class="mr-4">Failed: <strong>@Model.Stats.Failed</strong></span>
+        <span>Recurring: <strong>@Model.Stats.Recurring</strong></span>
+    </div>
+</div>
+
+@if (TempData["Message"] is string ok)
+{
+    <div class="p-3 mb-4 bg-green-100 text-green-800 rounded">@ok</div>
+}
+@if (TempData["Error"] is string err)
+{
+    <div class="p-3 mb-4 bg-red-100 text-red-800 rounded">@err</div>
+}
+
+<div class="overflow-x-auto">
+<table class="min-w-full border divide-y">
+    <thead>
+        <tr class="bg-gray-50">
+            <th class="px-4 py-2 text-left">Id</th>
+            <th class="px-4 py-2 text-left">Method</th>
+            <th class="px-4 py-2">Cron</th>
+            <th class="px-4 py-2">Next</th>
+            <th class="px-4 py-2">Last</th>
+            <th class="px-4 py-2">Queue</th>
+            <th class="px-4 py-2"></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var j in Model.Jobs)
+    {
+        <tr>
+            <td class="px-4 py-2 font-mono text-xs">@j.Id</td>
+            <td class="px-4 py-2 text-xs text-gray-600">(see details)</td>
+            <td class="px-4 py-2">@j.Cron</td>
+            <td class="px-4 py-2">@j.NextExecution</td>
+            <td class="px-4 py-2">@j.LastExecution</td>
+            <td class="px-4 py-2">@j.Queue</td>
+            <td class="px-4 py-2 text-right">
+                <a class="text-blue-600 hover:underline" href="@Url.Action("Details", new { id = j.Id })">View</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+</div>

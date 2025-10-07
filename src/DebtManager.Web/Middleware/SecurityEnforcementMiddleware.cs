@@ -43,12 +43,8 @@ public class SecurityEnforcementMiddleware
             return;
         }
 
-        var profile = await db.UserProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == user.Id);
-
-        // Allow entire security setup flow through
+        // Enforce security setup only (TOTP for admins or phone confirmation for others)
         var atSecurityFlow = IsSecuritySetupFlow(path);
-
-        // Enforce: Admins must have TOTP; Clients/Users must have confirmed phone
         var isAdmin = context.User.IsInRole("Admin");
         var needsSecuritySetup = isAdmin ? !user.TwoFactorEnabled : !user.PhoneNumberConfirmed;
 
@@ -56,35 +52,6 @@ public class SecurityEnforcementMiddleware
         {
             context.Response.Redirect("/Security/Setup");
             return;
-        }
-
-        if (atSecurityFlow)
-        {
-            await _next(context);
-            return;
-        }
-
-        // Client org required for client role
-        if (context.User.IsInRole("Client"))
-        {
-            if (profile?.OrganizationId == null)
-            {
-                if (!path.StartsWith("/Client/Onboarding", StringComparison.OrdinalIgnoreCase))
-                {
-                    context.Response.Redirect("/Client/Onboarding");
-                    return;
-                }
-            }
-        }
-
-        // Debtor profile required for user role
-        if (context.User.IsInRole("User") && profile?.DebtorId == null)
-        {
-            if (!path.StartsWith("/User/Onboarding", StringComparison.OrdinalIgnoreCase))
-            {
-                context.Response.Redirect("/User/Onboarding");
-                return;
-            }
         }
 
         await _next(context);

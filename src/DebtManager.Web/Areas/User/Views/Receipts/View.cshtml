@@ -1,0 +1,39 @@
+@model DebtManager.Web.Areas.User.Controllers.ReceiptDetailVm
+@{
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+}
+
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Receipt @Model.ReceiptNumber</h3>
+            <div>
+                <a href="/User/Receipts/Download/@Model.Id" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Download</a>
+            </div>
+        </div>
+        <div class="p-6 space-y-4 text-sm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <div class="text-gray-500">Date</div>
+                    <div class="font-medium">@Model.ProcessedAtUtc.ToLocalTime()</div>
+                </div>
+                <div>
+                    <div class="text-gray-500">Status</div>
+                    <div class="font-medium">@Model.Status</div>
+                </div>
+                <div>
+                    <div class="text-gray-500">Debt Reference</div>
+                    <div class="font-medium">@Model.DebtReference</div>
+                </div>
+                <div>
+                    <div class="text-gray-500">Method</div>
+                    <div class="font-medium">@Model.Method</div>
+                </div>
+            </div>
+            <div class="border-t pt-4">
+                <div class="text-gray-500">Amount</div>
+                <div class="text-2xl font-semibold">@Model.Currency @Model.Amount.ToString("N2")</div>
+            </div>
+        </div>
+    </div>
+</div>
