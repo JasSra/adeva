@@ -5,13 +5,6 @@ namespace DebtManager.Web.Areas.Admin.Controllers;
 
 public partial class ConfigurationController : Controller
 {
-    private readonly IAppConfigService _configService;
-
-    public ConfigurationController(IAppConfigService configService)
-    {
-        _configService = configService;
-    }
-
     [HttpGet]
     public async Task<IActionResult> Secrets(string? q)
     {

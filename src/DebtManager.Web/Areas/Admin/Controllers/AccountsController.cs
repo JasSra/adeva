@@ -1,12 +1,25 @@
 using Microsoft.AspNetCore.Mvc;
 using DebtManager.Web.Services;
+using DebtManager.Contracts.Audit;
+using DebtManager.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace DebtManager.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
 public class AccountsController : Controller
 {
-    public IActionResult Index(string? search, string? role, int page = 1, int pageSize = 20)
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IAuditService _auditService;
+
+    public AccountsController(UserManager<ApplicationUser> userManager, IAuditService auditService)
+    {
+        _userManager = userManager;
+        _auditService = auditService;
+    }
+
+    public async Task<IActionResult> Index(string? search, string? role, int page = 1, int pageSize = 20)
     {
         var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
         ViewBag.ThemeName = theme?.Name ?? "Default";
@@ -15,31 +28,77 @@ public class AccountsController : Controller
         ViewBag.Role = role;
         ViewBag.Page = page;
         ViewBag.PageSize = pageSize;
-        return View();
+
+        var query = _userManager.Users.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(u => u.Email!.Contains(search) || (u.UserName != null && u.UserName.Contains(search)));
+        }
+
+        var totalCount = await query.CountAsync();
+        var users = await query
+            .OrderByDescending(u => u.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        ViewBag.TotalCount = totalCount;
+        ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        await _auditService.LogAsync("VIEW_ACCOUNTS", "Accounts", details: $"Searched: {search}, Role: {role}");
+
+        return View(users);
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(Guid id)
     {
         var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
         ViewBag.ThemeName = theme?.Name ?? "Default";
         ViewBag.Title = "Account Details";
-        ViewBag.AccountId = id;
-        return View();
+        
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        ViewBag.Roles = roles;
+
+        await _auditService.LogAsync("VIEW_ACCOUNT_DETAILS", "Account", id.ToString(), $"User: {user.Email}");
+
+        return View(user);
     }
 
-    public IActionResult AssignRole(int id)
+    public async Task<IActionResult> AssignRole(Guid id)
     {
         var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
         ViewBag.ThemeName = theme?.Name ?? "Default";
         ViewBag.Title = "Assign Role";
-        ViewBag.AccountId = id;
+        
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        ViewBag.User = user;
         return View();
     }
 
     [HttpPost]
-    public IActionResult UpdateRole(int id, string role)
+    public async Task<IActionResult> UpdateRole(Guid id, string role)
     {
-        TempData["Message"] = $"Role updated successfully for account #{id}";
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        await _auditService.LogAsync("UPDATE_USER_ROLE", "Account", id.ToString(), $"Role updated to: {role} for user: {user.Email}");
+
+        TempData["Message"] = $"Role updated successfully for account {user.Email}";
         return RedirectToAction("Index");
     }
 }

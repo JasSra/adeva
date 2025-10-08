@@ -14,6 +14,8 @@ using DebtManager.Contracts.Documents;
 using DebtManager.Infrastructure.Documents;
 using DebtManager.Contracts.Analytics;
 using DebtManager.Infrastructure.Analytics;
+using DebtManager.Contracts.Audit;
+using DebtManager.Infrastructure.Audit;
 
 namespace DebtManager.Infrastructure;
 
@@ -33,9 +35,13 @@ public static class DependencyInjection
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IInvoiceDataRepository, InvoiceDataRepository>();
         services.AddScoped<IMetricRepository, MetricRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
         // Config service
         services.AddScoped<IAppConfigService, AppConfigService>();
+
+        // Audit service
+        services.AddScoped<IAuditService, AuditService>();
 
         // Notifications
         services.AddScoped<IEmailSender, EmailSender>();
