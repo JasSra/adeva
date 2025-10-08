@@ -1,13 +1,12 @@
 @model DebtManager.Web.Areas.User.Controllers.AcceptDebtVm
 @{
     Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
-    var primary = "var(--primary)";
 }
 
-<div class="max-w-3xl mx-auto">
+<div class="max-w-5xl mx-auto px-4 py-8">
     @if (!ViewData.ModelState.IsValid)
     {
-        <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <div class="flex items-start gap-2">
                 <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
@@ -28,170 +27,232 @@
         </div>
     }
 
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div class="p-6 border-b dark:border-gray-700 flex items-center justify-between" style="border-top: 4px solid var(--primary)">
-            <div class="flex items-center gap-3">
-                <div class="h-8 w-8 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold" style="color: var(--primary)">@Model.OrganizationName?.Substring(0, Math.Min(2, Model.OrganizationName.Length)).ToUpper()</div>
-                <div>
-                    <h3 class="text-lg font-semibold dark:text-white">Review & Accept Debt</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">@Model.OrganizationName</p>
+    <!-- Debt Summary Header -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden mb-8">
+        <div class="p-6 border-b dark:border-gray-700" style="border-top: 4px solid var(--primary)">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="h-12 w-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-bold" style="color: var(--primary)">
+                        @Model.OrganizationName?.Substring(0, Math.Min(2, Model.OrganizationName.Length)).ToUpper()
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold dark:text-white">Review & Accept Debt</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">@Model.OrganizationName</p>
+                    </div>
                 </div>
-            </div>
-            <div class="text-right">
-                <div class="text-xs text-gray-500 dark:text-gray-400">Reference</div>
-                <div class="font-mono text-sm dark:text-white">@Model.Reference</div>
+                <div class="text-right">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Reference</div>
+                    <div class="font-mono text-lg font-semibold dark:text-white">@Model.Reference</div>
+                </div>
             </div>
         </div>
-        <div class="p-6 space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div class="bg-gray-50 dark:bg-gray-900/40 rounded p-3">
-                    <div class="text-gray-500 dark:text-gray-400">Outstanding</div>
-                    <div class="text-xl font-semibold text-red-600 dark:text-red-400">$@Model.Outstanding.ToString("N2")</div>
+
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Outstanding Balance</div>
+                    <div class="text-2xl font-bold text-red-600 dark:text-red-400">$@Model.Outstanding.ToString("N2")</div>
                 </div>
-                <div class="bg-gray-50 dark:bg-gray-900/40 rounded p-3">
-                    <div class="text-gray-500 dark:text-gray-400">Original Amount</div>
-                    <div class="font-medium dark:text-white">$@Model.OriginalAmount.ToString("N2")</div>
+                <div class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Original Amount</div>
+                    <div class="text-xl font-semibold dark:text-white">$@Model.OriginalAmount.ToString("N2")</div>
                 </div>
-                <div class="bg-gray-50 dark:bg-gray-900/40 rounded p-3">
-                    <div class="text-gray-500 dark:text-gray-400">Due Date</div>
-                    <div class="font-medium dark:text-white">@(Model.DueDateUtc?.ToLocalTime().ToString("MMM d, yyyy") ?? "�")</div>
+                <div class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Due Date</div>
+                    <div class="text-xl font-semibold dark:text-white">@(Model.DueDateUtc?.ToLocalTime().ToString("MMM d, yyyy") ?? "—")</div>
                 </div>
-            </div>
-
-            <div class="border rounded p-4 dark:border-gray-700">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="font-medium dark:text-white">Plan preview</div>
-                    <span class="text-xs text-gray-500">You can change or confirm below</span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div class="border rounded p-3 dark:border-gray-700">
-                        <div class="text-sm font-medium dark:text-white">Pay in full</div>
-                        <div class="text-2xl font-bold mt-1" style="color: var(--primary)">$@Model.FullPaymentSuggested.ToString("N2")</div>
-                        @if (Model.FullPaymentDiscountPercent > 0) {
-                            <div class="text-xs text-green-700 dark:text-green-400 mt-1">@Model.FullPaymentDiscountPercent% discount applied</div>
-                        }
-                    </div>
-                    <div class="border rounded p-3 dark:border-gray-700">
-                        <div class="text-sm font-medium dark:text-white">Installments</div>
-                        <div class="text-xs text-gray-500">Choose frequency and count below</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="border-t dark:border-gray-700 pt-4">
-                <form method="post" asp-action="Index" asp-controller="Accept" asp-area="User" id="acceptForm">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="DebtId" value="@Model.DebtId" />
-
-                    <div class="space-y-4">
-                        <div>
-                            <div class="font-medium dark:text-white mb-2">Choose an option</div>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Select how you would like to proceed with this debt</p>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <label class="border-2 rounded-lg p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors option-card dark:border-gray-600">
-                                <input type="radio" name="SelectedOption" value="PayInFull" class="mr-2" required />
-                                <span class="font-medium dark:text-white">Pay in full</span>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pay today and finish</div>
-                            </label>
-                            <label class="border-2 rounded-lg p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors option-card dark:border-gray-600">
-                                <input type="radio" name="SelectedOption" value="Installments" class="mr-2" required />
-                                <span class="font-medium dark:text-white">Set up installments</span>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pay over time</div>
-                            </label>
-                            <label class="border-2 rounded-lg p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors option-card dark:border-gray-600">
-                                <input type="radio" name="SelectedOption" value="Dispute" class="mr-2" required />
-                                <span class="font-medium dark:text-white">Dispute</span>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">I don't recognize or disagree</div>
-                            </label>
-                        </div>
-
-                        <div id="installmentOptions" class="hidden border rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-                            <h4 class="font-medium text-sm mb-3 dark:text-white">Installment Options</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Payment Frequency</label>
-                                    <select name="Frequency" class="w-full border rounded px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                        <option value="Weekly">Weekly</option>
-                                        <option value="Fortnightly">Fortnightly</option>
-                                        <option value="Monthly" selected>Monthly</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Number of Installments</label>
-                                    <input type="number" name="InstallmentCount" min="2" max="48" value="6" class="w-full border rounded px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Between 2 and 48 installments</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="disputeOptions" class="hidden border rounded-lg p-4 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800">
-                            <h4 class="font-medium text-sm mb-2 dark:text-white">Dispute Information</h4>
-                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Please provide details about why you are disputing this debt</p>
-                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Reason (optional)</label>
-                            <textarea name="DisputeReason" rows="3" maxlength="500" class="w-full border rounded px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Briefly describe the dispute..."></textarea>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Maximum 500 characters</p>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex items-center justify-between">
-                        <a href="/User" class="px-4 py-2 border rounded text-sm dark:border-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</a>
-                        <button type="submit" id="submitBtn" class="px-6 py-2 text-white rounded text-sm font-medium transition-colors" style="background: var(--primary)">
-                            <span id="submitText">Continue</span>
-                            <span id="submitLoader" class="hidden">Processing...</span>
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
+
+    <!-- Payment Plan Options -->
+    <h2 class="text-xl font-semibold dark:text-white mb-4">Choose Your Payment Plan</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-6">Select the payment option that works best for you</p>
+
+    <form method="post" asp-action="Index" asp-controller="Accept" asp-area="User" id="acceptForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="DebtId" value="@Model.DebtId" />
+        <input type="hidden" name="IsDispute" id="isDisputeField" value="false" />
+        <input type="hidden" name="SelectedPlanIndex" id="selectedPlanIndex" value="-1" />
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            @for (int i = 0; i < Model.PaymentPlanOptions.Count; i++)
+            {
+                var option = Model.PaymentPlanOptions[i];
+                var cardClass = option.IsRecommended ? "border-2 border-green-500 dark:border-green-600" : "border border-gray-200 dark:border-gray-700";
+                
+                <div class="payment-plan-card bg-white dark:bg-gray-800 rounded-lg shadow-sm @cardClass cursor-pointer hover:shadow-md transition-all relative"
+                     data-plan-index="@i"
+                     onclick="selectPlan(@i)">
+                    
+                    @if (option.IsRecommended)
+                    {
+                        <div class="absolute -top-3 left-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                            RECOMMENDED
+                        </div>
+                    }
+                    
+                    @if (option.RequiresApproval)
+                    {
+                        <div class="absolute -top-3 right-4 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                            REQUIRES APPROVAL
+                        </div>
+                    }
+
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold dark:text-white mb-2">@option.Title</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">@option.Description</p>
+
+                        <div class="mb-4">
+                            <div class="text-3xl font-bold" style="color: var(--primary)">
+                                $@option.TotalAmount.ToString("N2")
+                            </div>
+                            @if (option.DiscountAmount.HasValue && option.DiscountAmount.Value > 0)
+                            {
+                                <div class="text-sm text-gray-500 line-through">$@option.OriginalAmount.ToString("N2")</div>
+                                <div class="text-sm font-semibold text-green-600 dark:text-green-400">
+                                    Save $@option.DiscountAmount.Value.ToString("N2") (@option.DiscountPercentage% off)
+                                </div>
+                            }
+                        </div>
+
+                        @if (option.InstallmentCount > 1)
+                        {
+                            <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
+                                <div class="text-sm font-semibold dark:text-white">@option.InstallmentCount installments</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400">$@option.InstallmentAmount.ToString("N2") @option.Frequency.ToString().ToLower()</div>
+                            </div>
+                        }
+
+                        <div class="space-y-2">
+                            @foreach (var benefit in option.Benefits)
+                            {
+                                <div class="flex items-start gap-2 text-sm">
+                                    <svg class="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">@benefit</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-gray-50 dark:bg-gray-900/40 border-t dark:border-gray-700">
+                        <button type="button" class="w-full py-2 px-4 rounded font-medium transition-colors select-plan-btn"
+                                style="background: var(--primary); color: white"
+                                onclick="selectPlan(@i)">
+                            Select This Plan
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Dispute Option -->
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold dark:text-white mb-2">Don't recognize this debt?</h3>
+            <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">If you believe this debt is incorrect or you don't recognize it, you can dispute it.</p>
+            
+            <div id="disputeSection" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reason for Dispute (optional)</label>
+                <textarea name="DisputeReason" rows="3" maxlength="500" 
+                          class="w-full border rounded px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          placeholder="Please provide details about why you are disputing this debt..."></textarea>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Maximum 500 characters</p>
+            </div>
+
+            <button type="button" class="mt-3 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded font-medium transition-colors" 
+                    onclick="selectDispute()">
+                Dispute This Debt
+            </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-between">
+            <a href="/User" class="px-6 py-2 border rounded text-sm font-medium dark:border-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Cancel
+            </a>
+            <button type="submit" id="submitBtn" class="px-8 py-3 text-white rounded font-medium transition-colors shadow-sm"
+                    style="background: var(--primary)" disabled>
+                <span id="submitText">Continue</span>
+                <span id="submitLoader" class="hidden">Processing...</span>
+            </button>
+        </div>
+    </form>
 </div>
 
 <script>
-    const radioInputs = document.querySelectorAll('input[name="SelectedOption"]');
-    const inst = document.getElementById('installmentOptions');
-    const disp = document.getElementById('disputeOptions');
-    const form = document.getElementById('acceptForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const submitText = document.getElementById('submitText');
-    const submitLoader = document.getElementById('submitLoader');
-    const optionCards = document.querySelectorAll('.option-card');
+    let selectedPlanIdx = -1;
+    let isDisputing = false;
 
-    function updateUI(){
-        const val = document.querySelector('input[name="SelectedOption"]:checked')?.value;
-        inst.classList.toggle('hidden', val !== 'Installments');
-        disp.classList.toggle('hidden', val !== 'Dispute');
+    function selectPlan(index) {
+        selectedPlanIdx = index;
+        isDisputing = false;
         
-        // Update card styles to show selected state
-        optionCards.forEach(card => {
-            const radio = card.querySelector('input[type="radio"]');
-            if (radio.checked) {
+        // Update hidden fields
+        document.getElementById('selectedPlanIndex').value = index;
+        document.getElementById('isDisputeField').value = 'false';
+        
+        // Update UI
+        document.querySelectorAll('.payment-plan-card').forEach((card, idx) => {
+            if (idx === index) {
                 card.style.borderColor = 'var(--primary)';
-                card.style.backgroundColor = 'var(--primary-light, rgba(59, 130, 246, 0.1))';
+                card.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
             } else {
                 card.style.borderColor = '';
                 card.style.backgroundColor = '';
             }
         });
+        
+        // Hide dispute section
+        document.getElementById('disputeSection').classList.add('hidden');
+        
+        // Enable submit button
+        document.getElementById('submitBtn').disabled = false;
     }
 
-    radioInputs.forEach(r => r.addEventListener('change', updateUI));
-    
-    // Add form submission handler for loading state
-    form.addEventListener('submit', function(e) {
-        // Basic client-side validation
-        const selectedOption = document.querySelector('input[name="SelectedOption"]:checked');
-        if (!selectedOption) {
+    function selectDispute() {
+        selectedPlanIdx = -1;
+        isDisputing = true;
+        
+        // Update hidden fields
+        document.getElementById('selectedPlanIndex').value = '-1';
+        document.getElementById('isDisputeField').value = 'true';
+        
+        // Clear payment plan selection
+        document.querySelectorAll('.payment-plan-card').forEach(card => {
+            card.style.borderColor = '';
+            card.style.backgroundColor = '';
+        });
+        
+        // Show dispute section
+        document.getElementById('disputeSection').classList.remove('hidden');
+        
+        // Enable submit button
+        document.getElementById('submitBtn').disabled = false;
+    }
+
+    // Form submission handler
+    document.getElementById('acceptForm').addEventListener('submit', function(e) {
+        if (selectedPlanIdx === -1 && !isDisputing) {
             e.preventDefault();
-            alert('Please select an option to continue');
-            return;
+            alert('Please select a payment plan or choose to dispute this debt');
+            return false;
         }
-
+        
         // Show loading state
-        submitBtn.disabled = true;
-        submitText.classList.add('hidden');
-        submitLoader.classList.remove('hidden');
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitText').classList.add('hidden');
+        document.getElementById('submitLoader').classList.remove('hidden');
     });
-
-    updateUI();
 </script>
+
+<style>
+    .payment-plan-card {
+        transition: all 0.2s ease;
+    }
+    
+    .payment-plan-card:hover {
+        transform: translateY(-2px);
+    }
+</style>

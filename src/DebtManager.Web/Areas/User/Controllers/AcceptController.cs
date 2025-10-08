@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using DebtManager.Contracts.Payments;
 using DebtManager.Domain.Communications;
 using DebtManager.Domain.Debts;
 using DebtManager.Domain.Organizations;
@@ -19,11 +20,16 @@ public class AcceptController : Controller
 {
     private readonly AppDbContext _db;
     private readonly ILogger<AcceptController> _logger;
+    private readonly IPaymentPlanGenerationService _paymentPlanService;
 
-    public AcceptController(AppDbContext db, ILogger<AcceptController> logger)
+    public AcceptController(
+        AppDbContext db, 
+        ILogger<AcceptController> logger,
+        IPaymentPlanGenerationService paymentPlanService)
     {
         _db = db;
         _logger = logger;
+        _paymentPlanService = paymentPlanService;
     }
 
     // Fallback without id to avoid 404 when reached from sidebar
@@ -72,14 +78,8 @@ public class AcceptController : Controller
             return Redirect("/User");
         }
 
-        // Compute full-payment discounted suggestion
-        var cfg = await _db.OrganizationFeeConfigurations.FirstOrDefaultAsync(c => c.OrganizationId == debt.OrganizationId, ct);
-        decimal? fullDiscountPct = cfg?.FullPaymentDiscountPercentage;
-        decimal discounted = debt.OutstandingPrincipal;
-        if (fullDiscountPct.HasValue && fullDiscountPct.Value > 0)
-        {
-            discounted = Math.Round(debt.OutstandingPrincipal * (1 - (fullDiscountPct.Value / 100m)), 2, MidpointRounding.AwayFromZero);
-        }
+        // Generate payment plan options using the payment plan service
+        var paymentPlanOptions = await _paymentPlanService.GeneratePaymentPlanOptionsAsync(debt, ct);
 
         var vm = new AcceptDebtVm
         {
@@ -90,8 +90,7 @@ public class AcceptController : Controller
             DueDateUtc = debt.DueDateUtc,
             Status = debt.Status.ToString(),
             OrganizationName = debt.Organization?.TradingName ?? debt.Organization?.Name ?? (theme?.Name ?? "Organization"),
-            FullPaymentSuggested = discounted,
-            FullPaymentDiscountPercent = fullDiscountPct ?? 0
+            PaymentPlanOptions = paymentPlanOptions.ToList()
         };
         return View(vm);
     }
@@ -106,12 +105,11 @@ public class AcceptController : Controller
 
         if (!ModelState.IsValid)
         {
-            // reload summary to render again
+            // Reload payment plan options for display
             var debt0 = await _db.Debts.Include(d => d.Organization).FirstOrDefaultAsync(d => d.Id == vm.DebtId, ct);
             if (debt0 == null) return NotFound();
-            var cfg0 = await _db.OrganizationFeeConfigurations.FirstOrDefaultAsync(c => c.OrganizationId == debt0.OrganizationId, ct);
-            var discPct0 = cfg0?.FullPaymentDiscountPercentage ?? 0m;
-            var discAmt0 = discPct0 > 0 ? Math.Round(debt0.OutstandingPrincipal * (1 - (discPct0 / 100m)), 2) : debt0.OutstandingPrincipal;
+            
+            var options0 = await _paymentPlanService.GeneratePaymentPlanOptionsAsync(debt0, ct);
             var reVm = new AcceptDebtVm
             {
                 DebtId = debt0.Id,
@@ -121,46 +119,9 @@ public class AcceptController : Controller
                 DueDateUtc = debt0.DueDateUtc,
                 Status = debt0.Status.ToString(),
                 OrganizationName = debt0.Organization?.TradingName ?? debt0.Organization?.Name ?? (theme?.Name ?? "Organization"),
-                FullPaymentSuggested = discAmt0,
-                FullPaymentDiscountPercent = discPct0
+                PaymentPlanOptions = options0.ToList()
             };
             return View(reVm);
-        }
-
-        // Additional validation for installments option
-        if (vm.SelectedOption == AcceptOption.Installments)
-        {
-            if (!vm.Frequency.HasValue)
-            {
-                ModelState.AddModelError(nameof(vm.Frequency), "Please select a payment frequency");
-            }
-            if (!vm.InstallmentCount.HasValue || vm.InstallmentCount.Value < 2 || vm.InstallmentCount.Value > 48)
-            {
-                ModelState.AddModelError(nameof(vm.InstallmentCount), "Please enter a valid number of installments (2-48)");
-            }
-            
-            if (!ModelState.IsValid)
-            {
-                // reload summary to render again with errors
-                var debt0 = await _db.Debts.Include(d => d.Organization).FirstOrDefaultAsync(d => d.Id == vm.DebtId, ct);
-                if (debt0 == null) return NotFound();
-                var cfg0 = await _db.OrganizationFeeConfigurations.FirstOrDefaultAsync(c => c.OrganizationId == debt0.OrganizationId, ct);
-                var discPct0 = cfg0?.FullPaymentDiscountPercentage ?? 0m;
-                var discAmt0 = discPct0 > 0 ? Math.Round(debt0.OutstandingPrincipal * (1 - (discPct0 / 100m)), 2) : debt0.OutstandingPrincipal;
-                var reVm = new AcceptDebtVm
-                {
-                    DebtId = debt0.Id,
-                    Reference = string.IsNullOrWhiteSpace(debt0.ClientReferenceNumber) ? ("D-" + debt0.Id.ToString().Substring(0, 8)) : debt0.ClientReferenceNumber!,
-                    Outstanding = debt0.OutstandingPrincipal,
-                    OriginalAmount = debt0.OriginalPrincipal,
-                    DueDateUtc = debt0.DueDateUtc,
-                    Status = debt0.Status.ToString(),
-                    OrganizationName = debt0.Organization?.TradingName ?? debt0.Organization?.Name ?? (theme?.Name ?? "Organization"),
-                    FullPaymentSuggested = discAmt0,
-                    FullPaymentDiscountPercent = discPct0
-                };
-                return View(reVm);
-            }
         }
 
         var debtorId = await GetCurrentDebtorIdAsync(ct);
@@ -171,6 +132,7 @@ public class AcceptController : Controller
 
         var debt = await _db.Debts
             .Include(d => d.PaymentPlans)
+            .Include(d => d.Organization)
             .FirstOrDefaultAsync(d => d.Id == vm.DebtId, ct);
         if (debt == null) return NotFound();
 
@@ -188,7 +150,8 @@ public class AcceptController : Controller
 
         string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "user";
 
-        if (vm.SelectedOption == AcceptOption.Dispute)
+        // Handle dispute option separately
+        if (vm.IsDispute)
         {
             if (!string.IsNullOrWhiteSpace(vm.DisputeReason))
             {
@@ -200,49 +163,34 @@ public class AcceptController : Controller
             return Redirect($"/User/Debts/Dispute/{debt.Id}");
         }
 
-        // Build a payment plan based on selection
-        PaymentPlan plan;
-        var startDate = DateTime.UtcNow.Date.AddDays(1);
-        if (vm.SelectedOption == AcceptOption.PayInFull)
+        // Get the selected payment plan option from the submitted index
+        var paymentPlanOptions = await _paymentPlanService.GeneratePaymentPlanOptionsAsync(debt, ct);
+        if (vm.SelectedPlanIndex < 0 || vm.SelectedPlanIndex >= paymentPlanOptions.Count)
         {
-            // Apply org-configured discount if present
-            var cfg = await _db.OrganizationFeeConfigurations.FirstOrDefaultAsync(c => c.OrganizationId == debt.OrganizationId, ct);
-            var pct = cfg?.FullPaymentDiscountPercentage ?? 0m;
-            var discounted = pct > 0 ? Math.Round(debt.OutstandingPrincipal * (1 - (pct / 100m)), 2, MidpointRounding.AwayFromZero) : debt.OutstandingPrincipal;
-
-            plan = new PaymentPlan(
-                debt.Id,
-                reference: $"PLAN-{Guid.NewGuid():N}".Substring(0, 12),
-                type: PaymentPlanType.FullSettlement,
-                frequency: PaymentFrequency.OneOff,
-                startDateUtc: startDate,
-                installmentAmount: discounted,
-                installmentCount: 1);
-            if (pct > 0)
+            ModelState.AddModelError("", "Invalid payment plan selection");
+            var reVm = new AcceptDebtVm
             {
-                plan.ApplyDiscount(debt.OutstandingPrincipal - discounted);
-            }
-        }
-        else // Installments
-        {
-            var count = Math.Clamp(vm.InstallmentCount ?? 6, 2, 48);
-            var freq = vm.Frequency ?? PaymentFrequency.Monthly;
-            var perInstallment = Math.Round(Math.Max(1, debt.OutstandingPrincipal / count), 2, MidpointRounding.AwayFromZero);
-            plan = new PaymentPlan(
-                debt.Id,
-                reference: $"PLAN-{Guid.NewGuid():N}".Substring(0, 12),
-                type: PaymentPlanType.SystemGenerated,
-                frequency: freq,
-                startDateUtc: startDate,
-                installmentAmount: perInstallment,
-                installmentCount: count);
+                DebtId = debt.Id,
+                Reference = string.IsNullOrWhiteSpace(debt.ClientReferenceNumber) ? ("D-" + debt.Id.ToString().Substring(0, 8)) : debt.ClientReferenceNumber!,
+                Outstanding = debt.OutstandingPrincipal,
+                OriginalAmount = debt.OriginalPrincipal,
+                DueDateUtc = debt.DueDateUtc,
+                Status = debt.Status.ToString(),
+                OrganizationName = debt.Organization?.TradingName ?? debt.Organization?.Name ?? (theme?.Name ?? "Organization"),
+                PaymentPlanOptions = paymentPlanOptions.ToList()
+            };
+            return View(reVm);
         }
 
-        plan.SetCreatedBy(userId);
+        var selectedOption = paymentPlanOptions[vm.SelectedPlanIndex];
+        
+        // Create payment plan from the selected option using the service
+        var plan = await _paymentPlanService.CreatePaymentPlanFromOptionAsync(debt, selectedOption, userId, ct);
+        
         _db.PaymentPlans.Add(plan);
         debt.AttachPaymentPlan(plan);
         plan.Activate(userId);
-        debt.AppendNote($"Plan {plan.Reference} accepted by user {userId} ({vm.SelectedOption})");
+        debt.AppendNote($"Plan {plan.Reference} accepted by user {userId} (Type: {selectedOption.Type})");
 
         // Prepare messaging content with templates
         var debtor = await _db.Debtors.FirstOrDefaultAsync(d => d.Id == debt.DebtorId, ct);
@@ -306,7 +254,8 @@ public class AcceptController : Controller
 
         await _db.SaveChangesAsync(ct);
 
-        if (vm.SelectedOption == AcceptOption.PayInFull)
+        // Redirect based on payment plan type
+        if (selectedOption.Type == PaymentPlanType.FullSettlement)
         {
             return Redirect($"/User/Payments/MakePayment?debtId={debt.Id}");
         }
@@ -357,8 +306,7 @@ public class AcceptDebtVm
     public DateTime? DueDateUtc { get; set; }
     public string Status { get; set; } = string.Empty;
     public string OrganizationName { get; set; } = string.Empty;
-    public decimal FullPaymentSuggested { get; set; }
-    public decimal FullPaymentDiscountPercent { get; set; }
+    public List<PaymentPlanOption> PaymentPlanOptions { get; set; } = new();
 }
 
 public class AcceptDebtPostVm
@@ -367,21 +315,12 @@ public class AcceptDebtPostVm
     public Guid DebtId { get; set; }
 
     [Required]
-    public AcceptOption SelectedOption { get; set; }
+    [Range(0, int.MaxValue, ErrorMessage = "Please select a payment plan option")]
+    public int SelectedPlanIndex { get; set; } = -1;
 
-    // For installment option
-    public PaymentFrequency? Frequency { get; set; }
-    [Range(2, 48)]
-    public int? InstallmentCount { get; set; }
-
-    // For dispute option
+    // For dispute option (special case, not a payment plan)
+    public bool IsDispute { get; set; }
+    
     [MaxLength(500)]
     public string? DisputeReason { get; set; }
-}
-
-public enum AcceptOption
-{
-    PayInFull = 1,
-    Installments = 2,
-    Dispute = 3
 }
