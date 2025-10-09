@@ -1,0 +1,64 @@
+# Dapr Pub/Sub Component - Azure Service Bus for Production
+# For local development, use in-memory or Redis pub/sub
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: saga-pubsub
+spec:
+  type: pubsub.azure.servicebus.topics
+  version: v1
+  metadata:
+  # Connection string should be stored in a secret store
+  - name: connectionString
+    secretKeyRef:
+      name: servicebus-connection-string
+      key: value
+  # Consumer ID for message subscription
+  - name: consumerID
+    value: "debt-management-saga"
+  # Enable automatic topic/subscription creation
+  - name: enableEntityManagement
+    value: "true"
+  # Maximum delivery attempts before dead-letter
+  - name: maxDeliveryCount
+    value: "10"
+  # Message lock duration in seconds
+  - name: lockDurationInSec
+    value: "60"
+  # Enable sessions for ordered message processing
+  - name: requireSessions
+    value: "false"
+  # Time to live for messages (24 hours)
+  - name: defaultMessageTimeToLiveInSec
+    value: "86400"
+scopes:
+  - saga-orchestrator
+  - organization-service
+  - debt-service
+  - payment-service
+  - notification-service
+  - customer-service
+---
+# Local Development Alternative - Redis Pub/Sub
+# Uncomment for local development without Azure Service Bus
+# apiVersion: dapr.io/v1alpha1
+# kind: Component
+# metadata:
+#   name: saga-pubsub
+# spec:
+#   type: pubsub.redis
+#   version: v1
+#   metadata:
+#   - name: redisHost
+#     value: "localhost:6379"
+#   - name: redisPassword
+#     value: ""
+#   - name: enableTLS
+#     value: "false"
+# scopes:
+#   - saga-orchestrator
+#   - organization-service
+#   - debt-service
+#   - payment-service
+#   - notification-service
+#   - customer-service

@@ -1,0 +1,39 @@
+# Dapr Configuration - Global settings for Dapr runtime
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: dapr-config
+spec:
+  # Enable tracing for observability
+  tracing:
+    samplingRate: "1"
+    zipkin:
+      endpointAddress: "http://zipkin:9411/api/v2/spans"
+  
+  # Metrics configuration
+  metric:
+    enabled: true
+  
+  # HTTP/gRPC API access control
+  accessControl:
+    defaultAction: allow
+    trustDomain: "public"
+  
+  # Service name resolution
+  nameResolution:
+    component: "mdns"
+    configuration:
+      clusterDomain: "cluster.local"
+  
+  # Secrets configuration
+  secrets:
+    scopes:
+      - storeName: saga-secrets
+        defaultAccess: allow
+  
+  # Features configuration
+  features:
+    - name: ServiceInvocation
+      enabled: true
+    - name: Workflow
+      enabled: true

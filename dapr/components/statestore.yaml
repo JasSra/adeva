@@ -1,0 +1,85 @@
+# Dapr State Store Component - Redis for Saga State Management
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: saga-statestore
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+  # Redis host and port
+  - name: redisHost
+    value: "localhost:6379"
+  # Redis password (use secret store in production)
+  - name: redisPassword
+    secretKeyRef:
+      name: redis-password
+      key: value
+  # Enable TLS for production
+  - name: enableTLS
+    value: "false"
+  # Required for actor/workflow state management
+  - name: actorStateStore
+    value: "true"
+  # Default TTL for state entries (24 hours)
+  - name: ttlInSeconds
+    value: "86400"
+  # Key prefix for state entries
+  - name: keyPrefix
+    value: "saga"
+  # Max retries for state operations
+  - name: maxRetries
+    value: "3"
+  # Retry backoff in milliseconds
+  - name: maxRetryBackoff
+    value: "2000"
+scopes:
+  - saga-orchestrator
+---
+# Production Alternative - Azure Cosmos DB
+# Provides globally distributed, multi-region state storage
+# apiVersion: dapr.io/v1alpha1
+# kind: Component
+# metadata:
+#   name: saga-statestore
+# spec:
+#   type: state.azure.cosmosdb
+#   version: v1
+#   metadata:
+#   - name: url
+#     value: "https://<your-cosmos-account>.documents.azure.com:443/"
+#   - name: masterKey
+#     secretKeyRef:
+#       name: cosmos-master-key
+#       key: value
+#   - name: database
+#     value: "debtmanager"
+#   - name: collection
+#     value: "saga-state"
+#   - name: actorStateStore
+#     value: "true"
+# scopes:
+#   - saga-orchestrator
+---
+# Production Alternative - Azure Table Storage
+# Cost-effective option for simpler state management needs
+# apiVersion: dapr.io/v1alpha1
+# kind: Component
+# metadata:
+#   name: saga-statestore
+# spec:
+#   type: state.azure.tablestorage
+#   version: v1
+#   metadata:
+#   - name: accountName
+#     value: "<your-storage-account>"
+#   - name: accountKey
+#     secretKeyRef:
+#       name: storage-account-key
+#       key: value
+#   - name: tableName
+#     value: "sagastate"
+#   - name: actorStateStore
+#     value: "true"
+# scopes:
+#   - saga-orchestrator
