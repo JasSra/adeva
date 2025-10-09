@@ -325,10 +325,20 @@
                             </div>
 
                             <div class="mt-auto">
-                                <button type="button" class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                                        onclick="selectPlan(@i)">
-                                    → Choose This Plan
-                                </button>
+                                @if (option.Type.ToString() == "Custom")
+                                {
+                                    <button type="button" class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                                            onclick="openCustomPlanModal(@i)">
+                                        ✨ Design Custom Plan
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                                            onclick="selectPlan(@i)">
+                                        → Choose This Plan
+                                    </button>
+                                }
                             </div>
                         </div>
                     </div>
@@ -382,6 +392,192 @@
         </form>
     </div>
 </div>
+
+<!-- Custom Payment Plan Designer Modal -->
+<div id="customPlanModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden animate-fade-in-up">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-3xl font-bold flex items-center">
+                        <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Design Your Custom Payment Schedule
+                    </h3>
+                    <p class="mt-2 text-purple-100">Create a payment plan that works for your unique financial situation</p>
+                </div>
+                <button onclick="closeCustomPlanModal()" class="text-white hover:text-gray-200 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 200px);">
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Left Column: Configuration -->
+                <div>
+                    <!-- Quick Presets -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Quick Presets
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" class="preset-btn px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-purple-100 hover:border-purple-500 border-2 border-gray-200 dark:border-gray-600 rounded-lg transition font-semibold" data-months="3">
+                                3 Months
+                            </button>
+                            <button type="button" class="preset-btn px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-purple-100 hover:border-purple-500 border-2 border-gray-200 dark:border-gray-600 rounded-lg transition font-semibold" data-months="6">
+                                6 Months
+                            </button>
+                            <button type="button" class="preset-btn px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-purple-100 hover:border-purple-500 border-2 border-gray-200 dark:border-gray-600 rounded-lg transition font-semibold" data-months="12">
+                                12 Months
+                            </button>
+                            <button type="button" class="preset-btn px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-purple-100 hover:border-purple-500 border-2 border-gray-200 dark:border-gray-600 rounded-lg transition font-semibold" data-months="24">
+                                24 Months
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Duration -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Payment Duration
+                        </label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="durationSlider" min="2" max="24" value="6" 
+                                   class="flex-1 h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer slider-purple">
+                            <input type="number" id="durationMonths" min="2" max="24" value="6" 
+                                   class="w-24 px-3 py-2 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-semibold text-center">
+                            <span class="text-sm text-gray-600 dark:text-gray-400 font-medium">months</span>
+                        </div>
+                        <div class="mt-2 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <span>2 months min</span>
+                            <span id="totalWeeks">~26 weeks</span>
+                            <span>24 months max</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Frequency -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Payment Frequency
+                        </label>
+                        <select id="paymentFrequency" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 font-semibold">
+                            <option value="Weekly">Weekly</option>
+                            <option value="Biweekly" selected>Bi-Weekly (Every 2 weeks)</option>
+                            <option value="Monthly">Monthly</option>
+                        </select>
+                    </div>
+
+                    <!-- Live Preview Card -->
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-700 rounded-xl p-5">
+                        <h4 class="font-bold text-gray-800 dark:text-white mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                            Payment Summary
+                        </h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Number of Payments:</span>
+                                <span class="text-lg font-bold text-purple-600 dark:text-purple-400" id="numPayments">0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Payment Amount:</span>
+                                <span class="text-2xl font-bold text-gray-900 dark:text-white" id="paymentAmount">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-2 border-t border-purple-200 dark:border-purple-700">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">Admin Fee:</span>
+                                <span class="text-lg font-semibold text-red-600 dark:text-red-400" id="adminFee">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Total to Pay:</span>
+                                <span class="text-2xl font-bold text-gray-900 dark:text-white" id="totalToPay">$0.00</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                            <p class="text-xs text-blue-800 dark:text-blue-300">
+                                <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                </svg>
+                                <strong>Note:</strong> Admin fee increases with longer payment periods. Shorter plans = lower fees.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Validation Warnings -->
+                    <div id="validationWarnings" class="hidden mt-4"></div>
+                </div>
+
+                <!-- Right Column: Timeline View -->
+                <div>
+                    <h4 class="font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        </svg>
+                        Payment Timeline
+                        <button type="button" onclick="autoGenerateSchedule()" class="ml-auto text-sm px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Auto-Generate
+                        </button>
+                    </h4>
+                    
+                    <div id="paymentTimeline" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                        <!-- Timeline items will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4 flex justify-between items-center border-t dark:border-gray-700">
+            <button type="button" onclick="closeCustomPlanModal()" class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-semibold">
+                Cancel
+            </button>
+            <button type="button" id="submitCustomPlan" onclick="submitCustomPlan()" class="px-10 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                Submit for Approval →
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .slider-purple::-webkit-slider-thumb {
+        background: #9333ea;
+    }
+    .slider-purple::-moz-range-thumb {
+        background: #9333ea;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #9333ea;
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #7c3aed;
+    }
+</style>
 
 <script>
     let selectedPlanIdx = -1;
@@ -469,4 +665,257 @@
             }, index * 150);
         });
     });
+
+    // Custom Plan Modal Functions
+    let customPlanOptionIndex = -1;
+    const debtAmount = @Model.Outstanding;
+    const currency = 'USD';
+
+    function openCustomPlanModal(planIndex) {
+        customPlanOptionIndex = planIndex;
+        document.getElementById('customPlanModal').classList.remove('hidden');
+        updatePaymentCalculations();
+        generateTimeline();
+    }
+
+    function closeCustomPlanModal() {
+        document.getElementById('customPlanModal').classList.add('hidden');
+        customPlanOptionIndex = -1;
+    }
+
+    // Sync sliders and inputs
+    const durationSlider = document.getElementById('durationSlider');
+    const durationMonths = document.getElementById('durationMonths');
+    const paymentFrequency = document.getElementById('paymentFrequency');
+
+    durationSlider.addEventListener('input', (e) => {
+        durationMonths.value = e.target.value;
+        updatePaymentCalculations();
+        generateTimeline();
+    });
+
+    durationMonths.addEventListener('input', (e) => {
+        let val = parseInt(e.target.value) || 6;
+        val = Math.max(2, Math.min(24, val));
+        durationMonths.value = val;
+        durationSlider.value = val;
+        updatePaymentCalculations();
+        generateTimeline();
+    });
+
+    paymentFrequency.addEventListener('change', () => {
+        updatePaymentCalculations();
+        generateTimeline();
+    });
+
+    // Preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const months = parseInt(btn.dataset.months);
+            durationMonths.value = months;
+            durationSlider.value = months;
+            updatePaymentCalculations();
+            generateTimeline();
+            
+            document.querySelectorAll('.preset-btn').forEach(b => {
+                b.classList.remove('bg-purple-100', 'border-purple-500');
+                b.classList.add('bg-gray-100');
+            });
+            btn.classList.remove('bg-gray-100');
+            btn.classList.add('bg-purple-100', 'border-purple-500');
+        });
+    });
+
+    function calculateAdminFee(months, numPayments) {
+        // Admin fee logic: longer duration = higher fees
+        // Base fee: 2% of debt
+        let baseFee = debtAmount * 0.02;
+        
+        // Duration multiplier: 0% extra for 2-6 months, up to 3% extra for 24 months
+        let durationMultiplier = Math.max(0, (months - 6) / 18);
+        let durationFee = debtAmount * 0.03 * durationMultiplier;
+        
+        // Payment count fee: More payments = higher admin overhead
+        let paymentCountFee = (numPayments - 2) * 2.50;
+        
+        return Math.round((baseFee + durationFee + paymentCountFee) * 100) / 100;
+    }
+
+    function getPaymentCount(months, frequency) {
+        switch(frequency) {
+            case 'Weekly':
+                return Math.ceil(months * 4.33);
+            case 'Biweekly':
+                return Math.ceil(months * 2.17);
+            case 'Monthly':
+                return months;
+            default:
+                return months * 2;
+        }
+    }
+
+    function updatePaymentCalculations() {
+        const months = parseInt(durationMonths.value) || 6;
+        const frequency = paymentFrequency.value;
+        const numPayments = getPaymentCount(months, frequency);
+        
+        document.getElementById('totalWeeks').textContent = `~${Math.ceil(months * 4.33)} weeks`;
+        
+        const adminFee = calculateAdminFee(months, numPayments);
+        const totalAmount = debtAmount + adminFee;
+        const paymentAmount = Math.ceil((totalAmount / numPayments) * 100) / 100;
+        
+        document.getElementById('numPayments').textContent = numPayments;
+        document.getElementById('paymentAmount').textContent = `$${paymentAmount.toFixed(2)}`;
+        document.getElementById('adminFee').textContent = `$${adminFee.toFixed(2)}`;
+        document.getElementById('totalToPay').textContent = `$${totalAmount.toFixed(2)}`;
+        
+        // Validation warnings
+        const warnings = document.getElementById('validationWarnings');
+        warnings.innerHTML = '';
+        warnings.classList.add('hidden');
+        
+        if (paymentAmount < 10) {
+            warnings.innerHTML = `
+                <div class="p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
+                    <p class="text-sm text-red-800 dark:text-red-300 font-semibold">
+                        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        Warning: Payment amount too low ($${paymentAmount.toFixed(2)}). Please reduce duration or change frequency.
+                    </p>
+                </div>
+            `;
+            warnings.classList.remove('hidden');
+        } else if (months > 12 && numPayments > 20) {
+            warnings.innerHTML = `
+                <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 rounded">
+                    <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        Note: Longer payment plans incur higher admin fees ($${adminFee.toFixed(2)}). Consider a shorter duration.
+                    </p>
+                </div>
+            `;
+            warnings.classList.remove('hidden');
+        }
+    }
+
+    function generateTimeline() {
+        const months = parseInt(durationMonths.value) || 6;
+        const frequency = paymentFrequency.value;
+        const numPayments = getPaymentCount(months, frequency);
+        const adminFee = calculateAdminFee(months, numPayments);
+        const totalAmount = debtAmount + adminFee;
+        const paymentAmount = Math.ceil((totalAmount / numPayments) * 100) / 100;
+        
+        const timeline = document.getElementById('paymentTimeline');
+        timeline.innerHTML = '';
+        
+        let currentDate = new Date();
+        currentDate.setDate(currentDate.getDate() + 7); // Start in 1 week
+        
+        let daysIncrement;
+        switch(frequency) {
+            case 'Weekly':
+                daysIncrement = 7;
+                break;
+            case 'Biweekly':
+                daysIncrement = 14;
+                break;
+            case 'Monthly':
+                daysIncrement = 30;
+                break;
+        }
+        
+        for (let i = 1; i <= numPayments; i++) {
+            const isLast = i === numPayments;
+            const amount = isLast ? (totalAmount - (paymentAmount * (numPayments - 1))) : paymentAmount;
+            
+            const item = document.createElement('div');
+            item.className = 'relative pl-8 pb-4 border-l-2 border-purple-200 dark:border-purple-700';
+            item.innerHTML = `
+                <div class="absolute -left-2.5 top-0 w-5 h-5 rounded-full bg-purple-600 border-2 border-white dark:border-gray-800"></div>
+                <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm hover:shadow-md transition">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="font-bold text-gray-900 dark:text-white">Payment #${i}</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-purple-600 dark:text-purple-400">$${amount.toFixed(2)}</div>
+                            ${isLast ? '<div class="text-xs text-green-600 dark:text-green-400 font-semibold">Final Payment</div>' : ''}
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        <div class="flex justify-between">
+                            <span>Running Total:</span>
+                            <span class="font-semibold">$${(paymentAmount * i).toFixed(2)}</span>
+                        </div>
+                        ${isLast ? `<div class="flex justify-between mt-1 text-green-600 dark:text-green-400"><span>✓ Debt Cleared</span></div>` : ''}
+                    </div>
+                </div>
+            `;
+            timeline.appendChild(item);
+            
+            currentDate.setDate(currentDate.getDate() + daysIncrement);
+        }
+    }
+
+    function autoGenerateSchedule() {
+        // Already auto-generated via generateTimeline()
+        generateTimeline();
+        
+        // Show confirmation
+        const timeline = document.getElementById('paymentTimeline');
+        const notification = document.createElement('div');
+        notification.className = 'mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg text-sm text-green-800 dark:text-green-300';
+        notification.innerHTML = `
+            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            Payment schedule generated successfully!
+        `;
+        timeline.insertBefore(notification, timeline.firstChild);
+        setTimeout(() => notification.remove(), 3000);
+    }
+
+    function submitCustomPlan() {
+        const months = parseInt(durationMonths.value) || 6;
+        const frequency = paymentFrequency.value;
+        const numPayments = getPaymentCount(months, frequency);
+        const adminFee = calculateAdminFee(months, numPayments);
+        const paymentAmount = Math.ceil(((debtAmount + adminFee) / numPayments) * 100) / 100;
+        
+        // Basic validation
+        if (paymentAmount < 10) {
+            alert('Payment amount is too low. Please adjust your plan.');
+            return;
+        }
+        
+        // Select this custom plan option
+        selectedPlanIdx = customPlanOptionIndex;
+        document.getElementById('selectedPlanIndex').value = customPlanOptionIndex;
+        document.getElementById('isDisputeField').value = 'false';
+        
+        // Close modal and enable submit
+        closeCustomPlanModal();
+        document.getElementById('submitBtn').disabled = false;
+        
+        // Highlight the custom plan card
+        document.querySelectorAll('.plan-card').forEach((card, idx) => {
+            if (idx === customPlanOptionIndex) {
+                card.classList.add('selected');
+                card.style.borderColor = 'var(--primary)';
+            } else {
+                card.classList.remove('selected');
+                card.style.borderColor = '';
+            }
+        });
+        
+        // Show confirmation message
+        alert(`Custom payment plan configured!\n\n${numPayments} ${frequency.toLowerCase()} payments of $${paymentAmount.toFixed(2)}\nAdmin fee: $${adminFee.toFixed(2)}\nTotal: $${(debtAmount + adminFee).toFixed(2)}\n\nClick "Continue" to submit for approval.`);
+    }
+
 </script>
