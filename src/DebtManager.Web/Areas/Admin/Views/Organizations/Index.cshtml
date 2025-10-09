@@ -1,32 +1,140 @@
+@model IEnumerable<DebtManager.Domain.Organizations.Organization>
 @{
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var page = (int)ViewBag.Page;
+    var pageSize = (int)ViewBag.PageSize;
+    var totalCount = (int)ViewBag.TotalCount;
+    var totalPages = (int)ViewBag.TotalPages;
 }
 
-@* Build a view model for the reusable table *@
-@{
-    var model = new DebtManager.Web.Models.DataTable.DataTableViewModel
+<form method="get" action="@Url.Action("Index")" class="bg-white rounded-lg shadow">
+    <div class="p-6 border-b flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Organizations Management</h3>
+        <div class="flex gap-2">
+            <select name="status" class="border rounded px-3 py-2 text-sm">
+                <option value="">All Status</option>
+                <option value="approved" @(ViewBag.Status == "approved" ? "selected" : "")>Approved</option>
+                <option value="pending" @(ViewBag.Status == "pending" ? "selected" : "")>Pending</option>
+            </select>
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search organizations..." class="border rounded px-3 py-2 text-sm" />
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Search</button>
+            @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.Status as string))
+            {
+                <a href="@Url.Action("Index")" class="px-4 py-2 border rounded text-sm hover:bg-gray-100">Clear</a>
+            }
+        </div>
+    </div>
+</form>
+
+<div class="bg-white rounded-lg shadow mt-4">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Legal Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ABN</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subdomain</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var org in Model)
+                    {
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">@org.Name</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">@org.LegalName</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">@org.Abn</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                @if (!string.IsNullOrEmpty(org.Subdomain))
+                                {
+                                    <a href="https://@(org.Subdomain).debtmanager.com" target="_blank" class="text-blue-600 hover:underline">@org.Subdomain</a>
+                                }
+                                else
+                                {
+                                    <span class="text-gray-400">-</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if (org.IsApproved)
+                                {
+                                    <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Approved</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @org.CreatedAtUtc.ToString("yyyy-MM-dd")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <a href="@Url.Action("Details", new { id = org.Id })" class="text-blue-600 hover:underline mr-3">View</a>
+                                <a href="@Url.Action("Edit", new { id = org.Id })" class="text-blue-600 hover:underline">Edit</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                            @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.Status as string))
+                            {
+                                <text>No organizations found matching your criteria.</text>
+                            }
+                            else
+                            {
+                                <text>No organizations available.</text>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    @if (totalPages > 0)
     {
-        TableKey = "admin.organizations",
-        Title = "Organizations",
-        DataUrl = Url.Action("Get", "OrganizationsApi", new { area = "Admin" }),
-        Columns = new System.Collections.Generic.List<DebtManager.Web.Models.DataTable.DataTableColumn>
-        {
-            new("Id","ID"),
-            new("Name","Name"),
-            new("Abn","ABN"),
-            new("Subdomain","Subdomain"),
-            new("Status","Status"),
-            new("Debtors","Debtors")
-        },
-        Rows = new System.Collections.Generic.List<DebtManager.Web.Models.DataTable.DataTableRow>(),
-        Page = (int)(ViewBag.Page ?? 1),
-        PageSize = (int)(ViewBag.PageSize ?? 10),
-        TotalCount = 0,
-        ShowSearch = true,
-        ShowStatusFilter = true,
-        StatusOptions = new System.Collections.Generic.List<(string,string)> { ("active","Active"), ("pending","Pending"), ("suspended","Suspended") },
-        ShowDensityToggle = true
-    };
-}
-
-@await Html.PartialAsync("~/Views/Shared/Components/_DataTable.cshtml", model)
+        <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                Showing @((page - 1) * pageSize + 1) to @Math.Min(page * pageSize, totalCount) of @totalCount entries
+            </div>
+            <div class="flex gap-1">
+                @if (page > 1)
+                {
+                    <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = page - 1, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">Previous</a>
+                }
+                else
+                {
+                    <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Previous</button>
+                }
+                
+                @for (int i = Math.Max(1, page - 2); i <= Math.Min(totalPages, page + 2); i++)
+                {
+                    if (i == page)
+                    {
+                        <button class="px-3 py-1 border rounded text-sm bg-blue-600 text-white">@i</button>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = i, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">@i</a>
+                    }
+                }
+                
+                @if (page < totalPages)
+                {
+                    <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = page + 1, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">Next</a>
+                }
+                else
+                {
+                    <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Next</button>
+                }
+            </div>
+        </div>
+    }
+</div>

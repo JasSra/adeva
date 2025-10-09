@@ -1,31 +1,156 @@
+@model IEnumerable<DebtManager.Domain.Debts.Debt>
 @{
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var page = (int)ViewBag.Page;
+    var pageSize = (int)ViewBag.PageSize;
+    var totalCount = (int)ViewBag.TotalCount;
+    var totalPages = (int)ViewBag.TotalPages;
 }
 
-@{
-    var model = new DebtManager.Web.Models.DataTable.DataTableViewModel
+<form method="get" action="@Url.Action("Index")" class="bg-white rounded-lg shadow">
+    <div class="p-6 border-b flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Debts Management</h3>
+        <div class="flex gap-2">
+            <select name="status" class="border rounded px-3 py-2 text-sm">
+                <option value="">All Status</option>
+                <option value="active" @(ViewBag.Status == "active" ? "selected" : "")>Active</option>
+                <option value="settled" @(ViewBag.Status == "settled" ? "selected" : "")>Settled</option>
+                <option value="inarrears" @(ViewBag.Status == "inarrears" ? "selected" : "")>In Arrears</option>
+                <option value="disputed" @(ViewBag.Status == "disputed" ? "selected" : "")>Disputed</option>
+            </select>
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search debts..." class="border rounded px-3 py-2 text-sm" />
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Search</button>
+            @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.Status as string))
+            {
+                <a href="@Url.Action("Index")" class="px-4 py-2 border rounded text-sm hover:bg-gray-100">Clear</a>
+            }
+        </div>
+    </div>
+</form>
+
+<div class="bg-white rounded-lg shadow mt-4">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Debtor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Original Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var debt in Model)
+                    {
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">@debt.ClientReferenceNumber</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                @if (debt.Debtor != null)
+                                {
+                                    <text>@debt.Debtor.FirstName @debt.Debtor.LastName</text>
+                                }
+                                else
+                                {
+                                    <text>-</text>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                @debt.Currency @debt.OriginalPrincipal.ToString("N2")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                @debt.Currency @debt.OutstandingPrincipal.ToString("N2")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @{
+                                    var statusClass = debt.Status switch
+                                    {
+                                        DebtManager.Domain.Debts.DebtStatus.Active => "bg-blue-100 text-blue-800",
+                                        DebtManager.Domain.Debts.DebtStatus.Settled => "bg-green-100 text-green-800",
+                                        DebtManager.Domain.Debts.DebtStatus.InArrears => "bg-red-100 text-red-800",
+                                        DebtManager.Domain.Debts.DebtStatus.Disputed => "bg-yellow-100 text-yellow-800",
+                                        _ => "bg-gray-100 text-gray-800"
+                                    };
+                                }
+                                <span class="px-2 py-1 text-xs rounded-full @statusClass">@debt.Status</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                @if (debt.DueDateUtc.HasValue)
+                                {
+                                    @debt.DueDateUtc.Value.ToString("yyyy-MM-dd")
+                                }
+                                else
+                                {
+                                    <text>-</text>
+                                }
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <a href="@Url.Action("Details", new { id = debt.Id })" class="text-blue-600 hover:underline mr-3">View</a>
+                                <a href="@Url.Action("Edit", new { id = debt.Id })" class="text-blue-600 hover:underline">Edit</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                            @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.Status as string))
+                            {
+                                <text>No debts found matching your criteria.</text>
+                            }
+                            else
+                            {
+                                <text>No debts available.</text>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    @if (totalPages > 0)
     {
-        TableKey = "admin.debts",
-        Title = "Debts",
-        DataUrl = Url.Action("Get", "DebtsApi", new { area = "Admin" }),
-        Columns = new System.Collections.Generic.List<DebtManager.Web.Models.DataTable.DataTableColumn>
-        {
-            new("Id","ID"),
-            new("Debtor","Debtor"),
-            new("Org","Organization"),
-            new("Amount","Amount"),
-            new("Outstanding","Outstanding"),
-            new("Status","Status")
-        },
-        Rows = new System.Collections.Generic.List<DebtManager.Web.Models.DataTable.DataTableRow>(),
-        Page = (int)(ViewBag.Page ?? 1),
-        PageSize = (int)(ViewBag.PageSize ?? 10),
-        TotalCount = 0,
-        ShowSearch = true,
-        ShowStatusFilter = true,
-        StatusOptions = new System.Collections.Generic.List<(string,string)> { ("Active","Active"), ("Settled","Settled"), ("InArrears","In Arrears"), ("Disputed","Disputed") },
-        ShowDensityToggle = true
-    };
-}
-
-@await Html.PartialAsync("~/Views/Shared/Components/_DataTable.cshtml", model)
+        <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                Showing @((page - 1) * pageSize + 1) to @Math.Min(page * pageSize, totalCount) of @totalCount entries
+            </div>
+            <div class="flex gap-1">
+                @if (page > 1)
+                {
+                    <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = page - 1, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">Previous</a>
+                }
+                else
+                {
+                    <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Previous</button>
+                }
+                
+                @for (int i = Math.Max(1, page - 2); i <= Math.Min(totalPages, page + 2); i++)
+                {
+                    if (i == page)
+                    {
+                        <button class="px-3 py-1 border rounded text-sm bg-blue-600 text-white">@i</button>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = i, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">@i</a>
+                    }
+                }
+                
+                @if (page < totalPages)
+                {
+                    <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = page + 1, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">Next</a>
+                }
+                else
+                {
+                    <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Next</button>
+                }
+            </div>
+        </div>
+    }
+</div>
