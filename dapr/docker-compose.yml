@@ -1,0 +1,235 @@
+version: '3.8'
+
+# Docker Compose for Dapr Saga Orchestration POC
+# This file provides a complete local development environment with Dapr sidecars
+
+services:
+  #########################################
+  # Infrastructure Services
+  #########################################
+  
+  # Redis - State Store and Pub/Sub
+  redis:
+    image: redis:7-alpine
+    container_name: dapr-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dapr-network
+  
+  # Zipkin - Distributed Tracing
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: dapr-zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - dapr-network
+  
+  # Dapr Placement Service - Required for Actors/Workflows
+  dapr-placement:
+    image: daprio/dapr:1.13.0
+    container_name: dapr-placement
+    command: ["./placement", "-port", "50006"]
+    ports:
+      - "50006:50006"
+    networks:
+      - dapr-network
+  
+  #########################################
+  # Saga Orchestrator Service
+  #########################################
+  
+  # Note: This is a placeholder. Actual implementation would be in src/DebtManager.Sagas
+  # For now, this demonstrates the architecture
+  
+  # saga-orchestrator:
+  #   build:
+  #     context: ../src/DebtManager.Sagas
+  #     dockerfile: Dockerfile
+  #   container_name: saga-orchestrator
+  #   ports:
+  #     - "5000:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - ASPNETCORE_URLS=http://+:80
+  #   depends_on:
+  #     - redis
+  #     - dapr-placement
+  #   networks:
+  #     - dapr-network
+  
+  # saga-orchestrator-dapr:
+  #   image: daprio/daprd:1.13.0
+  #   container_name: saga-orchestrator-dapr
+  #   network_mode: "service:saga-orchestrator"
+  #   depends_on:
+  #     - saga-orchestrator
+  #     - redis
+  #     - dapr-placement
+  #     - zipkin
+  #   command: [
+  #     "./daprd",
+  #     "-app-id", "saga-orchestrator",
+  #     "-app-port", "80",
+  #     "-placement-host-address", "dapr-placement:50006",
+  #     "-components-path", "/components",
+  #     "-config", "/components/configuration.yaml"
+  #   ]
+  #   volumes:
+  #     - ./components:/components
+
+  #########################################
+  # Organization Service (Example)
+  #########################################
+  
+  # organization-service:
+  #   build:
+  #     context: ../src/DebtManager.Services.Organization
+  #     dockerfile: Dockerfile
+  #   container_name: organization-service
+  #   ports:
+  #     - "5001:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - dapr-network
+  
+  # organization-service-dapr:
+  #   image: daprio/daprd:1.13.0
+  #   container_name: organization-service-dapr
+  #   network_mode: "service:organization-service"
+  #   depends_on:
+  #     - organization-service
+  #     - redis
+  #   command: [
+  #     "./daprd",
+  #     "-app-id", "organization-service",
+  #     "-app-port", "80",
+  #     "-components-path", "/components",
+  #     "-config", "/components/configuration.yaml"
+  #   ]
+  #   volumes:
+  #     - ./components:/components
+
+  #########################################
+  # Debt Service (Example)
+  #########################################
+  
+  # debt-service:
+  #   build:
+  #     context: ../src/DebtManager.Services.Debt
+  #     dockerfile: Dockerfile
+  #   container_name: debt-service
+  #   ports:
+  #     - "5002:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - dapr-network
+  
+  # debt-service-dapr:
+  #   image: daprio/daprd:1.13.0
+  #   container_name: debt-service-dapr
+  #   network_mode: "service:debt-service"
+  #   depends_on:
+  #     - debt-service
+  #     - redis
+  #   command: [
+  #     "./daprd",
+  #     "-app-id", "debt-service",
+  #     "-app-port", "80",
+  #     "-components-path", "/components",
+  #     "-config", "/components/configuration.yaml"
+  #   ]
+  #   volumes:
+  #     - ./components:/components
+
+  #########################################
+  # Payment Service (Example)
+  #########################################
+  
+  # payment-service:
+  #   build:
+  #     context: ../src/DebtManager.Services.Payment
+  #     dockerfile: Dockerfile
+  #   container_name: payment-service
+  #   ports:
+  #     - "5003:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - dapr-network
+  
+  # payment-service-dapr:
+  #   image: daprio/daprd:1.13.0
+  #   container_name: payment-service-dapr
+  #   network_mode: "service:payment-service"
+  #   depends_on:
+  #     - payment-service
+  #     - redis
+  #   command: [
+  #     "./daprd",
+  #     "-app-id", "payment-service",
+  #     "-app-port", "80",
+  #     "-components-path", "/components",
+  #     "-config", "/components/configuration.yaml"
+  #   ]
+  #   volumes:
+  #     - ./components:/components
+
+  #########################################
+  # Notification Service (Example)
+  #########################################
+  
+  # notification-service:
+  #   build:
+  #     context: ../src/DebtManager.Services.Notification
+  #     dockerfile: Dockerfile
+  #   container_name: notification-service
+  #   ports:
+  #     - "5004:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - dapr-network
+  
+  # notification-service-dapr:
+  #   image: daprio/daprd:1.13.0
+  #   container_name: notification-service-dapr
+  #   network_mode: "service:notification-service"
+  #   depends_on:
+  #     - notification-service
+  #     - redis
+  #   command: [
+  #     "./daprd",
+  #     "-app-id", "notification-service",
+  #     "-app-port", "80",
+  #     "-components-path", "/components",
+  #     "-config", "/components/configuration.yaml"
+  #   ]
+  #   volumes:
+  #     - ./components:/components
+
+networks:
+  dapr-network:
+    driver: bridge
+
+volumes:
+  redis-data:

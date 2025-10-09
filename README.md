@@ -136,6 +136,27 @@ Sign in: /Account/SignIn  •  Sign out: /Account/SignOutUser
 
 If BaseUrl is not set, the app uses a local stub that validates 11-digit ABNs.
 
+### Saga Orchestration with Dapr (POC)
+
+**Distributed Transaction Management** for microservices architecture:
+
+- **Documentation**: See [`docs/DAPR_SAGA_POC.md`](docs/DAPR_SAGA_POC.md) for comprehensive guide
+- **Quick Start**: See [`dapr/QUICKSTART.md`](dapr/QUICKSTART.md) for hands-on setup
+
+**Key Features:**
+- Saga pattern for distributed transactions
+- Dapr workflow orchestration
+- Multiple message broker support (Azure Service Bus, Kafka, RabbitMQ)
+- Pluggable state stores (Redis, Cosmos DB, PostgreSQL)
+- Built-in observability and tracing
+- Cloud-agnostic architecture
+
+**Example Workflows:**
+- Organization onboarding with ABN validation
+- Debt raising with customer identification
+- Payment processing with receipt generation
+- Multi-step compensation on failures
+
 ## Documentation
 
 Comprehensive documentation is available in the **[Wiki](wiki/Home.md)**:
