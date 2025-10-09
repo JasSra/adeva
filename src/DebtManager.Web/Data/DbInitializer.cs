@@ -19,8 +19,12 @@ public static class DbInitializer
         var appConfig = sp.GetRequiredService<IAppConfigService>();
         var config = sp.GetRequiredService<IConfiguration>();
 
-        // Lean: run migrations only
-        await db.Database.MigrateAsync();
+        // Run migrations: Only auto-migrate in development; production should use pre-deployment scripts
+        var autoMigrate = config.GetValue<bool>("Database:AutoMigrateOnStartup", env.IsDevelopment());
+        if (autoMigrate)
+        {
+            await db.Database.MigrateAsync();
+        }
 
         // Roles
         var roles = new[] { "SuperAdmin", "Admin", "Client", "User" };
