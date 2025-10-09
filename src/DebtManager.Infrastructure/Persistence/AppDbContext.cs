@@ -8,6 +8,7 @@ using DebtManager.Domain.Documents;
 using DebtManager.Domain.Configuration;
 using DebtManager.Domain.Analytics;
 using DebtManager.Domain.Communications;
+using DebtManager.Domain.Audit;
 using DebtManager.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -35,6 +36,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<QueuedMessage> QueuedMessages => Set<QueuedMessage>();
     public DbSet<InternalMessage> InternalMessages => Set<InternalMessage>();
     public DbSet<InternalMessageRecipient> InternalMessageRecipients => Set<InternalMessageRecipient>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -270,6 +272,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         {
             builder.HasIndex(x => new { x.UserId, x.Status });
             builder.HasIndex(x => x.InternalMessageId);
+        });
+
+        modelBuilder.Entity<AuditLog>(builder =>
+        {
+            builder.HasIndex(x => x.CreatedAtUtc);
+            builder.HasIndex(x => x.EntityType);
+            builder.HasIndex(x => new { x.UserId, x.CreatedAtUtc });
+            builder.Property(x => x.UserId).HasMaxLength(256).IsRequired();
+            builder.Property(x => x.UserEmail).HasMaxLength(256).IsRequired();
+            builder.Property(x => x.Action).HasMaxLength(200).IsRequired();
+            builder.Property(x => x.EntityType).HasMaxLength(100).IsRequired();
+            builder.Property(x => x.EntityId).HasMaxLength(100);
+            builder.Property(x => x.Details).HasMaxLength(2000);
+            builder.Property(x => x.IpAddress).HasMaxLength(50);
+            builder.Property(x => x.UserAgent).HasMaxLength(500);
         });
     }
 }

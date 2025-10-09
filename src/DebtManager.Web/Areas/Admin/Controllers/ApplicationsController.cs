@@ -1,12 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
 using DebtManager.Web.Services;
+using DebtManager.Contracts.Persistence;
+using DebtManager.Contracts.Audit;
+using DebtManager.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace DebtManager.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
 public class ApplicationsController : Controller
 {
-    public IActionResult Index(string? search, int page = 1, int pageSize = 20)
+    private readonly AppDbContext _db;
+    private readonly IOrganizationRepository _organizationRepository;
+    private readonly IAuditService _auditService;
+
+    public ApplicationsController(AppDbContext db, IOrganizationRepository organizationRepository, IAuditService auditService)
+    {
+        _db = db;
+        _organizationRepository = organizationRepository;
+        _auditService = auditService;
+    }
+
+    public async Task<IActionResult> Index(string? search, int page = 1, int pageSize = 20)
     {
         var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
         ViewBag.ThemeName = theme?.Name ?? "Default";
@@ -14,29 +29,78 @@ public class ApplicationsController : Controller
         ViewBag.Search = search;
         ViewBag.Page = page;
         ViewBag.PageSize = pageSize;
-        return View();
+
+        var query = _db.Organizations.Where(o => !o.IsApproved).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(o => o.Name.Contains(search) || 
+                                    o.LegalName.Contains(search) ||
+                                    o.Abn.Contains(search));
+        }
+
+        var totalCount = await query.CountAsync();
+        var organizations = await query
+            .OrderByDescending(o => o.CreatedAtUtc)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        ViewBag.TotalCount = totalCount;
+        ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        await _auditService.LogAsync("VIEW_APPLICATIONS", "Applications", details: $"Searched: {search}");
+
+        return View(organizations);
     }
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(Guid id)
     {
         var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
         ViewBag.ThemeName = theme?.Name ?? "Default";
         ViewBag.Title = "Application Details";
-        ViewBag.ApplicationId = id;
-        return View();
+        
+        var organization = await _organizationRepository.GetAsync(id);
+        if (organization == null)
+        {
+            return NotFound();
+        }
+
+        await _auditService.LogAsync("VIEW_APPLICATION_DETAILS", "Application", id.ToString(), $"Organization: {organization.Name}");
+
+        return View(organization);
     }
 
     [HttpPost]
-    public IActionResult Approve(int id)
+    public async Task<IActionResult> Approve(Guid id)
     {
-        TempData["Message"] = $"Application #{id} approved successfully";
+        var organization = await _organizationRepository.GetAsync(id);
+        if (organization == null)
+        {
+            return NotFound();
+        }
+
+        organization.Approve();
+        await _organizationRepository.SaveChangesAsync();
+
+        await _auditService.LogAsync("APPROVE_APPLICATION", "Application", id.ToString(), $"Approved organization: {organization.Name}");
+
+        TempData["Message"] = $"Application for {organization.Name} approved successfully";
         return RedirectToAction("Index");
     }
 
     [HttpPost]
-    public IActionResult Reject(int id, string reason)
+    public async Task<IActionResult> Reject(Guid id, string reason)
     {
-        TempData["Message"] = $"Application #{id} rejected";
+        var organization = await _organizationRepository.GetAsync(id);
+        if (organization == null)
+        {
+            return NotFound();
+        }
+
+        await _auditService.LogAsync("REJECT_APPLICATION", "Application", id.ToString(), $"Rejected organization: {organization.Name}. Reason: {reason}");
+
+        TempData["Message"] = $"Application for {organization.Name} rejected";
         return RedirectToAction("Index");
     }
 }
