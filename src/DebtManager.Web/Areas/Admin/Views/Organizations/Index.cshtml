@@ -7,37 +7,76 @@
     var totalPages = (int)ViewBag.TotalPages;
 }
 
-<form method="get" action="@Url.Action("Index")" class="bg-white rounded-lg shadow">
-    <div class="p-6 border-b flex items-center justify-between">
-        <h3 class="text-lg font-semibold">Organizations Management</h3>
-        <div class="flex gap-2">
-            <select name="status" class="border rounded px-3 py-2 text-sm">
-                <option value="">All Status</option>
-                <option value="approved" @(ViewBag.Status == "approved" ? "selected" : "")>Approved</option>
-                <option value="pending" @(ViewBag.Status == "pending" ? "selected" : "")>Pending</option>
-            </select>
-            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search organizations..." class="border rounded px-3 py-2 text-sm" />
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Search</button>
+<!-- Page Header -->
+<div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Organizations</h1>
+    <p class="text-sm text-gray-600 mt-2">Manage client organizations and their configurations</p>
+</div>
+
+<!-- Filter Panel -->
+<form method="get" action="@Url.Action("Index")" class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+    <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <h3 class="text-base font-semibold text-gray-900">Filter Organizations</h3>
+            </div>
             @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.Status as string))
             {
-                <a href="@Url.Action("Index")" class="px-4 py-2 border rounded text-sm hover:bg-gray-100">Clear</a>
+                <span class="text-xs text-gray-600 bg-blue-50 px-2 py-1 rounded">Filters Active</span>
             }
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="md:col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Search</label>
+                <input type="text" name="search" value="@ViewBag.Search" placeholder="Search by name, ABN, legal name..." 
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+            </div>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Status</option>
+                    <option value="approved" @(ViewBag.Status == "approved" ? "selected" : "")>Approved</option>
+                    <option value="pending" @(ViewBag.Status == "pending" ? "selected" : "")>Pending</option>
+                </select>
+            </div>
+            
+            <div class="flex items-end space-x-2">
+                <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Search
+                </button>
+                @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.Status as string))
+                {
+                    <a href="@Url.Action("Index")" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-100 transition-colors flex items-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </a>
+                }
+            </div>
         </div>
     </div>
 </form>
 
-<div class="bg-white rounded-lg shadow mt-4">
+<div class="bg-white rounded-lg shadow">
     <div class="overflow-x-auto">
         <table class="w-full">
             <thead class="bg-gray-50 border-b">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Legal Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ABN</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subdomain</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Legal Name</th>
+                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ABN</th>
+                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subdomain</th>
+                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -45,36 +84,88 @@
                 {
                     @foreach (var org in Model)
                     {
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">@org.Name</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">@org.LegalName</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">@org.Abn</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 md:px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">@org.Name</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">@org.LegalName</td>
+                            <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                                    </svg>
+                                    @org.Abn
+                                </div>
+                            </td>
+                            <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm">
                                 @if (!string.IsNullOrEmpty(org.Subdomain))
                                 {
-                                    <a href="https://@(org.Subdomain).debtmanager.com" target="_blank" class="text-blue-600 hover:underline">@org.Subdomain</a>
+                                    <a href="https://@(org.Subdomain).debtmanager.com" target="_blank" class="text-blue-600 hover:underline flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                        @org.Subdomain
+                                    </a>
                                 }
                                 else
                                 {
                                     <span class="text-gray-400">-</span>
                                 }
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 md:px-6 py-4 whitespace-nowrap">
                                 @if (org.IsApproved)
                                 {
-                                    <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Approved</span>
+                                    <span class="px-2 py-1 text-xs rounded-full font-semibold bg-green-100 text-green-800 border border-green-200 flex items-center w-fit">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                        Approved
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                    <span class="px-2 py-1 text-xs rounded-full font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200 flex items-center w-fit">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                        </svg>
+                                        Pending
+                                    </span>
                                 }
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @org.CreatedAtUtc.ToString("yyyy-MM-dd")
+                            <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    @org.CreatedAtUtc.ToString("yyyy-MM-dd")
+                                </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="@Url.Action("Details", new { id = org.Id })" class="text-blue-600 hover:underline mr-3">View</a>
-                                <a href="@Url.Action("Edit", new { id = org.Id })" class="text-blue-600 hover:underline">Edit</a>
+                            <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <a href="@Url.Action("Details", new { id = org.Id })" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        View
+                                    </a>
+                                    <span class="text-gray-300">|</span>
+                                    <a href="@Url.Action("Edit", new { id = org.Id })" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Edit
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -82,15 +173,20 @@
                 else
                 {
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
-                            @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.Status as string))
-                            {
-                                <text>No organizations found matching your criteria.</text>
-                            }
-                            else
-                            {
-                                <text>No organizations available.</text>
-                            }
+                        <td colspan="7" class="px-4 md:px-6 py-12 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500">
+                                @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.Status as string))
+                                {
+                                    <text>No organizations found matching your criteria.</text>
+                                }
+                                else
+                                {
+                                    <text>No organizations available.</text>
+                                }
+                            </p>
                         </td>
                     </tr>
                 }
@@ -100,41 +196,64 @@
     
     @if (totalPages > 0)
     {
-        <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
+        <div class="p-4 border-t bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div class="text-sm text-gray-600">
-                Showing @((page - 1) * pageSize + 1) to @Math.Min(page * pageSize, totalCount) of @totalCount entries
+                Showing <span class="font-medium">@((page - 1) * pageSize + 1)</span> to <span class="font-medium">@Math.Min(page * pageSize, totalCount)</span> of <span class="font-medium">@totalCount</span> entries
             </div>
-            <div class="flex gap-1">
+            <nav class="flex gap-1" aria-label="Pagination">
                 @if (page > 1)
                 {
-                    <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = page - 1, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">Previous</a>
+                    <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = page - 1, pageSize })" 
+                       class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-100 transition-colors flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Previous
+                    </a>
                 }
                 else
                 {
-                    <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Previous</button>
+                    <button disabled class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-100 text-gray-400 cursor-not-allowed flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Previous
+                    </button>
                 }
                 
                 @for (int i = Math.Max(1, page - 2); i <= Math.Min(totalPages, page + 2); i++)
                 {
                     if (i == page)
                     {
-                        <button class="px-3 py-1 border rounded text-sm bg-blue-600 text-white">@i</button>
+                        <button class="px-3 py-2 border border-blue-500 rounded-lg text-sm bg-blue-600 text-white font-medium shadow-sm">@i</button>
                     }
                     else
                     {
-                        <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = i, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">@i</a>
+                        <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = i, pageSize })" 
+                           class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-100 transition-colors">@i</a>
                     }
                 }
                 
                 @if (page < totalPages)
                 {
-                    <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = page + 1, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">Next</a>
+                    <a href="@Url.Action("Index", new { search = ViewBag.Search, status = ViewBag.Status, page = page + 1, pageSize })" 
+                       class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-100 transition-colors flex items-center">
+                        Next
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
                 }
                 else
                 {
-                    <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Next</button>
+                    <button disabled class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-100 text-gray-400 cursor-not-allowed flex items-center">
+                        Next
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
                 }
-            </div>
+            </nav>
         </div>
     }
 </div>
