@@ -7,11 +7,53 @@
 <!-- Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
 
-<div class="max-w-2xl mx-auto px-4 sm:px-6">
+<div class="max-w-2xl mx-auto px-4 sm:px-6 py-4">
+    <!-- Progress Steps -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center flex-1">
+                <div class="flex items-center text-blue-600">
+                    <div class="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-semibold text-sm">
+                        1
+                    </div>
+                    <div class="ml-2 text-sm font-medium">Find Debt</div>
+                </div>
+            </div>
+            <div class="flex-1 h-0.5 bg-gray-300 mx-4"></div>
+            <div class="flex items-center flex-1">
+                <div class="flex items-center text-gray-400" id="step2-indicator">
+                    <div class="flex items-center justify-center w-8 h-8 bg-gray-300 text-gray-600 rounded-full font-semibold text-sm">
+                        2
+                    </div>
+                    <div class="ml-2 text-sm font-medium">Enter Amount</div>
+                </div>
+            </div>
+            <div class="flex-1 h-0.5 bg-gray-300 mx-4"></div>
+            <div class="flex items-center flex-1">
+                <div class="flex items-center text-gray-400" id="step3-indicator">
+                    <div class="flex items-center justify-center w-8 h-8 bg-gray-300 text-gray-600 rounded-full font-semibold text-sm">
+                        3
+                    </div>
+                    <div class="ml-2 text-sm font-medium">Complete</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white rounded-lg shadow-lg">
-        <div class="p-4 sm:p-6 border-b">
-            <h3 class="text-lg sm:text-xl font-semibold">Quick Payment</h3>
-            <p class="text-sm text-gray-500 mt-1">Secure payment in just 2 clicks</p>
+        <!-- Header -->
+        <div class="p-4 sm:p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-900">Make a Payment</h3>
+                    <p class="text-sm text-gray-600 mt-1">Secure payment in just a few clicks ⚡</p>
+                </div>
+            </div>
         </div>
         
         <div class="p-4 sm:p-6">
@@ -19,23 +61,51 @@
             <div id="step-find-debt" class="space-y-4">
                 @if (debtId == null)
                 {
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mb-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-blue-700">
+                                    <strong>Quick Tip:</strong> Have your debt reference ready. You received it via email or letter.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Debt Reference Number</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            Debt Reference Number
+                        </label>
                         <div class="flex gap-2">
                             <input 
                                 type="text" 
                                 id="reference-input"
-                                class="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-base"
+                                class="flex-1 border-2 border-gray-300 rounded-lg px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
                                 placeholder="e.g., D-5001 or ACC123456"
                                 required />
                             <button 
                                 type="button"
                                 id="find-debt-btn"
-                                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium whitespace-nowrap">
-                                Find Debt
+                                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition font-semibold shadow-md whitespace-nowrap flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                Find
                             </button>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">Enter your debt reference to continue</p>
+                        <p class="text-xs text-gray-500 mt-2 flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Enter your unique debt reference to continue
+                        </p>
                     </div>
                 }
                 else
@@ -46,55 +116,93 @@
 
             <!-- Debt Summary (initially hidden if debtId is null) -->
             <div id="debt-summary" class="@(debtId == null ? "hidden" : "") mt-6">
-                <div class="mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
-                    <h4 class="font-semibold text-gray-900 mb-3">Payment Summary</h4>
+                <div class="mb-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-5 border-2 border-blue-100 shadow-sm">
+                    <div class="flex items-center mb-3">
+                        <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <h4 class="font-bold text-gray-900">Payment Summary</h4>
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <p class="text-gray-600">Reference</p>
-                            <p class="font-semibold text-gray-900" id="debt-reference">-</p>
+                        <div class="bg-white bg-opacity-60 rounded-lg p-3">
+                            <p class="text-gray-600 text-xs flex items-center mb-1">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                </svg>
+                                Reference
+                            </p>
+                            <p class="font-bold text-gray-900" id="debt-reference">-</p>
                         </div>
-                        <div>
-                            <p class="text-gray-600">Outstanding Balance</p>
-                            <p class="font-bold text-red-600 text-lg" id="debt-amount">-</p>
+                        <div class="bg-white bg-opacity-60 rounded-lg p-3">
+                            <p class="text-gray-600 text-xs flex items-center mb-1">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Outstanding Balance
+                            </p>
+                            <p class="font-bold text-red-600 text-xl" id="debt-amount">-</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Payment Amount -->
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Amount</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                        <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Payment Amount
+                    </label>
                     <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">$</span>
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg font-semibold">$</span>
                         <input 
                             type="number" 
                             id="payment-amount"
-                            class="w-full border-2 border-gray-300 rounded-lg pl-10 pr-4 py-3 text-lg font-semibold focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                            class="w-full border-2 border-gray-300 rounded-lg pl-10 pr-4 py-3 text-lg font-semibold focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
                             placeholder="0.00"
                             step="0.01"
                             min="0.01"
                             required />
                     </div>
-                    <div class="flex gap-2 mt-2">
-                        <button type="button" class="quick-amount-btn text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full" data-percentage="25">25%</button>
-                        <button type="button" class="quick-amount-btn text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full" data-percentage="50">50%</button>
-                        <button type="button" class="quick-amount-btn text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full" data-percentage="100">Full Amount</button>
+                    <div class="flex gap-2 mt-3">
+                        <button type="button" class="quick-amount-btn text-xs px-4 py-2 bg-gray-100 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-300 border border-gray-200 rounded-full transition font-medium" data-percentage="25">
+                            25%
+                        </button>
+                        <button type="button" class="quick-amount-btn text-xs px-4 py-2 bg-gray-100 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-300 border border-gray-200 rounded-full transition font-medium" data-percentage="50">
+                            50%
+                        </button>
+                        <button type="button" class="quick-amount-btn text-xs px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 hover:text-green-800 border border-green-300 rounded-full transition font-medium" data-percentage="100">
+                            ✓ Full Amount
+                        </button>
                     </div>
                 </div>
 
                 <!-- Payment Methods with Wallet Support -->
                 <div class="mb-6">
-                    <h4 class="font-medium text-gray-900 mb-3">Choose Payment Method</h4>
+                    <h4 class="font-medium text-gray-900 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        Choose Payment Method
+                    </h4>
                     
                     <!-- Stripe Payment Element Container -->
-                    <div id="payment-element" class="mb-4">
+                    <div id="payment-element" class="mb-4 border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
                         <!-- Stripe.js will inject payment UI here -->
+                        <div class="text-center text-gray-500 py-4">
+                            <svg class="animate-spin inline-block w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Loading payment methods...
+                        </div>
                     </div>
                     
-                    <div class="flex items-center gap-3 mt-3 text-sm text-gray-500">
-                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+                        <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                         </svg>
-                        <span>Secured by Stripe. Supports Apple Pay, Google Pay, and cards.</span>
+                        <span><strong>Secure Payment:</strong> Powered by Stripe. Supports Apple Pay, Google Pay, and cards.</span>
                     </div>
                 </div>
 
@@ -107,17 +215,25 @@
                     <button 
                         type="button"
                         id="submit-payment-btn"
-                        class="flex-1 px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span id="submit-text">Pay Now</span>
-                        <span id="submit-spinner" class="hidden">
+                        class="flex-1 px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 active:from-green-800 active:to-green-900 transition font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <span id="submit-text" class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Pay Securely Now
+                        </span>
+                        <span id="submit-spinner" class="hidden flex items-center">
                             <svg class="animate-spin inline-block w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Processing...
+                            Processing Payment...
                         </span>
                     </button>
-                    <a href="/User/Debts" class="px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-center">
+                    <a href="/User/Debts" class="px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition font-semibold text-center flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
                         Cancel
                     </a>
                 </div>
@@ -125,8 +241,21 @@
         </div>
     </div>
     
-    <div class="mt-6 text-center text-sm text-gray-500 px-4">
-        <p>🔒 Payments are secured with 256-bit SSL encryption</p>
+    <div class="mt-6 text-center">
+        <div class="flex items-center justify-center gap-6 text-sm text-gray-600">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-green-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>256-bit SSL Encryption</span>
+            </div>
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-blue-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>PCI DSS Compliant</span>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -210,6 +339,7 @@
                 currentAmount = data.amount;
                 
                 document.getElementById('debt-summary').classList.remove('hidden');
+                updateProgressStep(2);
                 
                 // Initialize payment element
                 await initializePaymentElement(debtId, data.amount, data.currency);
@@ -275,6 +405,7 @@
         
         setLoading(true);
         hideError();
+        updateProgressStep(3);
         
         try {
             const { error } = await stripe.confirmPayment({
@@ -285,14 +416,33 @@
             });
             
             if (error) {
-                showError(error.message);
-                setLoading(false);
+                // Payment failed - redirect to failure page with error details
+                const errorMessage = encodeURIComponent(error.message || 'Payment failed');
+                const errorCode = error.code || 'unknown';
+                window.location.href = `/User/Payments/Failed?error_message=${errorMessage}&error_code=${errorCode}`;
             }
             // If no error, user will be redirected to return_url
         } catch (error) {
             console.error('Payment error:', error);
             showError('An unexpected error occurred. Please try again.');
             setLoading(false);
+            updateProgressStep(2);
+        }
+    }
+
+    function updateProgressStep(step) {
+        // Update progress indicators
+        if (step >= 2) {
+            document.getElementById('step2-indicator').classList.remove('text-gray-400');
+            document.getElementById('step2-indicator').classList.add('text-blue-600');
+            document.getElementById('step2-indicator').querySelector('.bg-gray-300').classList.remove('bg-gray-300');
+            document.getElementById('step2-indicator').querySelector('.text-gray-600').classList.add('bg-blue-600', 'text-white');
+        }
+        if (step >= 3) {
+            document.getElementById('step3-indicator').classList.remove('text-gray-400');
+            document.getElementById('step3-indicator').classList.add('text-blue-600');
+            document.getElementById('step3-indicator').querySelector('.bg-gray-300').classList.remove('bg-gray-300');
+            document.getElementById('step3-indicator').querySelector('.text-gray-600').classList.add('bg-blue-600', 'text-white');
         }
     }
 
