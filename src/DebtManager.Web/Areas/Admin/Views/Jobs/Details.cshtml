@@ -35,7 +35,7 @@
             <dd class="mb-2">@Model.Queue</dd>
         </dl>
 
-        <form method="post" asp-action="UpdateCron" class="mt-4 flex items-end gap-2">
+        <form method="post" action="/Admin/Jobs/UpdateCron" class="mt-4 flex items-end gap-2">
             @Html.AntiForgeryToken()
             <input type="hidden" name="id" value="@Model.Id" />
             <div>
@@ -45,13 +45,13 @@
             <button class="px-4 py-2 bg-blue-600 text-white rounded">Save</button>
         </form>
 
-        <form method="post" asp-action="Trigger" class="mt-2">
+        <form method="post" action="/Admin/Jobs/Trigger" class="mt-2">
             @Html.AntiForgeryToken()
             <input type="hidden" name="id" value="@Model.Id" />
             <button class="px-4 py-2 bg-emerald-600 text-white rounded">Trigger Now</button>
         </form>
 
-        <form method="post" asp-action="RequeueFailedDispatches" class="mt-2">
+        <form method="post" action="/Admin/Jobs/RequeueFailedDispatches" class="mt-2">
             @Html.AntiForgeryToken()
             <button class="px-4 py-2 bg-orange-600 text-white rounded" title="Requeue all failed email/SMS dispatches">Requeue Failed Dispatches</button>
         </form>

@@ -32,6 +32,16 @@ public partial class ScenariosController : Controller
         ViewBag.ThemeName = theme?.Name ?? "Default";
         ViewBag.Title = "Test Scenarios";
 
+        // Check database connectivity
+        try
+        {
+            ViewBag.DatabaseConnected = await _context.Database.CanConnectAsync();
+        }
+        catch
+        {
+            ViewBag.DatabaseConnected = false;
+        }
+
         // Faker defaults for quick form
         var faker = new Faker("en_AU");
         var first = faker.Name.FirstName();
@@ -83,6 +93,14 @@ public partial class ScenariosController : Controller
     {
         try
         {
+            // Test database connectivity first
+            var canConnect = await _context.Database.CanConnectAsync();
+            if (!canConnect)
+            {
+                TempData["ErrorMessage"] = "❌ Cannot connect to database. Please ensure SQL Server is running on localhost:1433. Run: cd deploy && docker compose up -d";
+                return RedirectToAction(nameof(Index));
+            }
+
             await DummyDataSeeder.SeedDummyDataAsync(_context);
             TempData["SuccessMessage"] = "Dummy data seeded successfully!";
         }
@@ -100,6 +118,14 @@ public partial class ScenariosController : Controller
     {
         try
         {
+            // Test database connectivity first
+            var canConnect = await _context.Database.CanConnectAsync();
+            if (!canConnect)
+            {
+                TempData["ErrorMessage"] = "❌ Cannot connect to database. Please ensure SQL Server is running on localhost:1433. Run: cd deploy && docker compose up -d";
+                return RedirectToAction(nameof(Index));
+            }
+
             // Remove all dummy data
             var dummyOrgs = await _context.Organizations.Where(o => o.TagsCsv.Contains("dummy")).ToListAsync();
             var dummyDebtors = await _context.Debtors.Where(d => d.TagsCsv.Contains("dummy")).ToListAsync();
@@ -134,13 +160,21 @@ public partial class ScenariosController : Controller
     {
         try
         {
+            // Test database connectivity first
+            var canConnect = await _context.Database.CanConnectAsync();
+            if (!canConnect)
+            {
+                TempData["ErrorMessage"] = "❌ Cannot connect to database. Please ensure SQL Server is running on localhost:1433. Run: cd deploy && docker compose up -d";
+                return RedirectToAction(nameof(Index));
+            }
+
             var result = await ScenarioGenerator.GenerateAsync(_context, req);
             await CreateScenarioActorsAsync(result);
-            TempData["SuccessMessage"] = $"Generated pack {result.PackId} ({result.PackName}) � Orgs: {result.OrganizationIds.Count}, Debtors: {result.DebtorIds.Count}, Debts: {result.DebtIds.Count}. Impersonation users created.";
+            TempData["SuccessMessage"] = $"Generated pack {result.PackId} ({result.PackName}) – Orgs: {result.OrganizationIds.Count}, Debtors: {result.DebtorIds.Count}, Debts: {result.DebtIds.Count}. Impersonation users created.";
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = $"Error generating scenarios: {ex.Message}";
+            TempData["ErrorMessage"] = $"Error generating scenarios: {ex.Message}<br/>Stack: {ex.StackTrace?.Substring(0, Math.Min(500, ex.StackTrace?.Length ?? 0))}";
         }
         return RedirectToAction(nameof(Index));
     }
@@ -187,8 +221,19 @@ public partial class ScenariosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> QuickDebtorCase(string orgName, string debtorEmail, string debtorFirstName, string debtorLastName, string phone, decimal amount)
     {
+        // Log to verify this method is being called
+        System.Diagnostics.Debug.WriteLine($"QuickDebtorCase called: orgName={orgName}, email={debtorEmail}");
+        
         try
         {
+            // Test database connectivity first
+            var canConnect = await _context.Database.CanConnectAsync();
+            if (!canConnect)
+            {
+                TempData["ErrorMessage"] = "❌ Cannot connect to database. Please ensure SQL Server is running on localhost:1433. Run: cd deploy && docker compose up -d";
+                return RedirectToAction(nameof(Index));
+            }
+
             // Auto-populate missing inputs with Faker defaults
             var faker = new Faker("en_AU");
             if (string.IsNullOrWhiteSpace(orgName)) orgName = faker.Company.CompanyName();
@@ -233,11 +278,16 @@ public partial class ScenariosController : Controller
             var portalUser = await EnsureUserAsync(debtorEmail, externalId: $"debtor-{debtor.Id}", roles: new[] { "User" });
             await EnsureProfileAsync(portalUser.Id, debtorId: debtor.Id, organizationId: org.Id);
 
-            TempData["SuccessMessage"] = $"Quick case created. Org={org.Name}, Debtor={debtorEmail}, Debt={debt.Id}. You can impersonate client {clientEmail} or debtor {debtorEmail}.";
+            // Store the debt ID and debtor email in TempData for easy access
+            TempData["SuccessMessage"] = $"✅ Quick case created successfully!";
+            TempData["TestDebtId"] = debt.Id.ToString();
+            TempData["TestDebtorEmail"] = debtorEmail;
+            TempData["TestClientEmail"] = clientEmail;
+            TempData["AcceptUrl"] = $"/User/Accept/{debt.Id}";
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = ex.Message;
+            TempData["ErrorMessage"] = $"Error creating quick case: {ex.Message}<br/><br/>Inner: {ex.InnerException?.Message}<br/><br/>Stack: {ex.StackTrace?.Substring(0, Math.Min(500, ex.StackTrace?.Length ?? 0))}";
         }
 
         return RedirectToAction(nameof(Index));
@@ -249,6 +299,14 @@ public partial class ScenariosController : Controller
     {
         try
         {
+            // Test database connectivity first
+            var canConnect = await _context.Database.CanConnectAsync();
+            if (!canConnect)
+            {
+                TempData["ErrorMessage"] = "❌ Cannot connect to database. Please ensure SQL Server is running on localhost:1433. Run: cd deploy && docker compose up -d";
+                return RedirectToAction(nameof(Index));
+            }
+
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(contactEmail))
             {
                 TempData["ErrorMessage"] = "Organization name and contact email are required.";
@@ -278,7 +336,7 @@ public partial class ScenariosController : Controller
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = ex.Message;
+            TempData["ErrorMessage"] = $"Error creating client org: {ex.Message}";
         }
 
         return RedirectToAction(nameof(Index));

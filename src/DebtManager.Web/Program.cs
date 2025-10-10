@@ -141,7 +141,7 @@ var app = builder.Build();
 var maintenance = app.Services.GetRequiredService<IMaintenanceState>();
 try
 {
-    await DebtManager.Web.Data.DbInitializer.InitializeAsync(app.Services, app.Environment);
+    // await DebtManager.Web.Data.DbInitializer.InitializeAsync(app.Services, app.Environment);
 }
 catch (Exception ex)
 {

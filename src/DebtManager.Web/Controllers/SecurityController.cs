@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Text.Json;
 using DebtManager.Infrastructure.Identity;
 using DebtManager.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +10,7 @@ using DebtManager.Contracts.Notifications;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
 using DebtManager.Contracts.Configuration;
+using Microsoft.Extensions.Configuration;
 
 namespace DebtManager.Web.Controllers;
 
@@ -19,13 +21,20 @@ public class SecurityController : Controller
     private readonly ISmsSender _smsSender;
     private readonly AppDbContext _db;
     private readonly IAppConfigService _cfg;
+    private readonly IConfiguration _configuration;
 
-    public SecurityController(UserManager<ApplicationUser> userManager, ISmsSender smsSender, AppDbContext db, IAppConfigService cfg)
+    public SecurityController(
+        UserManager<ApplicationUser> userManager, 
+        ISmsSender smsSender, 
+        AppDbContext db, 
+        IAppConfigService cfg,
+        IConfiguration configuration)
     {
         _userManager = userManager;
         _smsSender = smsSender;
         _db = db;
         _cfg = cfg;
+        _configuration = configuration;
     }
 
     [HttpGet]
@@ -50,8 +59,8 @@ public class SecurityController : Controller
 
         var (heading, subheading, tips) = BuildCopyForScope(isAdmin);
         
-        // Dev mode: Check if bypass is enabled
-        var bypass = (await _cfg.GetAsync<bool>("Security:BypassOtpVerification")) == true;
+        // Dev mode: Check if bypass is enabled from appsettings.json
+        var bypass = _configuration.GetValue<bool>("Security:BypassOtpVerification");
 
         // Persisted phone from last SendSms
         var lastSmsPhone = TempData.Peek("SmsPhone") as string;
@@ -105,8 +114,8 @@ public class SecurityController : Controller
         var normalizedPhone = NormalizePhone(phoneNumber);
         TempData["SmsPhone"] = normalizedPhone;
 
-        // In dev, allow bypass via IAppConfig toggle
-        var bypass = (await _cfg.GetAsync<bool>("Security:BypassOtpVerification")) == true;
+        // Dev mode: Check if bypass is enabled from appsettings.json
+        var bypass = _configuration.GetValue<bool>("Security:BypassOtpVerification");
         if (!bypass)
         {
             var token = await _userManager.GenerateChangePhoneNumberTokenAsync(user, normalizedPhone);
@@ -132,7 +141,8 @@ public class SecurityController : Controller
         var showTotp = isAdmin;    // Admins: TOTP only
         var showSms = !isAdmin;    // Client/User: SMS OTP only
 
-        var bypass = (await _cfg.GetAsync<bool>("Security:BypassOtpVerification")) == true;
+        // Dev mode: Check if bypass is enabled from appsettings.json
+        var bypass = _configuration.GetValue<bool>("Security:BypassOtpVerification");
 
         bool phoneVerified = false;
         bool totpVerified = false;
@@ -149,13 +159,21 @@ public class SecurityController : Controller
             {
                 ModelState.AddModelError("PhoneNumber", "Phone number is required.");
             }
-            else if (!bypass && string.IsNullOrWhiteSpace(vm.SmsCode))
+            else if (string.IsNullOrWhiteSpace(vm.SmsCode))
             {
                 ModelState.AddModelError("SmsCode", "SMS verification code is required.");
             }
             else
             {
-                if (!bypass)
+                if (bypass)
+                {
+                    // Bypass mode - accept any code (e.g., 000000) and auto-verify
+                    user.PhoneNumber = phoneToVerify;
+                    user.PhoneNumberConfirmed = true;
+                    phoneVerified = true;
+                    vm.PhoneNumber = phoneToVerify;
+                }
+                else
                 {
                     // Atomically set + confirm phone using Identity helper
                     var result = await _userManager.ChangePhoneNumberAsync(user, phoneToVerify, vm.SmsCode!);
@@ -172,27 +190,24 @@ public class SecurityController : Controller
                         vm.PhoneNumber = phoneToVerify;
                     }
                 }
-                else
-                {
-                    // Bypass mode - auto-verify
-                    user.PhoneNumber = phoneToVerify;
-                    user.PhoneNumberConfirmed = true;
-                    phoneVerified = true;
-                    vm.PhoneNumber = phoneToVerify;
-                }
             }
         }
 
         // Conditional validation for TOTP
         if (showTotp)
         {
-            if (!bypass && string.IsNullOrWhiteSpace(vm.TotpCode))
+            if (string.IsNullOrWhiteSpace(vm.TotpCode))
             {
                 ModelState.AddModelError("TotpCode", "Authenticator app code is required.");
             }
             else
             {
-                if (!bypass)
+                if (bypass)
+                {
+                    // Bypass mode - accept any code and auto-verify
+                    totpVerified = true;
+                }
+                else
                 {
                     var verified = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, vm.TotpCode!);
                     if (!verified)
@@ -204,11 +219,6 @@ public class SecurityController : Controller
                         totpVerified = true;
                     }
                 }
-                else
-                {
-                    // Bypass mode - auto-verify
-                    totpVerified = true;
-                }
             }
         }
 
@@ -216,12 +226,14 @@ public class SecurityController : Controller
         if (!ModelState.IsValid)
         {
             // Store validation errors in TempData for display
-            TempData["ValidationErrors"] = ModelState
+            var validationErrors = ModelState
                 .Where(x => x.Value?.Errors.Count > 0)
                 .ToDictionary(
                     kvp => kvp.Key,
                     kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
                 );
+            
+            TempData["ValidationErrors"] = JsonSerializer.Serialize(validationErrors);
             
             return RedirectToAction(nameof(Setup));
         }
@@ -362,18 +374,18 @@ public class SecurityController : Controller
         {
             return (
                 heading: "Secure your admin account with an Authenticator App",
-                subheading: "Admins must use Time–based One–Time Passwords (TOTP). Scan the QR code and enter the 6–digit code from your app to finish.",
+                subheading: "Admins must use Timeï¿½based Oneï¿½Time Passwords (TOTP). Scan the QR code and enter the 6ï¿½digit code from your app to finish.",
                 tips: new List<string>
                 {
                     "Use any authenticator app (Microsoft, Google, Authy).",
                     "Back up your recovery codes in your password manager.",
-                    "TOTP will be required on every admin sign–in."
+                    "TOTP will be required on every admin signï¿½in."
                 }
             );
         }
         return (
             heading: "Verify your phone number",
-            subheading: "We send a one–time SMS code to confirm it's you. This keeps your account secure without needing an authenticator app.",
+            subheading: "We send a oneï¿½time SMS code to confirm it's you. This keeps your account secure without needing an authenticator app.",
             tips: new List<string>
             {
                 "Enter a mobile number where you can receive SMS messages.",

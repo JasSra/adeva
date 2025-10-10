@@ -10,7 +10,7 @@
     <h2 class="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Fake Sign-in (Development)</h2>
     <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Generate a fake identity for local onboarding without Azure AD B2C. Override any field and choose scopes.</p>
 
-    <form method="post" asp-action="FakeSignin" class="space-y-4">
+    <form method="post" action="/Dev/FakeSignin" class="space-y-4">
         @Html.AntiForgeryToken()
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>

@@ -1,8 +1,14 @@
 @model DebtManager.Web.Controllers.TotpSetupVm
+@using System.Text.Json
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Security Setup";
-    var validationErrors = TempData["ValidationErrors"] as Dictionary<string, string[]> ?? new Dictionary<string, string[]>();
+    
+    var validationErrors = new Dictionary<string, string[]>();
+    if (TempData["ValidationErrors"] is string json && !string.IsNullOrWhiteSpace(json))
+    {
+        validationErrors = JsonSerializer.Deserialize<Dictionary<string, string[]>>(json) ?? new Dictionary<string, string[]>();
+    }
 }
 
 <div class="max-w-6xl mx-auto bg-white/95 dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8">

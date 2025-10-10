@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DebtManager.Contracts.Configuration;
 using Microsoft.AspNetCore.Mvc;
 
@@ -52,8 +53,18 @@ public partial class ConfigurationController : Controller
             TempData["Message"] = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
             return RedirectToAction("Secrets");
         }
+        
+        // Audit log
+        var existingValue = await _configService.GetAsync(vm.Key);
+        var action = existingValue == null ? "CREATE_CONFIG" : "UPDATE_CONFIG";
+        await _auditService.LogAsync(action, "Configuration", vm.Key, JsonSerializer.Serialize(new { 
+            key = vm.Key, 
+            isSecret = vm.IsSecret,
+            valueChanged = existingValue != vm.Value 
+        }));
+        
         await _configService.SetAsync(vm.Key, vm.Value, vm.IsSecret);
-        TempData["Message"] = "Configuration saved";
+        TempData["Message"] = $"Configuration '{vm.Key}' saved successfully";
         return RedirectToAction("Secrets");
     }
 
@@ -63,10 +74,26 @@ public partial class ConfigurationController : Controller
     {
         if (!string.IsNullOrWhiteSpace(key))
         {
+            // Audit log
+            await _auditService.LogAsync("DELETE_CONFIG", "Configuration", key,  key );
+            
             await _configService.DeleteAsync(key);
-            TempData["Message"] = $"Deleted {key}";
+            TempData["Message"] = $"Configuration '{key}' deleted successfully";
         }
         return RedirectToAction("Secrets");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reveal(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key)) return BadRequest();
+
+        // Audit without exposing secret value
+        await _auditService.LogAsync("REVEAL_CONFIG", "Configuration", key);
+
+        var value = await _configService.GetAsync(key);
+        return Json(new { key, value });
     }
 
     private static IEnumerable<string> ValidateConfigEntry(string key, string? value)

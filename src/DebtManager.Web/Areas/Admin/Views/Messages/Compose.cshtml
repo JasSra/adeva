@@ -12,7 +12,7 @@
         <div class="p-3 mb-4 bg-green-100 text-green-800 rounded">@ok</div>
     }
 
-    <form method="post" asp-action="Compose" class="space-y-6" id="composeForm">
+    <form method="post" action="/Admin/Messages/Compose" class="space-y-6" id="composeForm">
         @Html.AntiForgeryToken()
 
         <div>

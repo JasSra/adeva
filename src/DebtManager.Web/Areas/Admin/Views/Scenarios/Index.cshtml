@@ -10,6 +10,37 @@
     </p>
 </div>
 
+@* Database Status Banner *@
+@if (ViewBag.DatabaseConnected == false)
+{
+    <div class="mb-6 bg-red-50 border-2 border-red-500 text-red-900 px-4 py-4 rounded-lg">
+        <div class="flex items-start">
+            <svg class="w-6 h-6 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            <div class="flex-1">
+                <h3 class="font-bold text-lg">❌ Database Not Connected</h3>
+                <p class="mt-2">Cannot connect to SQL Server on localhost:1433. The Scenarios buttons will not work until the database is running.</p>
+                <div class="mt-3 p-3 bg-red-100 rounded border border-red-300">
+                    <p class="font-semibold mb-1">To start SQL Server:</p>
+                    <code class="block bg-gray-900 text-green-400 px-3 py-2 rounded mt-2 font-mono text-sm">cd deploy && docker compose up -d</code>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (ViewBag.DatabaseConnected == true)
+{
+    <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span class="font-medium">✅ Database Connected - SQL Server on localhost:1433</span>
+        </div>
+    </div>
+}
+
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded">
@@ -17,8 +48,39 @@
             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
             </svg>
-            @TempData["SuccessMessage"]
+            <span>@TempData["SuccessMessage"]</span>
         </div>
+        @if (TempData["AcceptUrl"] != null)
+        {
+            <div class="mt-4 p-4 bg-white border border-green-300 rounded">
+                <h4 class="font-semibold text-green-900 mb-2">🎯 Test Accept Debt Page:</h4>
+                <div class="space-y-2">
+                    <div>
+                        <span class="text-sm font-medium">Debtor Email:</span>
+                        <code class="ml-2 px-2 py-1 bg-gray-100 rounded text-sm">@TempData["TestDebtorEmail"]</code>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium">Client Email:</span>
+                        <code class="ml-2 px-2 py-1 bg-gray-100 rounded text-sm">@TempData["TestClientEmail"]</code>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium">Accept URL:</span>
+                        <div class="mt-1 flex gap-2">
+                            <code class="flex-1 px-2 py-1 bg-gray-100 rounded text-sm">@TempData["AcceptUrl"]</code>
+                            <button onclick="copyAcceptUrl('@TempData["AcceptUrl"]')" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">Copy</button>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                        <a href="/Dev/Impersonate?email=@TempData["TestDebtorEmail"]" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm">
+                            🎭 Impersonate Debtor
+                        </a>
+                        <a href="@TempData["AcceptUrl"]" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                            🔗 Open Accept Page
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 }
 
@@ -69,7 +131,7 @@
             <p class="text-xs text-gray-500">Creates org (if needed), debtor, debt, and user accounts. Then impersonate to test UX.</p>
         </div>
         <div class="p-4">
-            <form method="post" asp-action="QuickDebtorCase" class="space-y-3">
+            <form method="post" action="/Admin/Scenarios/QuickDebtorCase" class="space-y-3">
                 @Html.AntiForgeryToken()
                 <div>
                     <label class="block text-sm">Organization Name</label>
@@ -113,7 +175,7 @@
             <p class="text-xs text-gray-500">Creates multiple orgs, customers, debts, plans and transactions.</p>
         </div>
         <div class="p-4">
-            <form method="post" asp-action="Generate" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <form method="post" action="/Admin/Scenarios/Generate" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                 @Html.AntiForgeryToken()
                 <div class="md:col-span-2">
                     <label class="block text-sm">Pack Name</label>
@@ -159,7 +221,7 @@
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Maintenance</h3>
         </div>
         <div class="p-4 space-y-3">
-            <form method="post" asp-action="Clear" onsubmit="return confirm('Clear all dummy data?');">
+            <form method="post" action="/Admin/Scenarios/Clear" onsubmit="return confirm('Clear all dummy data?');">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 w-full">Clear All Dummy Data</button>
             </form>
@@ -179,3 +241,11 @@
         <a href="/Admin/Payments" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">View Payments</a>
     </div>
 </div>
+
+<script>
+function copyAcceptUrl(url) {
+    navigator.clipboard.writeText(window.location.origin + url).then(() => {
+        alert('Accept URL copied to clipboard!');
+    });
+}
+</script>
