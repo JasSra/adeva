@@ -73,57 +73,145 @@
 
         @if (ViewBag.ShowReferenceInput == true)
         {
-            <!-- Reference Input Section -->
-            <div id="step-find-debt" class="max-w-2xl mx-auto">
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden animate-fade-in-up">
-                    <div class="p-6 border-b dark:border-gray-700" style="border-top: 4px solid var(--primary)">
-                        <h3 class="text-3xl font-bold dark:text-white mb-2">Accept Debt</h3>
-                        <p class="text-gray-600 dark:text-gray-400">Enter your debt reference number to continue</p>
+            <!-- Debt Acceptance Onboarding Section -->
+            <div id="step-find-debt" class="max-w-4xl mx-auto">
+                <!-- Hero Section with Context -->
+                <div class="text-center mb-8 animate-fade-in-up">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 mb-4 shadow-lg">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
                     </div>
-                    <div class="p-6">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Debt Reference Number</label>
-                                <div class="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        id="reference-input"
-                                        class="flex-1 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                        placeholder="e.g., D-5a3b7c9d or ACC123456"
-                                        required />
-                                    <button 
-                                        type="button"
-                                        id="find-debt-btn"
-                                        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-semibold whitespace-nowrap shadow-lg">
-                                        Find Debt
-                                    </button>
-                                </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                    <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    Enter the reference number from your email or account statement
-                                </p>
+                    <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-3">Review & Accept Your Debt</h1>
+                    <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                        You're taking an important step toward resolving your outstanding balance. 
+                        Let's start by finding your debt record.
+                    </p>
+                </div>
+
+                <!-- Main Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden animate-fade-in-up">
+                    <!-- Progress Indicator -->
+                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 px-6 py-4 border-b dark:border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm">1</div>
+                                <span class="font-semibold text-gray-900 dark:text-white">Find Your Debt</span>
                             </div>
-                            <div id="error-message" class="hidden p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <div class="flex-1">
-                                        <span id="error-text" class="text-sm text-red-700 dark:text-red-400"></span>
-                                    </div>
-                                </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold text-sm">2</div>
+                                <span class="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline">Review Details</span>
                             </div>
-                            <div id="loading-indicator" class="hidden text-center py-4">
-                                <svg class="animate-spin h-8 w-8 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Searching for debt...</p>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold text-sm">3</div>
+                                <span class="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline">Select Payment Plan</span>
                             </div>
                         </div>
                     </div>
+
+                    <div class="p-8">
+                        <!-- Information Banner -->
+                        <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 rounded-r-lg">
+                            <div class="flex gap-3">
+                                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <h3 class="font-semibold text-blue-900 dark:text-blue-300 mb-1">Where to find your reference number?</h3>
+                                    <p class="text-sm text-blue-800 dark:text-blue-300">
+                                        Check your email notification, account statement, or any correspondence from the organization. 
+                                        It may look like <span class="font-mono font-semibold">D-5a3b7c9d</span> or <span class="font-mono font-semibold">ACC123456</span>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Input Section -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                                    </svg>
+                                    Enter Your Debt Reference Number
+                                </label>
+                                <div class="relative">
+                                    <input 
+                                        type="text" 
+                                        id="reference-input"
+                                        class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl px-5 py-4 text-lg font-medium focus:border-blue-500 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900 transition-all duration-200 pl-12"
+                                        placeholder="Enter reference number (e.g., D-5a3b7c9d)"
+                                        autocomplete="off"
+                                        required />
+                                    <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 ml-1">
+                                    Reference numbers are case-insensitive
+                                </p>
+                            </div>
+
+                            <!-- Action Button -->
+                            <button 
+                                type="button"
+                                id="find-debt-btn"
+                                class="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 group">
+                                <span>Continue to Review</span>
+                                <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                </svg>
+                            </button>
+
+                            <!-- Error Message -->
+                            <div id="error-message" class="hidden p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-r-lg">
+                                <div class="flex gap-3">
+                                    <svg class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-red-900 dark:text-red-300 mb-1">Unable to Find Debt</h4>
+                                        <p id="error-text" class="text-sm text-red-800 dark:text-red-400"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Loading State -->
+                            <div id="loading-indicator" class="hidden py-8">
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="relative">
+                                        <div class="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 rounded-full"></div>
+                                        <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0"></div>
+                                    </div>
+                                    <p class="text-gray-600 dark:text-gray-400 mt-4 font-medium">Searching for your debt...</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">This will only take a moment</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Help Section -->
+                        <div class="mt-8 pt-6 border-t dark:border-gray-700">
+                            <div class="flex items-start gap-3 text-sm">
+                                <svg class="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                                <div>
+                                    <p class="text-gray-600 dark:text-gray-400">
+                                        <strong class="text-gray-900 dark:text-white">Need help?</strong> If you can't find your reference number or have questions, 
+                                        please <a href="/User/Contact" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium underline">contact support</a>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Badge -->
+                <div class="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                    <span>Your information is secure and encrypted</span>
                 </div>
             </div>
         }
@@ -988,6 +1076,9 @@
         const loadingIndicator = document.getElementById('loading-indicator');
 
         if (findDebtBtn && referenceInput) {
+            // Focus on input when page loads
+            setTimeout(() => referenceInput.focus(), 300);
+
             // Allow Enter key to trigger search
             referenceInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -996,10 +1087,16 @@
                 }
             });
 
+            // Clear error on input
+            referenceInput.addEventListener('input', function() {
+                hideError();
+            });
+
             findDebtBtn.addEventListener('click', async function() {
                 const reference = referenceInput.value.trim();
                 if (!reference) {
-                    showError('Please enter a debt reference number');
+                    showError('Please enter your debt reference number to continue.');
+                    referenceInput.focus();
                     return;
                 }
                 
@@ -1016,23 +1113,54 @@
                 const data = await response.json();
                 
                 if (!response.ok) {
-                    showError(data.error || 'Debt not found. Please check your reference number and try again.');
+                    let errorMsg = 'We couldn\'t find a debt with this reference number.';
+                    
+                    if (response.status === 404) {
+                        errorMsg = `We couldn't find a debt matching <strong class="font-mono">${reference}</strong>. Please check the reference number and try again.`;
+                    } else if (response.status === 400) {
+                        errorMsg = data.error || 'This debt cannot be accepted at this time. Please contact support if you believe this is an error.';
+                    } else if (response.status === 401) {
+                        errorMsg = 'Please complete your profile setup before accepting a debt.';
+                    }
+                    
+                    showError(errorMsg);
                     return;
                 }
                 
-                // Redirect to the debt acceptance page with the ID
-                window.location.href = `/User/Accept/${data.debtId}`;
+                // Success - show brief feedback before redirect
+                showSuccess(data.reference);
+                setTimeout(() => {
+                    window.location.href = `/User/Accept/${data.debtId}`;
+                }, 800);
             } catch (error) {
-                showError('Failed to find debt. Please try again.');
+                showError('We\'re having trouble connecting to the server. Please check your internet connection and try again.');
                 console.error('Error finding debt:', error);
             } finally {
                 showLoading(false);
             }
         }
 
+        function showSuccess(reference) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'p-4 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 rounded-r-lg animate-fade-in-up';
+            successDiv.innerHTML = `
+                <div class="flex gap-3">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                        <h4 class="font-semibold text-green-900 dark:text-green-300">Debt Found!</h4>
+                        <p class="text-sm text-green-800 dark:text-green-400">Loading details for ${reference}...</p>
+                    </div>
+                </div>
+            `;
+            errorMessage.parentElement.insertBefore(successDiv, errorMessage);
+        }
+
         function showError(message) {
-            errorText.textContent = message;
+            errorText.innerHTML = message;
             errorMessage.classList.remove('hidden');
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         function hideError() {
@@ -1043,11 +1171,15 @@
             if (show) {
                 loadingIndicator.classList.remove('hidden');
                 findDebtBtn.disabled = true;
-                findDebtBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                findDebtBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                referenceInput.disabled = true;
+                referenceInput.classList.add('opacity-60');
             } else {
                 loadingIndicator.classList.add('hidden');
                 findDebtBtn.disabled = false;
-                findDebtBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                findDebtBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                referenceInput.disabled = false;
+                referenceInput.classList.remove('opacity-60');
             }
         }
         </text>
