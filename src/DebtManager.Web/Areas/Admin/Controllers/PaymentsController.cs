@@ -82,4 +82,31 @@ public class PaymentsController : Controller
 
         return View(payment);
     }
+
+    public IActionResult CreateAdhoc()
+    {
+        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
+        ViewBag.ThemeName = theme?.Name ?? "Default";
+        ViewBag.Title = "Create Adhoc Payment";
+        return View();
+    }
+
+    public async Task<IActionResult> RetryFailed()
+    {
+        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
+        ViewBag.ThemeName = theme?.Name ?? "Default";
+        ViewBag.Title = "Retry Failed Payments";
+
+        var failedTransactions = await _db.Transactions
+            .Include(t => t.Debtor)
+            .Include(t => t.Debt)
+            .Where(t => t.Status == DebtManager.Domain.Payments.TransactionStatus.Failed)
+            .Where(t => t.ProcessedAtUtc >= DateTime.UtcNow.AddDays(-30))
+            .OrderByDescending(t => t.ProcessedAtUtc)
+            .ToListAsync();
+
+        await _auditService.LogAsync("VIEW_FAILED_PAYMENTS", "Payments", details: $"Viewed {failedTransactions.Count} failed payments");
+
+        return View(failedTransactions);
+    }
 }

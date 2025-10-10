@@ -65,15 +65,18 @@ public class PaymentWebhookJob
 {
     private readonly ITransactionRepository _transactionRepository;
     private readonly IDebtRepository _debtRepository;
+    private readonly IBackgroundJobClient _backgroundJobClient;
     private readonly ILogger<PaymentWebhookJob> _logger;
 
     public PaymentWebhookJob(
         ITransactionRepository transactionRepository,
         IDebtRepository debtRepository,
+        IBackgroundJobClient backgroundJobClient,
         ILogger<PaymentWebhookJob> logger)
     {
         _transactionRepository = transactionRepository;
         _debtRepository = debtRepository;
+        _backgroundJobClient = backgroundJobClient;
         _logger = logger;
     }
 
@@ -185,6 +188,10 @@ public class PaymentWebhookJob
         }
 
         await _transactionRepository.SaveChangesAsync(ct);
+
+        // Queue receipt generation job
+        _backgroundJobClient.Enqueue<ReceiptGenerationJob>(
+            job => job.GenerateReceiptAsync(transaction.Id, CancellationToken.None));
 
         _logger.LogInformation(
             "Payment succeeded for debt {DebtId}, amount {Amount} {Currency}, transaction {TxId}",

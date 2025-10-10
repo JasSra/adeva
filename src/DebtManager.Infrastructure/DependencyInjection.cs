@@ -50,6 +50,11 @@ public static class DependencyInjection
         // Payment Services
         services.AddScoped<IPaymentService, StripePaymentService>();
         services.AddScoped<IWebhookProcessor, StripeWebhookProcessor>();
+        services.AddScoped<IReceiptService, ReceiptService>();
+        
+        // Payment Jobs
+        services.AddScoped<ReceiptGenerationJob>();
+        services.AddScoped<RetryFailedPaymentsJob>();
 
         // Document Generation
         services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
