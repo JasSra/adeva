@@ -18,6 +18,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using DebtManager.Web.Middleware;
 using DebtManager.Web.Jobs;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
+using Microsoft.Extensions.Caching.Distributed;
+using DebtManager.Contracts.Configuration;
+ 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +43,24 @@ builder.Services.AddSingleton<DebtManager.Web.Services.IMaintenanceState, DebtMa
 
 // Health checks
 builder.Services.AddHealthChecks();
+
+// Distributed cache (Redis)
+var redisCs = builder.Configuration.GetConnectionString("Redis")
+    ?? builder.Configuration["Redis:ConnectionString"]
+    ?? Environment.GetEnvironmentVariable("REDIS_CONNECTION");
+if (!string.IsNullOrWhiteSpace(redisCs))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisCs;
+        options.InstanceName = "adeva:";
+    });
+}
+else
+{
+    // Fallback: in-memory dist cache (optional). If not added, AppConfigService will fallback to local cache.
+    // builder.Services.AddDistributedMemoryCache();
+}
 
 // EF Core
 var cs = builder.Configuration.GetConnectionString("Default") ?? "Server=(localdb)\\MSSQLLocalDB;Database=DebtManager;Trusted_Connection=True;";
@@ -111,11 +133,14 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IMessageQueueService, MessageQueueService>();
 builder.Services.AddScoped<IOnboardingNotificationService, OnboardingNotificationService>();
 builder.Services.AddScoped<MessageDispatchJob>();
-builder.Services.AddScoped<IBusinessLookupService>(x =>
+
+// ABR business lookup using runtime-managed API key (via IAppConfigService)
+builder.Services.AddScoped<IBusinessLookupService>(sp =>
 {
-    var logger = x.GetRequiredService<ILogger<AbrBusinessLookupService>>();
-    var key = builder.Configuration["AbrApi:ApiKey"];
-    return new AbrBusinessLookupService(builder.Configuration["AbrApi:ApiKey"] ?? string.Empty , logger);
+    var logger = sp.GetRequiredService<ILogger<AbrBusinessLookupService>>();
+    var cfg = sp.GetRequiredService<IAppConfigService>();
+    var key = cfg.GetAsync("AbrApi:ApiKey").GetAwaiter().GetResult() ?? string.Empty;
+    return new AbrBusinessLookupService(key, logger);
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);

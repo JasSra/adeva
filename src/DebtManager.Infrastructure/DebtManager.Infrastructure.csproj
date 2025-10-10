@@ -30,6 +30,5 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="External\BusinessLookup\" />
-    <Folder Include="Migrations\" />
   </ItemGroup>
 </Project>

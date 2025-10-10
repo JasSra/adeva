@@ -59,8 +59,8 @@ public class SecurityController : Controller
 
         var (heading, subheading, tips) = BuildCopyForScope(isAdmin);
         
-        // Dev mode: Check if bypass is enabled from appsettings.json
-        var bypass = _configuration.GetValue<bool>("Security:BypassOtpVerification");
+        // Prefer runtime-managed config; fallback to appsettings
+        var bypass = await GetBypassAsync();
 
         // Persisted phone from last SendSms
         var lastSmsPhone = TempData.Peek("SmsPhone") as string;
@@ -114,8 +114,7 @@ public class SecurityController : Controller
         var normalizedPhone = NormalizePhone(phoneNumber);
         TempData["SmsPhone"] = normalizedPhone;
 
-        // Dev mode: Check if bypass is enabled from appsettings.json
-        var bypass = _configuration.GetValue<bool>("Security:BypassOtpVerification");
+        var bypass = await GetBypassAsync();
         if (!bypass)
         {
             var token = await _userManager.GenerateChangePhoneNumberTokenAsync(user, normalizedPhone);
@@ -141,8 +140,7 @@ public class SecurityController : Controller
         var showTotp = isAdmin;    // Admins: TOTP only
         var showSms = !isAdmin;    // Client/User: SMS OTP only
 
-        // Dev mode: Check if bypass is enabled from appsettings.json
-        var bypass = _configuration.GetValue<bool>("Security:BypassOtpVerification");
+        var bypass = await GetBypassAsync();
 
         bool phoneVerified = false;
         bool totpVerified = false;
@@ -393,6 +391,16 @@ public class SecurityController : Controller
                 "You can update your phone later from your profile."
             }
         );
+    }
+
+    private async Task<bool> GetBypassAsync()
+    {
+        var v = await _cfg.GetAsync<string>("Security:BypassOtpVerification");
+        if (!string.IsNullOrWhiteSpace(v) && bool.TryParse(v, out var parsed))
+        {
+            return parsed;
+        }
+        return _configuration.GetValue<bool>("Security:BypassOtpVerification");
     }
 }
 

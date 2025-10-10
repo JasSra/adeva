@@ -1,25 +1,56 @@
 using DebtManager.Contracts.Configuration;
 using DebtManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace DebtManager.Infrastructure.Configuration;
 
 public class AppConfigService : IAppConfigService
 {
     private readonly AppDbContext _db;
+    private readonly IDistributedCache? _distributedCache;
     private readonly MemoryCache<string, (string? value, bool isSecret)> _cache = new();
 
-    public AppConfigService(AppDbContext db)
+    public AppConfigService(AppDbContext db, IDistributedCache? distributedCache = null)
     {
         _db = db;
+        _distributedCache = distributedCache;
     }
 
     public async Task<string?> GetAsync(string key, CancellationToken ct = default)
     {
+        // Prefer distributed cache if available
+        if (_distributedCache != null)
+        {
+            var cached = await _distributedCache.GetStringAsync(CacheKey(key), ct);
+            if (cached != null)
+            {
+                try
+                {
+                    var parsed = JsonSerializer.Deserialize<CacheDto>(cached);
+                    return parsed?.Value;
+                }
+                catch { /* ignore cache decode errors */ }
+            }
+        }
+
         if (_cache.TryGet(key, out var v)) return v.value;
+
         var entry = await _db.AppConfigEntries.AsNoTracking().FirstOrDefaultAsync(e => e.Key == key, ct);
         var tuple = (entry?.Value, entry?.IsSecret ?? false);
+
+        // Set caches
         _cache.Set(key, tuple, TimeSpan.FromMinutes(5));
+        if (_distributedCache != null)
+        {
+            var dto = new CacheDto { Value = tuple.Item1, IsSecret = tuple.Item2 };
+            var json = JsonSerializer.Serialize(dto);
+            await _distributedCache.SetStringAsync(CacheKey(key), json, new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            }, ct);
+        }
         return tuple.Item1;
     }
 
@@ -49,7 +80,13 @@ public class AppConfigService : IAppConfigService
             entry.Update(value, isSecret);
         }
         await _db.SaveChangesAsync(ct);
+
+        // Invalidate caches
         _cache.Remove(key);
+        if (_distributedCache != null)
+        {
+            await _distributedCache.RemoveAsync(CacheKey(key), ct);
+        }
     }
 
     public async Task<bool> ExistsAsync(string key, CancellationToken ct = default)
@@ -71,7 +108,19 @@ public class AppConfigService : IAppConfigService
             _db.AppConfigEntries.Remove(entry);
             await _db.SaveChangesAsync(ct);
             _cache.Remove(key);
+            if (_distributedCache != null)
+            {
+                await _distributedCache.RemoveAsync(CacheKey(key), ct);
+            }
         }
+    }
+
+    private static string CacheKey(string key) => $"appcfg:{key}";
+
+    private sealed class CacheDto
+    {
+        public string? Value { get; set; }
+        public bool IsSecret { get; set; }
     }
 
     // Simple in-memory cache helper

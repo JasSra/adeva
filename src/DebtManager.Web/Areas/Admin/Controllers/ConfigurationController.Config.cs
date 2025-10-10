@@ -9,6 +9,7 @@ public partial class ConfigurationController : Controller
     [HttpGet]
     public async Task<IActionResult> Secrets(string? q)
     {
+        await _auditService.LogAsync("VIEW_SECRETS_CONFIGURATION", "Configuration");
         var dict = await _configService.GetAllAsync();
         var filtered = string.IsNullOrWhiteSpace(q)
             ? dict
