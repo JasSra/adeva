@@ -71,7 +71,65 @@
             </div>
         }
 
-        <!-- Enhanced Debt Summary Header -->
+        @if (ViewBag.ShowReferenceInput == true)
+        {
+            <!-- Reference Input Section -->
+            <div id="step-find-debt" class="max-w-2xl mx-auto">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden animate-fade-in-up">
+                    <div class="p-6 border-b dark:border-gray-700" style="border-top: 4px solid var(--primary)">
+                        <h3 class="text-3xl font-bold dark:text-white mb-2">Accept Debt</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Enter your debt reference number to continue</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Debt Reference Number</label>
+                                <div class="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        id="reference-input"
+                                        class="flex-1 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-3 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                        placeholder="e.g., D-5a3b7c9d or ACC123456"
+                                        required />
+                                    <button 
+                                        type="button"
+                                        id="find-debt-btn"
+                                        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-semibold whitespace-nowrap shadow-lg">
+                                        Find Debt
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                    <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Enter the reference number from your email or account statement
+                                </p>
+                            </div>
+                            <div id="error-message" class="hidden p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <span id="error-text" class="text-sm text-red-700 dark:text-red-400"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="loading-indicator" class="hidden text-center py-4">
+                                <svg class="animate-spin h-8 w-8 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Searching for debt...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Enhanced Debt Summary Header (shown when debt is loaded) -->
+        <div id="debt-details-section" class="@(ViewBag.ShowReferenceInput == true ? "hidden" : "")"
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden mb-8 animate-fade-in-up">
             <div class="p-6 border-b dark:border-gray-700" style="border-top: 4px solid var(--primary)">
                 <div class="flex items-center justify-between flex-wrap gap-4">
@@ -391,6 +449,7 @@
             </div>
         </form>
     </div>
+</div>
 </div>
 
 <!-- Custom Payment Plan Designer Modal -->
@@ -916,6 +975,82 @@
         
         // Show confirmation message
         alert(`Custom payment plan configured!\n\n${numPayments} ${frequency.toLowerCase()} payments of $${paymentAmount.toFixed(2)}\nAdmin fee: $${adminFee.toFixed(2)}\nTotal: $${(debtAmount + adminFee).toFixed(2)}\n\nClick "Continue" to submit for approval.`);
+    }
+
+    // Debt reference lookup functionality
+    @if (ViewBag.ShowReferenceInput == true)
+    {
+        <text>
+        const findDebtBtn = document.getElementById('find-debt-btn');
+        const referenceInput = document.getElementById('reference-input');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const loadingIndicator = document.getElementById('loading-indicator');
+
+        if (findDebtBtn && referenceInput) {
+            // Allow Enter key to trigger search
+            referenceInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    findDebtBtn.click();
+                }
+            });
+
+            findDebtBtn.addEventListener('click', async function() {
+                const reference = referenceInput.value.trim();
+                if (!reference) {
+                    showError('Please enter a debt reference number');
+                    return;
+                }
+                
+                await findDebtByReference(reference);
+            });
+        }
+
+        async function findDebtByReference(reference) {
+            hideError();
+            showLoading(true);
+            
+            try {
+                const response = await fetch(`/User/Accept/api/find-by-reference?reference=${encodeURIComponent(reference)}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showError(data.error || 'Debt not found. Please check your reference number and try again.');
+                    return;
+                }
+                
+                // Redirect to the debt acceptance page with the ID
+                window.location.href = `/User/Accept/${data.debtId}`;
+            } catch (error) {
+                showError('Failed to find debt. Please try again.');
+                console.error('Error finding debt:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorMessage.classList.add('hidden');
+        }
+
+        function showLoading(show) {
+            if (show) {
+                loadingIndicator.classList.remove('hidden');
+                findDebtBtn.disabled = true;
+                findDebtBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                loadingIndicator.classList.add('hidden');
+                findDebtBtn.disabled = false;
+                findDebtBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+        </text>
     }
 
 </script>

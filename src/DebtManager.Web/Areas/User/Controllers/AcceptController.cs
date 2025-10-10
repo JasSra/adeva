@@ -32,12 +32,16 @@ public class AcceptController : Controller
         _paymentPlanService = paymentPlanService;
     }
 
-    // Fallback without id to avoid 404 when reached from sidebar
+    // Fallback without id - show reference input form
     [HttpGet]
     public IActionResult Index()
     {
-        TempData["Error"] = "Open the acceptance link from your email to continue.";
-        return Redirect("/User");
+        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
+        ViewBag.ThemeName = theme?.Name ?? "Default";
+        ViewBag.Title = "Accept Debt";
+        ViewBag.ShowReferenceInput = true;
+        
+        return View(new AcceptDebtVm());
     }
 
     [HttpGet("User/Accept/{id}")]
@@ -261,6 +265,66 @@ public class AcceptController : Controller
         }
 
         return Redirect("/User");
+    }
+
+    /// <summary>
+    /// Find debt by reference number for the authenticated user
+    /// </summary>
+    [HttpGet("User/Accept/api/find-by-reference")]
+    public async Task<IActionResult> FindByReference([FromQuery] string reference, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(reference))
+        {
+            return BadRequest(new { error = "Reference is required" });
+        }
+
+        // Get current debtor
+        var debtorId = await GetCurrentDebtorIdAsync(ct);
+        if (debtorId == null)
+        {
+            return Unauthorized(new { error = "Please complete onboarding first" });
+        }
+
+        // Search by client reference number or generated ID (D-xxxxxxxx format)
+        var debts = await _db.Debts
+            .Include(d => d.Organization)
+            .Where(d => d.DebtorId == debtorId.Value)
+            .ToListAsync(ct);
+
+        Debt? debt = null;
+        
+        // Try to match by ClientReferenceNumber first
+        debt = debts.FirstOrDefault(d => 
+            !string.IsNullOrWhiteSpace(d.ClientReferenceNumber) && 
+            d.ClientReferenceNumber.Equals(reference, StringComparison.OrdinalIgnoreCase));
+
+        // If not found, try to match by generated D-xxx reference
+        if (debt == null)
+        {
+            debt = debts.FirstOrDefault(d => 
+                ("D-" + d.Id.ToString().Substring(0, 8)).Equals(reference, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (debt == null)
+        {
+            return NotFound(new { error = "Debt not found with the provided reference" });
+        }
+
+        // Check if debt is acceptable
+        if (debt.Status == DebtStatus.Settled || debt.Status == DebtStatus.Disputed)
+        {
+            return BadRequest(new { error = "This debt is not available for acceptance" });
+        }
+
+        return Ok(new
+        {
+            debtId = debt.Id,
+            reference = string.IsNullOrWhiteSpace(debt.ClientReferenceNumber) 
+                ? ("D-" + debt.Id.ToString().Substring(0, 8)) 
+                : debt.ClientReferenceNumber,
+            outstanding = debt.OutstandingPrincipal,
+            organizationName = debt.Organization?.TradingName ?? debt.Organization?.Name ?? "Organization"
+        });
     }
 
     private async Task<(string subject, string body)?> RenderTemplateAsync(string templateCode, IDictionary<string, object?> data, CancellationToken ct)
