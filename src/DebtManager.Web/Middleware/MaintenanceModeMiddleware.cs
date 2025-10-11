@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Builder;
 using DebtManager.Web.Services;
 using Serilog;
+using Microsoft.Extensions.Configuration;
 
 namespace DebtManager.Web.Middleware;
 
@@ -17,7 +18,7 @@ public class MaintenanceModeMiddleware
         _next = next;
     }
 
-    public async Task InvokeAsync(HttpContext context, IMaintenanceState state, IHostEnvironment env)
+    public async Task InvokeAsync(HttpContext context, IMaintenanceState state, IHostEnvironment env, IConfiguration config)
     {
         // Allow health endpoints and brand assets to pass through
         var path = context.Request.Path.Value ?? string.Empty;
@@ -52,6 +53,29 @@ public class MaintenanceModeMiddleware
         var durationText = duration.HasValue ? FormatDuration(duration.Value) : "just now";
         var sinceText = since?.ToLocalTime().ToString("MMM d, yyyy 'at' h:mm tt zzz");
 
+        // Diagnostics data (optional in prod via flag)
+        var showDiag = env.IsDevelopment() || config.GetValue("Diagnostics:ShowMaintenanceErrors", false);
+        string selectedDbSource = "";
+        string selectedHfSource = "";
+        string dbConnSanitized = "";
+        string hfConnSanitized = "";
+        string authMode = "";
+        if (showDiag)
+        {
+            var defaultCs = config.GetConnectionString("Default");
+            var svcCs = config.GetConnectionString("DatabaseConnection");
+            var dbCs = defaultCs ?? svcCs ?? "Server=(localdb)\\MSSQLLocalDB;Database=DebtManager;Trusted_Connection=True;";
+            selectedDbSource = defaultCs != null ? "ConnectionStrings:Default" : (svcCs != null ? "ConnectionStrings:DatabaseConnection" : "fallback-localdb");
+            dbConnSanitized = SanitizeCs(dbCs);
+
+            var hangfireCs = config.GetConnectionString("Hangfire") ?? dbCs;
+            selectedHfSource = config.GetConnectionString("Hangfire") != null ? "ConnectionStrings:Hangfire" : selectedDbSource;
+            hfConnSanitized = SanitizeCs(hangfireCs);
+
+            // Try to infer authentication mode
+            authMode = InferAuthMode(dbCs);
+        }
+
         var sb = new StringBuilder();
         sb.Append("<!doctype html><html lang=\"en\"><head>");
         sb.Append("<meta charset=\"utf-8\">");
@@ -70,7 +94,7 @@ public class MaintenanceModeMiddleware
         sb.Append("line-height:1.6;letter-spacing:-0.011em;-webkit-font-smoothing:antialiased;");
         sb.Append("background-attachment:fixed}");
         
-        sb.Append(".container{max-width:540px;margin:0 auto;padding:2rem;text-align:center}");
+        sb.Append(".container{max-width:780px;margin:0 auto;padding:2rem;text-align:center}");
         
         sb.Append(".card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);");
         sb.Append("border-radius:20px;padding:3rem 2.5rem;backdrop-filter:blur(20px);");
@@ -127,7 +151,11 @@ public class MaintenanceModeMiddleware
         sb.Append(".error-details{background:rgba(255,179,71,0.05);border:1px solid rgba(255,179,71,0.2);");
         sb.Append("border-radius:8px;padding:1rem;font-family:'SF Mono',Monaco,Inconsolata,'Roboto Mono',Consolas,'Courier New',monospace;");
         sb.Append("font-size:0.75rem;color:rgba(255,179,71,0.9);text-align:left;");
-        sb.Append("white-space:pre-wrap;overflow:auto;max-height:300px}");
+        sb.Append("white-space:pre-wrap;overflow:auto;max-height:360px}");
+        
+        sb.Append(".kv{display:grid;grid-template-columns:180px 1fr;gap:0.5rem 1rem;text-align:left}");
+        sb.Append(".kv .k{color:rgba(139,174,255,0.9);font-size:0.8rem}");
+        sb.Append(".kv .v{font-family:'SF Mono',Monaco,Inconsolata,'Roboto Mono',Consolas,'Courier New',monospace;font-size:0.8rem;color:#e5e7eb}");
         
         sb.Append("@media (max-width:640px){");
         sb.Append(".container{padding:1rem}");
@@ -135,6 +163,7 @@ public class MaintenanceModeMiddleware
         sb.Append("h1{font-size:1.75rem}");
         sb.Append(".subtitle{font-size:1rem}");
         sb.Append(".info-grid{grid-template-columns:1fr;gap:0.75rem}");
+        sb.Append(".kv{grid-template-columns:1fr}");
         sb.Append("}");
         sb.Append("</style>");
         
@@ -155,23 +184,35 @@ public class MaintenanceModeMiddleware
         
         if (since.HasValue)
         {
-            sb.Append($"<div class=\"info-card\"><div class=\"info-label\">Started</div><div class=\"info-value\">{System.Net.WebUtility.HtmlEncode(sinceText!)}</div></div>");
+            sb.Append($"<div class=\"info-card\"><div class=\"info-label\">Started</div><div class=\"info-value\">{System.Net.WebUtility.HtmlEncode(sinceText!)} </div></div>");
             sb.Append($"<div class=\"info-card\"><div class=\"info-label\">Duration</div><div class=\"info-value\">{System.Net.WebUtility.HtmlEncode(durationText)}</div></div>");
         }
         sb.Append("</div>");
 
-        if (env.IsDevelopment())
+        if (showDiag)
         {
+            sb.Append("<div class=\"dev-section\">");
+            sb.Append("<div class=\"dev-title\">SQL/Startup Diagnostics</div>");
+
+            // Connection strings and selection info
+            sb.Append("<div class=\"kv\">");
+            sb.Append($"<div class=\"k\">DB Source</div><div class=\"v\">{System.Net.WebUtility.HtmlEncode(selectedDbSource)}</div>");
+            sb.Append($"<div class=\"k\">DB Connection</div><div class=\"v\">{System.Net.WebUtility.HtmlEncode(dbConnSanitized)}</div>");
+            sb.Append($"<div class=\"k\">Hangfire Source</div><div class=\"v\">{System.Net.WebUtility.HtmlEncode(selectedHfSource)}</div>");
+            sb.Append($"<div class=\"k\">Hangfire Connection</div><div class=\"v\">{System.Net.WebUtility.HtmlEncode(hfConnSanitized)}</div>");
+            sb.Append($"<div class=\"k\">Auth Mode</div><div class=\"v\">{System.Net.WebUtility.HtmlEncode(authMode)}</div>");
+            sb.Append("</div>");
+
             var ex = state.StartupException;
             if (ex != null)
             {
-                sb.Append("<div class=\"dev-section\">");
-                sb.Append("<div class=\"dev-title\">🔧 Development Information</div>");
+                sb.Append("<div class=\"dev-title\" style=\"margin-top:1.25rem\">Startup Exception</div>");
                 sb.Append("<div class=\"error-details\">");
                 sb.Append(System.Net.WebUtility.HtmlEncode(ex.ToString()));
                 sb.Append("</div>");
-                sb.Append("</div>");
             }
+
+            sb.Append("</div>");
         }
         
         sb.Append("<div class=\"footer\">");
@@ -183,6 +224,28 @@ public class MaintenanceModeMiddleware
         sb.Append("</body></html>");
 
         await context.Response.WriteAsync(sb.ToString());
+    }
+
+    private static string SanitizeCs(string cs)
+    {
+        if (string.IsNullOrEmpty(cs)) return cs;
+        var redacted = cs
+            .Replace("Password=", "Password=***", StringComparison.OrdinalIgnoreCase)
+            .Replace("Pwd=", "Pwd=***", StringComparison.OrdinalIgnoreCase)
+            .Replace("AccountKey=", "AccountKey=***", StringComparison.OrdinalIgnoreCase);
+        return redacted;
+    }
+
+    private static string InferAuthMode(string cs)
+    {
+        if (string.IsNullOrEmpty(cs)) return "Unknown";
+        var lc = cs.ToLowerInvariant();
+        if (lc.Contains("active directory managed identity")) return "Managed Identity";
+        if (lc.Contains("active directory default")) return "Azure AD Default";
+        if (lc.Contains("active directory integrated")) return "Azure AD Integrated";
+        if (lc.Contains("active directory password")) return "Azure AD Password";
+        if (lc.Contains("user id=") || lc.Contains("uid=")) return "SQL Auth";
+        return "Unknown";
     }
 
     private static string FormatDuration(TimeSpan ts)

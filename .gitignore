@@ -27,3 +27,4 @@ dist/
 src/DebtManager.Web/wwwroot/uploads/
 /src/DebtManager.Web/appsettings.Development.json
 /.vs
+/src/DebtManager.Web/Properties

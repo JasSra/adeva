@@ -18,12 +18,22 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using DebtManager.Web.Middleware;
 using DebtManager.Web.Jobs;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web.Resource;
+using Microsoft.IdentityModel.Logging;
+using System.Data;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Caching.Distributed;
 using DebtManager.Contracts.Configuration;
  
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Enable IdentityModel PII logging if configured (use with caution in production)
+IdentityModelEventSource.ShowPII = builder.Configuration.GetValue<bool>("AzureAd:EnablePiiLogging");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
 
 // Serilog basic setup (keep config-driven to avoid eager provider initialization)
 // Tip: Use appsettings to reduce noisy providers at boot (e.g., Microsoft to Warning)
@@ -63,8 +73,29 @@ else
 }
 
 // EF Core
-var cs = builder.Configuration.GetConnectionString("Default") ?? "Server=(localdb)\\MSSQLLocalDB;Database=DebtManager;Trusted_Connection=True;";
-builder.Services.AddDbContext<AppDbContext>(opts => opts.UseSqlServer(cs));
+// Prefer Default; fall back to Azure Connected Services name "DatabaseConnection" if present
+var defaultCs = builder.Configuration.GetConnectionString("Default");
+var svcCs = builder.Configuration.GetConnectionString("DatabaseConnection");
+var cs = defaultCs ?? svcCs ?? "Server=(localdb)\\MSSQLLocalDB;Database=DebtManager;Trusted_Connection=True;";
+
+var efSensitive = builder.Configuration.GetValue("Diagnostics:EfCore:SensitiveDataLogging", false);
+var efDetailed = builder.Configuration.GetValue("Diagnostics:EfCore:DetailedErrors", false);
+
+builder.Services.AddDbContext<AppDbContext>(opts =>
+{
+    opts.UseSqlServer(cs);
+    if (efSensitive) opts.EnableSensitiveDataLogging();
+    if (efDetailed) opts.EnableDetailedErrors();
+});
+
+// Log effective connection string source (sanitized)
+try
+{
+    var which = defaultCs != null ? "ConnectionStrings:Default" : (svcCs != null ? "ConnectionStrings:DatabaseConnection" : "fallback-localdb");
+    var safeCs = cs?.Replace("Password=", "Password=***").Replace("Pwd=", "Pwd=***");
+    Log.Information("DB connection source: {Source}. Hangfire source may differ. Effective CS (sanitized): {CS}", which, safeCs);
+}
+catch { }
 
 // Identity Core using EF stores
 builder.Services
@@ -117,7 +148,19 @@ builder.Services.Configure<CookieAuthenticationOptions>(CookieAuthenticationDefa
 builder.Services.AddScoped<IClaimsTransformation, B2CRoleClaimsTransformation>();
 
 // Hangfire (SQL Server for persistence and audit)
-var hangfireCs = builder.Configuration.GetConnectionString("Hangfire") ?? cs;
+var hangfireCs = builder.Configuration.GetConnectionString("Hangfire")
+                 ?? defaultCs
+                 ?? svcCs
+                 ?? cs;
+
+try
+{
+    var hangfireSource = builder.Configuration.GetConnectionString("Hangfire") != null ? "ConnectionStrings:Hangfire" : (defaultCs != null ? "ConnectionStrings:Default" : (svcCs != null ? "ConnectionStrings:DatabaseConnection" : "fallback-localdb"));
+    var safeHf = hangfireCs?.Replace("Password=", "Password=***").Replace("Pwd=", "Pwd=***");
+    Log.Information("Hangfire connection source: {Source}. Effective CS (sanitized): {CS}", hangfireSource, safeHf);
+}
+catch { }
+
 builder.Services.AddHangfire(cfg => cfg
     .UseSimpleAssemblyNameTypeSerializer()
     // Avoid forcing Newtonsoft/advanced serializer settings to keep startup lean
@@ -161,6 +204,12 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
+// Optionally turn on the Developer Exception Page in non-dev when explicitly enabled
+if (!app.Environment.IsDevelopment() && app.Configuration.GetValue("Diagnostics:UseDeveloperExceptionPage", false))
+{
+    app.UseDeveloperExceptionPage();
+}
 
 // Initialize database (lean): migrate; optional seed is handled inside initializer via config flags
 var maintenance = app.Services.GetRequiredService<IMaintenanceState>();
@@ -212,6 +261,35 @@ app.UseMiddleware<BrandingResolverMiddleware>();
 app.MapHealthChecks("/health/live");
 app.MapHealthChecks("/health/ready");
 
+// Diagnostics: SQL probe endpoint (guarded by config flag)
+if (app.Configuration.GetValue("Diagnostics:EnableSqlProbe", false))
+{
+    app.MapGet("/_diag/sql", async (AppDbContext db) =>
+    {
+        try
+        {
+            var conn = db.Database.GetDbConnection();
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT DB_NAME() AS DbName, SUSER_SNAME() AS LoginName, USER_NAME() AS UserName";
+            await using var reader = await cmd.ExecuteReaderAsync();
+            string dbName = ""; string loginName = ""; string userName = "";
+            if (await reader.ReadAsync())
+            {
+                dbName = reader["DbName"].ToString() ?? "";
+                loginName = reader["LoginName"].ToString() ?? "";
+                userName = reader["UserName"].ToString() ?? "";
+            }
+            return Results.Json(new { ok = true, dbName, loginName, userName });
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "SQL probe failed");
+            return Results.Json(new { ok = false, error = ex.Message });
+        }
+    });
+}
+
 // Hangfire Dashboard - Secured with Admin scope
 app.MapHangfireDashboard("/hangfire", new Hangfire.DashboardOptions
 {
@@ -228,9 +306,12 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+var scopeRequiredByApi = app.Configuration["AzureAd:Scopes"];
+
 // Simple API for recipient search (admin)
-app.MapGet("/api/admin/usersearch", async ([FromQuery] string q, AppDbContext db) =>
+app.MapGet("/api/admin/usersearch", async ([FromQuery] string q, AppDbContext db,HttpContext httpContext) =>
 {
+    httpContext.VerifyUserHasAnyAcceptedScope(scopeRequiredByApi);
     if (string.IsNullOrWhiteSpace(q) || q.Length < 2) return Results.Json(Array.Empty<object>());
     q = q.ToLowerInvariant();
     var results = await db.Users
