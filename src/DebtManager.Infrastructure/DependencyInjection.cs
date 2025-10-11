@@ -55,6 +55,7 @@ public static class DependencyInjection
         // Payment Jobs
         services.AddScoped<ReceiptGenerationJob>();
         services.AddScoped<RetryFailedPaymentsJob>();
+        services.AddScoped<PaymentNotificationJob>();
 
         // Document Generation
         services.AddScoped<IDocumentGenerationService, DocumentGenerationService>();
