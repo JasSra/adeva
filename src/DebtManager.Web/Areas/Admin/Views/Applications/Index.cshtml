@@ -5,153 +5,178 @@
     var pageSize = (int)ViewBag.PageSize;
     var totalCount = (int)ViewBag.TotalCount;
     var totalPages = (int)ViewBag.TotalPages;
+    var search = ViewBag.Search as string;
 }
 
 @if (TempData["Message"] != null)
 {
-    <div class="mb-4 p-4 bg-green-100 border border-green-300 text-green-800 rounded">
-        @TempData["Message"]
+    <div class="app-flash app-flash--success app-section" role="status">
+        <span class="app-flash__icon" aria-hidden="true">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </span>
+        <div class="app-flash__content">
+            <p class="app-flash__message">@TempData["Message"]</p>
+        </div>
     </div>
 }
 
-<form method="get" action="@Url.Action("Index")" class="bg-white rounded-lg shadow">
-    <div class="p-6 border-b flex items-center justify-between">
-        <h3 class="text-lg font-semibold">Pending Applications</h3>
-        <div class="flex gap-2">
-            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search applications..." class="border rounded px-3 py-2 text-sm" />
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Search</button>
-        </div>
-    </div>
-</form>
-
-<div class="bg-white rounded-lg shadow mt-4">
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-gray-50 border-b">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Legal Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ABN</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subdomain</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @if (Model != null && Model.Any())
-                {
-                    @foreach (var org in Model)
-                    {
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">@org.Name</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">@org.LegalName</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">@org.Abn</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                @if (!string.IsNullOrEmpty(org.Subdomain))
-                                {
-                                    <span class="text-blue-600">@org.Subdomain</span>
-                                }
-                                else
-                                {
-                                    <span class="text-gray-400">-</span>
-                                }
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @org.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pending Review</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="@Url.Action("Details", new { id = org.Id })" class="text-blue-600 hover:underline mr-3">View</a>
-                                <form method="post" action="@Url.Action("Approve", new { id = org.Id })" class="inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="text-green-600 hover:underline mr-3" onclick="return confirm('Are you sure you want to approve this application?');">Approve</button>
-                                </form>
-                                <button class="text-red-600 hover:underline" onclick="showRejectModal('@org.Id', '@org.Name')">Reject</button>
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
-                            @if (!string.IsNullOrEmpty(ViewBag.Search as string))
-                            {
-                                <text>No pending applications found matching your search.</text>
-                            }
-                            else
-                            {
-                                <text>No pending applications at this time.</text>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-    
-    @if (totalPages > 0)
-    {
-        <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
-            <div class="text-sm text-gray-600">
-                Showing @((page - 1) * pageSize + 1) to @Math.Min(page * pageSize, totalCount) of @totalCount entries
+<section class="app-section">
+    <div class="app-surface">
+        <div class="app-surface-header">
+            <div class="space-y-1">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Pending applications</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">
+                    Monitor organizations awaiting approval and manage onboarding decisions.
+                </p>
             </div>
-            <div class="flex gap-1">
-                @if (page > 1)
-                {
-                    <a href="@Url.Action("Index", new { search = ViewBag.Search, page = page - 1, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">Previous</a>
-                }
-                else
-                {
-                    <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Previous</button>
-                }
-                
-                @for (int i = Math.Max(1, page - 2); i <= Math.Min(totalPages, page + 2); i++)
-                {
-                    if (i == page)
+            <form method="get" action="@Url.Action("Index")" class="app-filters" role="search">
+                <label for="search" class="sr-only">Search applications</label>
+                <input id="search" type="text" name="search" value="@search" placeholder="Search by name, legal name or ABN…" />
+                <button type="submit" data-size="sm">Search</button>
+            </form>
+        </div>
+        <div class="app-surface-body">
+            <div class="app-table-wrap">
+                <table class="app-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Organization</th>
+                            <th scope="col">Legal Name</th>
+                            <th scope="col">ABN</th>
+                            <th scope="col">Subdomain</th>
+                            <th scope="col">Submitted</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var org in Model)
+                            {
+                                <tr>
+                                    <td>@org.Name</td>
+                                    <td>@org.LegalName</td>
+                                    <td>@org.Abn</td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(org.Subdomain))
+                                        {
+                                            <span class="text-slate-700 dark:text-slate-200">@org.Subdomain</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-slate-400 dark:text-slate-500">—</span>
+                                        }
+                                    </td>
+                                    <td class="text-slate-500 dark:text-slate-400">@org.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                                    <td>
+                                        <span class="app-chip app-chip--warning">Pending review</span>
+                                    </td>
+                                    <td class="text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a href="@Url.Action("Details", new { id = org.Id })" class="btn-ghost text-sm">View</a>
+                                            <form method="post" action="@Url.Action("Approve", new { id = org.Id })" class="inline">
+                                                @Html.AntiForgeryToken()
+                                                <button data-unstyled="true" type="submit" class="btn text-sm" onclick="return confirm('Approve this application?');">Approve</button>
+                                            </form>
+                                            <button data-unstyled="true" type="button" class="btn-danger-outline text-sm" onclick="showRejectModal('@org.Id', '@org.Name')">Reject</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7">
+                                    <div class="app-empty-state">
+                                        @if (!string.IsNullOrEmpty(search))
+                                        {
+                                            <span>No pending applications found matching <strong>@search</strong>.</span>
+                                        }
+                                        else
+                                        {
+                                            <span>No pending applications at this time.</span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @if (totalPages > 0)
+        {
+            <div class="app-surface-footer">
+                <div class="text-sm text-slate-500 dark:text-slate-400">
+                    Showing @((page - 1) * pageSize + 1) to @Math.Min(page * pageSize, totalCount) of @totalCount entries
+                </div>
+                <div class="app-pagination">
+                    @if (page > 1)
                     {
-                        <button class="px-3 py-1 border rounded text-sm bg-blue-600 text-white">@i</button>
+                        <a href="@Url.Action("Index", new { search, page = page - 1, pageSize })">Previous</a>
                     }
                     else
                     {
-                        <a href="@Url.Action("Index", new { search = ViewBag.Search, page = i, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">@i</a>
+                        <span class="is-disabled">Previous</span>
                     }
-                }
-                
-                @if (page < totalPages)
-                {
-                    <a href="@Url.Action("Index", new { search = ViewBag.Search, page = page + 1, pageSize })" class="px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100">Next</a>
-                }
-                else
-                {
-                    <button disabled class="px-3 py-1 border rounded text-sm bg-gray-100 text-gray-400 cursor-not-allowed">Next</button>
-                }
-            </div>
-        </div>
-    }
-</div>
 
-<!-- Reject Modal -->
-<div id="rejectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 class="text-lg font-semibold mb-4">Reject Application</h3>
-        <form id="rejectForm" method="post">
+                    @for (int i = Math.Max(1, page - 2); i <= Math.Min(totalPages, page + 2); i++)
+                    {
+                        if (i == page)
+                        {
+                            <span class="is-current">@i</span>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Index", new { search, page = i, pageSize })">@i</a>
+                        }
+                    }
+
+                    @if (page < totalPages)
+                    {
+                        <a href="@Url.Action("Index", new { search, page = page + 1, pageSize })">Next</a>
+                    }
+                    else
+                    {
+                        <span class="is-disabled">Next</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<div id="rejectModal" class="hidden fixed inset-0 z-50 app-modal items-center justify-center">
+    <div class="app-modal__dialog">
+        <div class="flex items-start justify-between gap-4 mb-4">
+            <div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Reject application</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Let the applicant know why they were rejected.</p>
+            </div>
+            <button data-unstyled="true" type="button" class="btn-ghost text-sm" onclick="hideRejectModal()" aria-label="Close modal">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <form id="rejectForm" method="post" class="space-y-4">
             @Html.AntiForgeryToken()
             <input type="hidden" id="rejectOrgId" name="id" value="" />
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Organization</label>
-                <p id="rejectOrgName" class="text-sm text-gray-600"></p>
+            <div>
+                <label class="text-sm font-medium text-slate-600 dark:text-slate-300">Organization</label>
+                <p id="rejectOrgName" class="mt-1 text-sm text-slate-500 dark:text-slate-400"></p>
             </div>
-            <div class="mb-4">
-                <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">Reason for Rejection</label>
-                <textarea id="reason" name="reason" rows="4" class="w-full border rounded px-3 py-2 text-sm" required placeholder="Please provide a reason for rejecting this application..."></textarea>
+            <div>
+                <label for="reason" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">Reason for rejection</label>
+                <textarea id="reason" name="reason" rows="4" required placeholder="Share context so the applicant understands the next steps."></textarea>
             </div>
-            <div class="flex gap-2 justify-end">
-                <button type="button" onclick="hideRejectModal()" class="px-4 py-2 border rounded text-sm hover:bg-gray-100">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm">Reject Application</button>
+            <div class="flex items-center justify-end gap-2">
+                <button data-unstyled="true" type="button" class="btn-ghost text-sm" onclick="hideRejectModal()">Cancel</button>
+                <button data-unstyled="true" type="submit" class="btn-danger text-sm">Reject application</button>
             </div>
         </form>
     </div>
@@ -159,14 +184,18 @@
 
 <script>
 function showRejectModal(orgId, orgName) {
-    document.getElementById('rejectModal').classList.remove('hidden');
+    const modal = document.getElementById('rejectModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
     document.getElementById('rejectOrgId').value = orgId;
     document.getElementById('rejectOrgName').textContent = orgName;
     document.getElementById('rejectForm').action = '@Url.Action("Reject")/' + orgId;
 }
 
 function hideRejectModal() {
-    document.getElementById('rejectModal').classList.add('hidden');
+    const modal = document.getElementById('rejectModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
     document.getElementById('reason').value = '';
 }
 </script>

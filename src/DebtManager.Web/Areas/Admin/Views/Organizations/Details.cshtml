@@ -1,0 +1,113 @@
+@model DebtManager.Domain.Organizations.Organization
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Organization Details";
+}
+
+<section class="app-section">
+    <div class="app-surface app-stat-card">
+        <div class="app-surface-header flex items-center justify-between">
+            <div>
+                <h2 class="app-page-title">@(Model.TradingName ?? Model.Name)</h2>
+                <p class="app-page-subtitle">ABN @Model.Abn • @(Model.IsApproved ? "Approved" : "Pending")</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn">Edit</a>
+                @if (!Model.IsApproved)
+                {
+                    <a href="@Url.Action("Details", "Applications", new { area = "Admin", id = Model.Id })" class="btn-outline">Application</a>
+                }
+            </div>
+        </div>
+        <div class="app-surface-body">
+            <dl class="app-property-grid">
+                <div>
+                    <dt>Legal name</dt>
+                    <dd>@Model.LegalName</dd>
+                </div>
+                <div>
+                    <dt>Trading name</dt>
+                    <dd>@(Model.TradingName ?? "-")</dd>
+                </div>
+                <div>
+                    <dt>Subdomain</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Subdomain) ? "-" : Model.Subdomain)</dd>
+                </div>
+                <div>
+                    <dt>Support email</dt>
+                    <dd>@Model.SupportEmail</dd>
+                </div>
+                <div>
+                    <dt>Support phone</dt>
+                    <dd>@Model.SupportPhone</dd>
+                </div>
+                <div>
+                    <dt>Timezone</dt>
+                    <dd>@Model.Timezone</dd>
+                </div>
+                <div>
+                    <dt>Brand colors</dt>
+                    <dd>
+                        <span class="inline-flex items-center gap-2">
+                            <span class="w-5 h-5 rounded" style="background:@Model.PrimaryColorHex"></span>
+                            <span class="w-5 h-5 rounded" style="background:@Model.SecondaryColorHex"></span>
+                        </span>
+                    </dd>
+                </div>
+                <div>
+                    <dt>Created</dt>
+                    <dd>@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</section>
+
+<section class="app-section grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="app-surface">
+        <div class="app-surface-header">
+            <h3 class="text-base font-semibold">Bank details</h3>
+            <p class="text-sm text-slate-500">Attach or update payout bank details.</p>
+        </div>
+        <div class="app-surface-body">
+            <p class="text-sm text-slate-600">Manage during application review.</p>
+            <a class="btn-outline mt-3" href="@Url.Action("Details","Applications", new { area="Admin", id = Model.Id })">Go to application</a>
+        </div>
+    </div>
+
+    <div class="app-surface">
+        <div class="app-surface-header">
+            <h3 class="text-base font-semibold">Delegated access</h3>
+            <p class="text-sm text-slate-500">Manage client users and roles.</p>
+        </div>
+        <div class="app-surface-body">
+            <a class="btn-outline" href="/Admin/Accounts?orgId=@Model.Id">Open user management</a>
+        </div>
+    </div>
+
+    <div class="app-surface">
+        <div class="app-surface-header">
+            <h3 class="text-base font-semibold">Receipts</h3>
+            <p class="text-sm text-slate-500">Review payments and remittances.</p>
+        </div>
+        <div class="app-surface-body">
+            <a class="btn-outline" href="/Admin/Transactions">Open transactions</a>
+        </div>
+    </div>
+</section>
+
+<section class="app-section">
+    <div class="app-surface">
+        <div class="app-surface-header">
+            <h3 class="text-base font-semibold">Audit trail</h3>
+            <p class="text-sm text-slate-500">Recent actions for this organization.</p>
+        </div>
+        <div class="app-surface-body">
+            <p class="text-sm text-slate-600">Open the audit log and filter by organization.</p>
+            <a class="btn-outline mt-3" href="/Admin/Audit">Open audit log</a>
+        </div>
+    </div>
+    <div class="mt-4">
+        <a href="@Url.Action("Index")" class="btn-ghost">Back to list</a>
+    </div>
+</section>

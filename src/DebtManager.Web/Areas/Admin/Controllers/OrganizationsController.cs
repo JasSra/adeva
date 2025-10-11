@@ -100,4 +100,38 @@ public class OrganizationsController : Controller
 
         return View(organization);
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(Guid id, [FromForm] string? LegalName, [FromForm] string? TradingName, [FromForm] string? SupportEmail, [FromForm] string? SupportPhone, [FromForm] string? Subdomain, [FromForm] string? Timezone, [FromForm] string? PrimaryColorHex, [FromForm] string? SecondaryColorHex, [FromForm] string? BankAccountName, [FromForm] string? BankAccountBsb, [FromForm] string? BankAccountNumber)
+    {
+        var org = await _organizationRepository.GetAsync(id);
+        if (org == null) return NotFound();
+
+        // simple validation
+        if (string.IsNullOrWhiteSpace(LegalName)) ModelState.AddModelError("LegalName", "Legal name is required");
+        if (string.IsNullOrWhiteSpace(SupportEmail)) ModelState.AddModelError("SupportEmail", "Support email is required");
+        if (!ModelState.IsValid)
+        {
+            ViewBag.Title = "Edit Organization";
+            return View(org);
+        }
+
+        // apply updates
+        org.UpdateSupportContacts(SupportEmail!, SupportPhone ?? org.SupportPhone);
+        org.UpdateBillingContact(org.BillingContactName, org.BillingContactEmail, org.BillingContactPhone);
+        org.UpdateTradingName(TradingName);
+        org.SetSubdomain(Subdomain);
+        if (!string.IsNullOrWhiteSpace(PrimaryColorHex) && !string.IsNullOrWhiteSpace(SecondaryColorHex))
+        {
+            org.RefreshBranding(PrimaryColorHex!, SecondaryColorHex!, org.LogoUrl, org.FaviconUrl, org.BrandTagline);
+        }
+        if (!string.IsNullOrWhiteSpace(Timezone)) org.SetTimezone(Timezone!);
+        org.SetBankDetails(BankAccountName, BankAccountBsb, BankAccountNumber);
+
+        await _organizationRepository.SaveChangesAsync();
+        await _auditService.LogAsync("UPDATE_ORGANIZATION", "Organization", id.ToString(), $"Updated profile for {org.Name}");
+        TempData["Message"] = "Organization updated";
+        return RedirectToAction(nameof(Details), new { id });
+    }
 }

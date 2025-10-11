@@ -4,10 +4,12 @@ using DebtManager.Contracts.Persistence;
 using DebtManager.Contracts.Audit;
 using DebtManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DebtManager.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
+[Authorize(Policy = "RequireAdminScope")]
 public class ApplicationsController : Controller
 {
     private readonly AppDbContext _db;
@@ -72,6 +74,7 @@ public class ApplicationsController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Approve(Guid id)
     {
         var organization = await _organizationRepository.GetAsync(id);
@@ -90,6 +93,34 @@ public class ApplicationsController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveWithDetails(Guid id, string? approvalNote, string? bankAccountName, string? bankBsb, string? bankAccountNumber, string? phoneVerificationNotes)
+    {
+        var organization = await _organizationRepository.GetAsync(id);
+        if (organization == null) return NotFound();
+
+        if (!string.IsNullOrWhiteSpace(bankAccountNumber) && (bankAccountNumber.Length < 4 || bankAccountNumber.Length > 20))
+        {
+            TempData["ErrorMessage"] = "Invalid bank account number length.";
+            return RedirectToAction("Details", new { id });
+        }
+
+        organization.SetApprovalNote(approvalNote);
+        organization.SetBankDetails(bankAccountName, bankBsb, bankAccountNumber);
+        if (!string.IsNullOrWhiteSpace(phoneVerificationNotes))
+        {
+            var who = User?.Identity?.Name ?? "admin";
+            organization.RecordPhoneVerification(phoneVerificationNotes, who);
+        }
+        organization.Approve();
+        await _organizationRepository.SaveChangesAsync();
+        await _auditService.LogAsync("APPROVE_APPLICATION", "Application", id.ToString(), $"Approved with details for org: {organization.Name}");
+        TempData["Message"] = $"Application for {organization.Name} approved.";
+        return RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Reject(Guid id, string reason)
     {
         var organization = await _organizationRepository.GetAsync(id);
@@ -98,6 +129,7 @@ public class ApplicationsController : Controller
             return NotFound();
         }
 
+        organization.SetRejectionReason(reason);
         await _auditService.LogAsync("REJECT_APPLICATION", "Application", id.ToString(), $"Rejected organization: {organization.Name}. Reason: {reason}");
 
         TempData["Message"] = $"Application for {organization.Name} rejected";

@@ -1,39 +1,67 @@
+@using DebtManager.Web.Services
 @model DebtManager.Web.Areas.User.Controllers.ReceiptDetailVm
 @{
     Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+    var theme = Context.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
 }
 
-<div class="max-w-3xl mx-auto">
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Receipt @Model.ReceiptNumber</h3>
+<div class="space-y-6 max-w-4xl mx-auto">
+    @await Html.PartialAsync("~/Views/Shared/Partials/_TenantIdentity.cshtml", theme)
+
+    <div class="app-surface">
+        <div class="app-surface-header flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-                <a href="/User/Receipts/Download/@Model.Id" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Download</a>
+                <h3 class="text-lg font-semibold">Receipt @Model.ReceiptNumber</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-300">Issued @Model.ProcessedAtUtc.ToLocalTime()</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <a href="/User/Receipts" class="btn-outline text-sm">Back to receipts</a>
+                <a href="/User/Receipts/Download/@Model.Id" class="btn text-sm">
+                    Download PDF
+                </a>
             </div>
         </div>
-        <div class="p-6 space-y-4 text-sm">
+
+        <div class="app-surface-body space-y-6 text-sm">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <div class="text-gray-500">Date</div>
-                    <div class="font-medium">@Model.ProcessedAtUtc.ToLocalTime()</div>
+                    <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-300">Status</span>
+                    <p class="mt-1 font-medium text-slate-900 dark:text-slate-100">@Model.Status</p>
                 </div>
                 <div>
-                    <div class="text-gray-500">Status</div>
-                    <div class="font-medium">@Model.Status</div>
+                    <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-300">Payment method</span>
+                    <p class="mt-1 font-medium text-slate-900 dark:text-slate-100">@Model.Method</p>
                 </div>
                 <div>
-                    <div class="text-gray-500">Debt Reference</div>
-                    <div class="font-medium">@Model.DebtReference</div>
+                    <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-300">Debt reference</span>
+                    <p class="mt-1 font-medium text-slate-900 dark:text-slate-100">@Model.DebtReference</p>
                 </div>
                 <div>
-                    <div class="text-gray-500">Method</div>
-                    <div class="font-medium">@Model.Method</div>
+                    <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-300">Processed on</span>
+                    <p class="mt-1 font-medium text-slate-900 dark:text-slate-100">@Model.ProcessedAtUtc.ToLocalTime()</p>
                 </div>
             </div>
-            <div class="border-t pt-4">
-                <div class="text-gray-500">Amount</div>
-                <div class="text-2xl font-semibold">@Model.Currency @Model.Amount.ToString("N2")</div>
+
+            <div class="border-t pt-4 space-y-2">
+                <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-300">Amount</span>
+                <p class="text-3xl font-semibold text-slate-900 dark:text-slate-100">@Model.Currency @Model.Amount.ToString("N2")</p>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(theme?.StatementFooter))
+            {
+                <div class="app-surface-muted p-4 text-xs text-slate-500 dark:text-slate-300 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                    @theme!.StatementFooter
+                </div>
+            }
+
+            <div class="app-surface-muted p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">Need help with this receipt?</h4>
+                <p class="text-sm text-slate-600 dark:text-slate-200">
+                    Contact <a href="mailto:@(theme?.SupportEmail ?? "support@adevaplus.com")" class="app-link">@(theme?.SupportEmail ?? "support@adevaplus.com")</a>
+                    or call <a href="tel:@(theme?.SupportPhone ?? "1300 ADEVA PLUS")" class="app-link">@(theme?.SupportPhone ?? "1300 ADEVA PLUS")</a>.
+                </p>
             </div>
         </div>
     </div>
 </div>
+

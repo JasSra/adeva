@@ -6,7 +6,7 @@ using DebtManager.Domain.Analytics;
 namespace DebtManager.Web.Areas.Admin.Controllers;
 
 [Area("Admin")]
-public class AnalyticsController(IMetricService metricService, IMetricRepository metricRepository) : Controller
+public class AnalyticsController(IMetricService metricService) : Controller
 {
     public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, Guid? organizationId)
     {

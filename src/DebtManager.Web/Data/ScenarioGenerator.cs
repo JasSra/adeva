@@ -35,65 +35,56 @@ public static class ScenarioGenerator
         }
 
         // Helper to create an org
-        Organization MakeOrg(string scenarioTag)
+        Organization MakeOrg(string scenarioTag, bool pendingFactory = false, string timezone = "Australia/Sydney")
         {
+            var brand = BrandingFixtures.Pick(faker.Random);
             var company = faker.Company.CompanyName();
-            var trading = company.Split(' ').First();
+            var trading = company.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? company;
             var subdomainBase = faker.Internet.DomainWord().Replace("_", "-").Replace(".", "-");
             var subdomain = $"{subdomainBase}-{packId}".ToLowerInvariant();
+            var supportEmail = $"support@{subdomain}.example";
+            var supportPhone = faker.Phone.PhoneNumber("1300#######");
 
-            var org = new Organization(
-                name: company,
-                legalName: $"{company} Pty Ltd",
-                abn: faker.Random.ReplaceNumbers("###########"),
-                defaultCurrency: req.Currency ?? "AUD",
-                primaryColorHex: faker.PickRandom(new[] { "#1e3a8a", "#059669", "#7c3aed", "#dc2626" }),
-                secondaryColorHex: faker.PickRandom(new[] { "#3b82f6", "#10b981", "#8b5cf6", "#ef4444" }),
-                supportEmail: faker.Internet.Email("support", subdomain + ".example"),
-                supportPhone: faker.Phone.PhoneNumber("1300#######"),
-                timezone: "Australia/Sydney",
-                subdomain: subdomain,
-                tradingName: trading
-            );
+            Organization org = pendingFactory
+                ? Organization.CreatePending(
+                    name: company,
+                    legalName: $"{company} Pty Ltd",
+                    abn: faker.Random.ReplaceNumbers("###########"),
+                    defaultCurrency: req.Currency ?? "AUD",
+                    primaryColorHex: brand.PrimaryColorHex,
+                    secondaryColorHex: brand.SecondaryColorHex,
+                    supportEmail: supportEmail,
+                    supportPhone: supportPhone,
+                    timezone: timezone,
+                    subdomain: subdomain,
+                    tradingName: trading)
+                : new Organization(
+                    name: company,
+                    legalName: $"{company} Pty Ltd",
+                    abn: faker.Random.ReplaceNumbers("###########"),
+                    defaultCurrency: req.Currency ?? "AUD",
+                    primaryColorHex: brand.PrimaryColorHex,
+                    secondaryColorHex: brand.SecondaryColorHex,
+                    supportEmail: supportEmail,
+                    supportPhone: supportPhone,
+                    timezone: timezone,
+                    subdomain: subdomain,
+                    tradingName: trading
+                );
             tagOrg(org, scenarioTag);
+            BrandingFixtures.ApplyTo(org, brand);
             return org;
         }
 
         // Create orgs per scenario
         for (int i = 0; i < req.PendingOrganizations; i++)
         {
-            var o = Organization.CreatePending(
-                name: faker.Company.CompanyName(),
-                legalName: faker.Company.CompanyName() + " Pty Ltd",
-                abn: faker.Random.ReplaceNumbers("###########"),
-                defaultCurrency: req.Currency ?? "AUD",
-                primaryColorHex: "#1e3a8a",
-                secondaryColorHex: "#3b82f6",
-                supportEmail: faker.Internet.Email("support"),
-                supportPhone: faker.Phone.PhoneNumber("1300#######"),
-                timezone: "Australia/Sydney",
-                subdomain: ($"{faker.Internet.DomainWord()}-{packId}").ToLowerInvariant(),
-                tradingName: faker.Company.CompanyName()
-            );
-            tagOrg(o, "scenario:pending-approval");
+            var o = MakeOrg("scenario:pending-approval", pendingFactory: true, timezone: "Australia/Sydney");
             orgs.Add(o);
         }
         for (int i = 0; i < req.RejectedOrganizations; i++)
         {
-            var o = Organization.CreatePending(
-                name: faker.Company.CompanyName(),
-                legalName: faker.Company.CompanyName() + " Pty Ltd",
-                abn: faker.Random.ReplaceNumbers("###########"),
-                defaultCurrency: req.Currency ?? "AUD",
-                primaryColorHex: "#dc2626",
-                secondaryColorHex: "#ef4444",
-                supportEmail: faker.Internet.Email("support"),
-                supportPhone: faker.Phone.PhoneNumber("1300#######"),
-                timezone: "Australia/Melbourne",
-                subdomain: ($"{faker.Internet.DomainWord()}-{packId}").ToLowerInvariant(),
-                tradingName: faker.Company.CompanyName()
-            );
-            tagOrg(o, "scenario:rejected");
+            var o = MakeOrg("scenario:rejected", pendingFactory: true, timezone: "Australia/Melbourne");
             orgs.Add(o);
         }
         for (int i = 0; i < req.ActiveOrganizations; i++)
@@ -412,7 +403,7 @@ public static class ScenarioGenerator
         {
             var plan = new PaymentPlan(
                 debt.Id,
-                $"PP-{debt.ClientReferenceNumber}",
+                $"PP-{debt.Id:N}-{Guid.NewGuid():N}",
                 PaymentPlanType.Custom,
                 PaymentFrequency.Fortnightly,
                 DateTime.UtcNow.AddDays(-30),
@@ -436,7 +427,7 @@ public static class ScenarioGenerator
         {
             var plan = new PaymentPlan(
                 debt.Id,
-                $"PP-{debt.ClientReferenceNumber}",
+                $"PP-{debt.Id:N}-{Guid.NewGuid():N}",
                 PaymentPlanType.Custom,
                 PaymentFrequency.Monthly,
                 DateTime.UtcNow.AddMonths(-3),
@@ -451,7 +442,7 @@ public static class ScenarioGenerator
         {
             var plan = new PaymentPlan(
                 debt.Id,
-                $"PP-{debt.ClientReferenceNumber}",
+                $"PP-{debt.Id:N}-{Guid.NewGuid():N}",
                 PaymentPlanType.FullSettlement,
                 PaymentFrequency.OneOff,
                 DateTime.UtcNow.AddDays(-35),

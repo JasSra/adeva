@@ -54,7 +54,7 @@ public class PaymentPlanGenerationService : IPaymentPlanGenerationService
         return options.AsReadOnly();
     }
 
-    public async Task<PaymentPlan> CreatePaymentPlanFromOptionAsync(
+    public Task<PaymentPlan> CreatePaymentPlanFromOptionAsync(
         Debt debt,
         PaymentPlanOption option,
         string userId,
@@ -97,7 +97,7 @@ public class PaymentPlanGenerationService : IPaymentPlanGenerationService
             paymentPlan.RequireManualReview();
         }
 
-        return paymentPlan;
+        return Task.FromResult(paymentPlan);
     }
 
     public async Task<PaymentPlan> CreateCustomPaymentPlanAsync(
@@ -169,12 +169,12 @@ public class PaymentPlanGenerationService : IPaymentPlanGenerationService
 
     #region Private Helper Methods
 
-    private async Task<OrganizationFeeConfiguration> GetOrCreateFeeConfigurationAsync(
+    private Task<OrganizationFeeConfiguration> GetOrCreateFeeConfigurationAsync(
         Organization organization,
         CancellationToken ct)
     {
         // TODO: Load from database - for now create default
-        return new OrganizationFeeConfiguration(organization.Id);
+        return Task.FromResult(new OrganizationFeeConfiguration(organization.Id));
     }
 
     private PaymentPlanOption GenerateFullPaymentOption(Debt debt, OrganizationFeeConfiguration feeConfig)

@@ -71,7 +71,7 @@ public class DebtsController : Controller
         ViewBag.ThemeName = theme?.Name ?? "Default";
         ViewBag.Title = "Debt Details";
         
-        var debt = await _debtRepository.GetAsync(id);
+        var debt = await _debtRepository.GetWithDetailsAsync(id);
         if (debt == null)
         {
             return NotFound();

@@ -21,13 +21,14 @@ public class TransactionsController : Controller
         _auditService = auditService;
     }
 
-    public async Task<IActionResult> Index(string? search, string? type, DateTime? fromDate, DateTime? toDate, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Index(string? search, string? type, Guid? organizationId, DateTime? fromDate, DateTime? toDate, int page = 1, int pageSize = 20)
     {
         var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
         ViewBag.ThemeName = theme?.Name ?? "Default";
         ViewBag.Title = "Transactions";
         ViewBag.Search = search;
         ViewBag.Type = type;
+        ViewBag.OrganizationId = organizationId;
         ViewBag.FromDate = fromDate;
         ViewBag.ToDate = toDate;
         ViewBag.Page = page;
@@ -37,8 +38,12 @@ public class TransactionsController : Controller
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(t => (t.ProviderRef != null && t.ProviderRef.Contains(search)) ||
-                                    (t.Debtor != null && (t.Debtor.FirstName.Contains(search) || t.Debtor.LastName.Contains(search))));
+              query = query.Where(t =>
+                 (t.ProviderRef != null && t.ProviderRef.Contains(search)) ||
+                 (t.Debtor != null &&
+                  ((t.Debtor.FirstName != null && t.Debtor.FirstName.Contains(search)) ||
+                   (t.Debtor.LastName != null && t.Debtor.LastName.Contains(search))))
+              );
         }
 
         if (!string.IsNullOrWhiteSpace(type))
@@ -49,6 +54,12 @@ public class TransactionsController : Controller
                 "outbound" => query.Where(t => t.Direction == DebtManager.Domain.Payments.TransactionDirection.Outbound),
                 _ => query
             };
+        }
+
+        if (organizationId.HasValue)
+        {
+            var orgId = organizationId.Value;
+            query = query.Where(t => t.Debtor != null && t.Debtor.OrganizationId == orgId);
         }
 
         if (fromDate.HasValue)

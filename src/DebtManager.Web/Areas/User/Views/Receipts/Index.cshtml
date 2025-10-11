@@ -1,71 +1,89 @@
+@using DebtManager.Web.Services
 @model DebtManager.Web.Areas.User.Controllers.ReceiptsIndexVm
 @{
     Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+    var theme = Context.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
+    var search = ViewBag.Search as string ?? string.Empty;
+    var fromValue = ViewBag.From is DateTime fromDt ? fromDt.ToString("yyyy-MM-dd") : string.Empty;
+    var toValue = ViewBag.To is DateTime toDt ? toDt.ToString("yyyy-MM-dd") : string.Empty;
 }
 
-<div class="bg-white rounded-lg shadow">
-    <div class="p-6 border-b flex items-center justify-between">
-        <h3 class="text-lg font-semibold">Payment Receipts</h3>
-        <form method="get" class="flex gap-2 items-center">
-            <input type="text" name="search" value="@ViewBag.Search" placeholder="Debt reference" class="border rounded px-3 py-2 text-sm" />
-            <input type="date" name="from" value="@(ViewBag.From is DateTime ? ((DateTime)ViewBag.From).ToString("yyyy-MM-dd") : string.Empty)" class="border rounded px-3 py-2 text-sm" />
-            <input type="date" name="to" value="@(ViewBag.To is DateTime ? ((DateTime)ViewBag.To).ToString("yyyy-MM-dd") : string.Empty)" class="border rounded px-3 py-2 text-sm" />
-            <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Filter</button>
-        </form>
-    </div>
-    
-    <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-gray-50 border-b">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt #</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Debt Reference</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @if (Model.Items.Count == 0)
-                {
+<div class="space-y-6">
+    @await Html.PartialAsync("~/Views/Shared/Partials/_TenantIdentity.cshtml", theme)
+
+    <div class="app-surface">
+        <div class="app-surface-header flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h3 class="text-lg font-semibold">Payment Receipts</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-300">Download official acknowledgements for every successful payment.</p>
+            </div>
+            <form method="get" class="flex flex-col sm:flex-row gap-2 sm:items-center text-sm">
+                <input type="text" name="search" value="@search" placeholder="Debt reference" class="w-full sm:w-44" />
+                <input type="date" name="from" value="@fromValue" class="w-full sm:w-40" />
+                <input type="date" name="to" value="@toValue" class="w-full sm:w-40" />
+                <button class="btn" type="submit">Filter</button>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="app-table">
+                <thead>
                     <tr>
-                        <td colspan="6" class="px-6 py-6 text-sm text-gray-600">No receipts found.</td>
+                        <th>Receipt #</th>
+                        <th>Date</th>
+                        <th>Debt Reference</th>
+                        <th>Amount</th>
+                        <th>Payment Method</th>
+                        <th>Actions</th>
                     </tr>
-                }
-                else
-                {
-                    @foreach (var r in Model.Items)
+                </thead>
+                <tbody>
+                    @if (Model.Items.Count == 0)
                     {
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">#@r.ReceiptNumber</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@r.ProcessedAtUtc.ToLocalTime()</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">@r.DebtReference</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold">@r.Currency @r.Amount.ToString("N2")</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@r.Method</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                                <a href="/User/Receipts/View/@r.Id" class="text-blue-600 hover:underline">View</a>
-                                <a href="/User/Receipts/Download/@r.Id" class="text-green-600 hover:underline">Download</a>
-                            </td>
+                            <td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500 dark:text-slate-300">No receipts found for the selected filters.</td>
                         </tr>
                     }
-                }
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
-        <div class="text-sm text-gray-700">
-            @{
-                var from = (Model.Total == 0) ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
-                var to = Math.Min(Model.Page * Model.PageSize, Model.Total);
-            }
-            Showing <span class="font-medium">@from</span> to <span class="font-medium">@to</span> of <span class="font-medium">@Model.Total</span> results
+                    else
+                    {
+                        @foreach (var r in Model.Items)
+                        {
+                            <tr>
+                                <td class="font-semibold text-slate-900 dark:text-slate-100">#@r.ReceiptNumber</td>
+                                <td class="text-slate-500 dark:text-slate-300">@r.ProcessedAtUtc.ToLocalTime()</td>
+                                <td class="text-slate-600 dark:text-slate-200">@r.DebtReference</td>
+                                <td class="font-semibold text-slate-900 dark:text-slate-100">@r.Currency @r.Amount.ToString("N2")</td>
+                                <td class="text-slate-500 dark:text-slate-300">@r.Method</td>
+                                <td class="flex items-center gap-3 py-4">
+                                    <a href="/User/Receipts/View/@r.Id" class="app-link text-sm">View</a>
+                                    <a href="/User/Receipts/Download/@r.Id" class="text-sm text-green-600 hover:underline dark:text-green-400">Download</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
         </div>
-        <div class="flex gap-2">
-            <a class="px-3 py-1 border rounded text-sm @(Model.Page <= 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none" : "bg-white hover:bg-gray-50")" href="@(Model.Page <= 1 ? "#" : $"?page={Model.Page-1}&pageSize={Model.PageSize}&search={ViewBag.Search}&from={ViewBag.From:yyyy-MM-dd}&to={ViewBag.To:yyyy-MM-dd}")">Previous</a>
-            <span class="px-3 py-1 border rounded text-sm bg-blue-600 text-white">@Model.Page</span>
-            <a class="px-3 py-1 border rounded text-sm @((Model.Page * Model.PageSize) >= Model.Total ? "bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none" : "bg-white hover:bg-gray-50")" href="@((Model.Page * Model.PageSize) >= Model.Total ? "#" : $"?page={Model.Page+1}&pageSize={Model.PageSize}&search={ViewBag.Search}&from={ViewBag.From:yyyy-MM-dd}&to={ViewBag.To:yyyy-MM-dd}")">Next</a>
+
+        <div class="app-surface-compact flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-t border-gray-200 dark:border-gray-700">
+            <div class="text-sm text-slate-600 dark:text-slate-300">
+                @{
+                    var fromIndex = (Model.Total == 0) ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
+                    var toIndex = Math.Min(Model.Page * Model.PageSize, Model.Total);
+                }
+                Showing <span class="font-medium text-slate-900 dark:text-slate-100">@fromIndex</span> to <span class="font-medium text-slate-900 dark:text-slate-100">@toIndex</span> of <span class="font-medium text-slate-900 dark:text-slate-100">@Model.Total</span> results
+            </div>
+            <div class="flex items-center gap-2">
+                @{
+                    var prevDisabled = Model.Page <= 1;
+                    var nextDisabled = (Model.Page * Model.PageSize) >= Model.Total;
+                    string BuildLink(int targetPage) => $"?page={targetPage}&pageSize={Model.PageSize}&search={search}&from={fromValue}&to={toValue}";
+                }
+                <a class="btn-outline text-sm @(prevDisabled ? "pointer-events-none opacity-60" : string.Empty)" href="@(prevDisabled ? "#" : BuildLink(Model.Page - 1))">Previous</a>
+                <span class="btn text-sm cursor-default">@Model.Page</span>
+                <a class="btn-outline text-sm @(nextDisabled ? "pointer-events-none opacity-60" : string.Empty)" href="@(nextDisabled ? "#" : BuildLink(Model.Page + 1))">Next</a>
+            </div>
         </div>
     </div>
 </div>
+

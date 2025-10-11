@@ -11,6 +11,7 @@
     <div class="p-6 border-b flex items-center justify-between">
         <h3 class="text-lg font-semibold">User Accounts & Role Management</h3>
         <div class="flex gap-2">
+            <input type="text" name="orgId" value="@((ViewBag.OrgId != null) ? ViewBag.OrgId.ToString() : "")" placeholder="Organization Id (optional)" class="border rounded px-3 py-2 text-sm" />
             <select name="role" class="border rounded px-3 py-2 text-sm">
                 <option value="">All Roles</option>
                 <option value="admin" @(ViewBag.Role == "admin" ? "selected" : "")>Administrator</option>

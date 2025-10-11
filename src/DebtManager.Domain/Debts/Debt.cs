@@ -143,6 +143,10 @@ public class Debt : Entity
 
     public void AddFee(decimal amount, string reason, DateTime? appliedAtUtc = null)
     {
+        if (Status is DebtStatus.Settled or DebtStatus.WrittenOff or DebtStatus.Closed)
+        {
+            throw new InvalidOperationException("Cannot add fees to a closed/settled debt.");
+        }
         if (amount <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(amount), "Fee amount must be positive.");
@@ -211,27 +215,55 @@ public class Debt : Entity
 
     public void WriteOff(string reason)
     {
+        if (Status is DebtStatus.Settled or DebtStatus.WrittenOff or DebtStatus.Closed)
+        {
+            throw new InvalidOperationException("Debt is already closed or settled.");
+        }
         SetStatus(DebtStatus.WrittenOff, reason);
         WriteOffReason = reason;
     }
 
     public void FlagDispute(string reason)
     {
+        if (Status is DebtStatus.Settled or DebtStatus.WrittenOff or DebtStatus.Closed)
+        {
+            throw new InvalidOperationException("Cannot dispute a closed/settled debt.");
+        }
         DisputeReason = reason;
         SetStatus(DebtStatus.Disputed, reason);
     }
 
     public void ResolveDispute()
     {
+        if (Status != DebtStatus.Disputed)
+        {
+            throw new InvalidOperationException("Debt is not in disputed status.");
+        }
         DisputeReason = null;
         SetStatus(DebtStatus.Active, "Dispute resolved");
     }
 
     public void ProposeSettlement(decimal amount, DateTime expiresAtUtc)
     {
+        if (Status is DebtStatus.Settled or DebtStatus.WrittenOff or DebtStatus.Closed)
+        {
+            throw new InvalidOperationException("Cannot propose settlement for a closed/settled debt.");
+        }
         if (amount <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(amount));
+        }
+        if (OutstandingPrincipal <= 0)
+        {
+            throw new InvalidOperationException("Debt has no outstanding principal to settle.");
+        }
+        if (amount > OutstandingPrincipal)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), "Settlement cannot exceed outstanding principal.");
+        }
+        if (expiresAtUtc <= DateTime.UtcNow)
+        {
+            throw new ArgumentOutOfRangeException(nameof(expiresAtUtc), "Expiry must be in the future.");
         }
 
         SettlementOfferAmount = amount;
@@ -296,5 +328,34 @@ public class Debt : Entity
     {
         TagsCsv = string.Join(',', tags.Select(t => t.Trim()).Where(t => !string.IsNullOrWhiteSpace(t)));
         UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void AcceptSettlement()
+    {
+        if (SettlementOfferAmount is null || SettlementOfferExpiresAtUtc is null)
+        {
+            throw new InvalidOperationException("No active settlement offer to accept.");
+        }
+        if (SettlementOfferExpiresAtUtc <= DateTime.UtcNow)
+        {
+            throw new InvalidOperationException("Settlement offer has expired.");
+        }
+
+        // Accepting a settlement closes the debt as settled.
+        OutstandingPrincipal = 0;
+        AccruedInterest = 0;
+        AppendNote($"Settlement accepted for {Currency} {SettlementOfferAmount.Value:F2}.");
+        ClearSettlementOffer();
+        SetStatus(DebtStatus.Settled, "Settlement accepted");
+    }
+
+    public void RejectSettlement(string? reason = null)
+    {
+        if (SettlementOfferAmount is null)
+        {
+            throw new InvalidOperationException("No settlement offer to reject.");
+        }
+        AppendNote($"Settlement offer rejected{(string.IsNullOrWhiteSpace(reason) ? string.Empty : ": " + reason)}.");
+        ClearSettlementOffer();
     }
 }

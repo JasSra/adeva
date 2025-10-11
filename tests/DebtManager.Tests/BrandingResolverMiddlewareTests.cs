@@ -17,7 +17,7 @@ public class BrandingResolverMiddlewareTests
         Assert.That(ctx.Items.ContainsKey(BrandingResolverMiddleware.ThemeItemKey), Is.True);
         var theme = ctx.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
         Assert.That(theme, Is.Not.Null);
-        Assert.That(theme!.Name, Is.EqualTo("Default Org"));
+        Assert.That(theme!.Name, Is.EqualTo(BrandingTheme.Default.Name));
     }
 
     [Test]

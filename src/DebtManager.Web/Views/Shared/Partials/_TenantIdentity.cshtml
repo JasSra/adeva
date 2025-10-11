@@ -1,0 +1,55 @@
+@using DebtManager.Web.Models
+@model DebtManager.Web.Services.BrandingTheme?
+@{
+    var theme = Model ?? DebtManager.Web.Services.BrandingTheme.Default;
+    var initials = new string(theme.Name
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(2)
+        .Select(word => char.ToUpperInvariant(word[0]))
+        .ToArray());
+    if (string.IsNullOrWhiteSpace(initials))
+    {
+        initials = "AP";
+    }
+    var tenantStyles = $"--tenant-primary:{theme.PrimaryColorHex};--tenant-secondary:{theme.SecondaryColorHex};";
+}
+<div class="app-tenant-identity" style="@tenantStyles">
+    <div class="app-tenant-identity__logos">
+        @await Html.PartialAsync("~/Views/Shared/Partials/_BrandLogo.cshtml", new BrandLogoModel
+        {
+            Variant = "mark",
+            Size = "sm",
+            Title = "Adeva Plus",
+            AsLink = false
+        })
+        <span class="app-tenant-identity__divider" aria-hidden="true"></span>
+        <div class="app-tenant-identity__tenant">
+            @if (theme.HasCustomLogo)
+            {
+                <img src="@theme.LogoUrl" alt="@theme.Name logo" class="app-tenant-logo" />
+            }
+            else
+            {
+                <span class="app-tenant-avatar" aria-hidden="true">@initials</span>
+            }
+            <div>
+                <span class="app-tenant-identity__name">@theme.Name</span>
+                <span class="app-tenant-identity__tagline">@theme.DisplayTagline</span>
+            </div>
+        </div>
+    </div>
+    @if (theme.HasSupportContact)
+    {
+        <div class="app-tenant-identity__support">
+            @if (!string.IsNullOrWhiteSpace(theme.SupportEmail))
+            {
+                <span>Email <a href="mailto:@theme.SupportEmail">@theme.SupportEmail</a></span>
+            }
+            @if (!string.IsNullOrWhiteSpace(theme.SupportPhone))
+            {
+                <span>Call <a href="tel:@theme.SupportPhone">@theme.SupportPhone</a></span>
+            }
+        </div>
+    }
+</div>
+

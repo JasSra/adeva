@@ -1,0 +1,396 @@
+@model DebtManager.Domain.Debts.Debt
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var debt = Model;
+    string StatusClass(DebtManager.Domain.Debts.DebtStatus s) => s switch {
+        DebtManager.Domain.Debts.DebtStatus.Active => "bg-blue-100 text-blue-800",
+        DebtManager.Domain.Debts.DebtStatus.Settled => "bg-green-100 text-green-800",
+        DebtManager.Domain.Debts.DebtStatus.InArrears => "bg-red-100 text-red-800",
+        DebtManager.Domain.Debts.DebtStatus.Disputed => "bg-yellow-100 text-yellow-800",
+        DebtManager.Domain.Debts.DebtStatus.WrittenOff => "bg-gray-200 text-gray-700",
+        _ => "bg-gray-100 text-gray-800"
+    };
+}
+
+<div class="bg-white rounded-lg shadow">
+  <div class="p-6 border-b flex items-start justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-semibold">Debt @debt.ClientReferenceNumber</h2>
+      <div class="mt-1 text-sm text-gray-600">
+        Debtor:
+        @if (debt.Debtor != null) {
+          <span class="font-medium">@debt.Debtor.FirstName @debt.Debtor.LastName</span>
+        } else {<span>-</span>}
+        <span class="mx-2">·</span>
+        Org: @debt.Organization?.Name
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="debt-status-pill" class="px-2 py-1 text-xs rounded-full @StatusClass(debt.Status)">@debt.Status</span>
+      @if (debt.DueDateUtc.HasValue) {
+        <span id="debt-due-date" class="text-xs text-gray-600">Due @debt.DueDateUtc.Value.ToString("yyyy-MM-dd")</span>
+      }
+    </div>
+  </div>
+
+  <div class="p-6 grid md:grid-cols-3 gap-6">
+    <div class="md:col-span-2 space-y-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="p-4 rounded bg-gray-50">
+          <div class="text-xs text-gray-500">Original</div>
+          <div id="metric-original" class="text-lg font-semibold">@debt.Currency @debt.OriginalPrincipal.ToString("N2")</div>
+        </div>
+        <div class="p-4 rounded bg-gray-50">
+          <div class="text-xs text-gray-500">Outstanding</div>
+          <div id="metric-outstanding" class="text-lg font-semibold">@debt.Currency @debt.OutstandingPrincipal.ToString("N2")</div>
+        </div>
+        <div class="p-4 rounded bg-gray-50">
+          <div class="text-xs text-gray-500">Accrued Interest</div>
+          <div id="metric-interest" class="text-lg font-semibold">@debt.Currency @debt.AccruedInterest.ToString("N2")</div>
+        </div>
+        <div class="p-4 rounded bg-gray-50">
+          <div class="text-xs text-gray-500">Fees</div>
+          <div id="metric-fees" class="text-lg font-semibold">@debt.Currency @debt.AccruedFees.ToString("N2")</div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-semibold mb-3">Payment Plans</h3>
+        @if (debt.PaymentPlans != null && debt.PaymentPlans.Any()) {
+          <div class="overflow-x-auto border rounded">
+            <table class="min-w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left text-xs text-gray-500">Reference</th>
+                  <th class="px-4 py-2 text-left text-xs text-gray-500">Type</th>
+                  <th class="px-4 py-2 text-left text-xs text-gray-500">Status</th>
+                  <th class="px-4 py-2 text-left text-xs text-gray-500">Total</th>
+                  <th class="px-4 py-2 text-left text-xs text-gray-500">Installments</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+              @foreach (var p in debt.PaymentPlans) {
+                <tr>
+                  <td class="px-4 py-2 text-sm">@p.Reference</td>
+                  <td class="px-4 py-2 text-sm">@p.Type</td>
+                  <td class="px-4 py-2 text-sm">@p.Status</td>
+                  <td class="px-4 py-2 text-sm">@debt.Currency @p.TotalPayable.ToString("N2")</td>
+                  <td class="px-4 py-2 text-sm">@p.InstallmentCount</td>
+                </tr>
+              }
+              </tbody>
+            </table>
+          </div>
+        } else {
+          <div class="text-sm text-gray-600">No payment plans.</div>
+        }
+      </div>
+
+      <div>
+        <h3 class="text-sm font-semibold mb-3">Transactions</h3>
+        @if (debt.Transactions != null && debt.Transactions.Any()) {
+          <div class="overflow-x-auto border rounded">
+            <table class="min-w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left text-xs text-gray-500">Date</th>
+                  <th class="px-4 py-2 text-left text-xs text-gray-500">Amount</th>
+                  <th class="px-4 py-2 text-left text-xs text-gray-500">Method</th>
+                  <th class="px-4 py-2 text-left text-xs text-gray-500">Status</th>
+                  <th class="px-4 py-2 text-right text-xs text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-body" class="divide-y">
+              @foreach (var t in debt.Transactions.OrderByDescending(x => x.ProcessedAtUtc)) {
+                <tr>
+                  <td class="px-4 py-2 text-sm">@t.ProcessedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                  <td class="px-4 py-2 text-sm font-medium">@t.Currency @t.Amount.ToString("N2")</td>
+                  <td class="px-4 py-2 text-sm">@t.Method</td>
+                  <td class="px-4 py-2 text-sm">@t.Status</td>
+                  <td class="px-4 py-2 text-right">
+                    @if (t.Status == DebtManager.Domain.Payments.TransactionStatus.Succeeded) {
+                      <a class="text-blue-600 hover:underline text-sm" href="/api/admin/payments/@t.Id/receipt">Receipt</a>
+                    }
+                  </td>
+                </tr>
+              }
+              </tbody>
+            </table>
+          </div>
+        } else { <div class="text-sm text-gray-600">No transactions.</div> }
+      </div>
+
+      @if (debt.SettlementOfferAmount.HasValue)
+      {
+        <div id="settlement-offer-block" class="p-4 border rounded bg-amber-50">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm font-semibold">Pending settlement offer</div>
+              <div id="settlement-amount" class="text-sm text-gray-700">Amount: @debt.Currency @debt.SettlementOfferAmount.Value.ToString("N2")</div>
+              @if (debt.SettlementOfferExpiresAtUtc.HasValue) {
+                <div id="settlement-expiry" class="text-xs text-gray-600">Expires (UTC): @debt.SettlementOfferExpiresAtUtc.Value.ToString("u")</div>
+              }
+            </div>
+            <div class="flex gap-2">
+              <button type="button" class="px-3 py-1.5 bg-emerald-600 text-white rounded text-sm" onclick="acceptSettlement()">Accept</button>
+              <button type="button" class="px-3 py-1.5 bg-white border rounded text-sm" onclick="rejectSettlement()">Reject</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <div>
+        <h3 class="text-sm font-semibold mb-2">Notes</h3>
+        <pre class="bg-gray-50 p-3 rounded text-sm whitespace-pre-wrap">@debt.Notes</pre>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="p-4 border rounded">
+        <h4 class="text-sm font-semibold mb-3">Actions</h4>
+        @{
+          var canTakePayments = debt.Status == DebtManager.Domain.Debts.DebtStatus.Active || debt.Status == DebtManager.Domain.Debts.DebtStatus.InArrears;
+          var isDisputed = debt.Status == DebtManager.Domain.Debts.DebtStatus.Disputed;
+          var isClosed = debt.Status == DebtManager.Domain.Debts.DebtStatus.Settled || debt.Status == DebtManager.Domain.Debts.DebtStatus.WrittenOff || debt.Status == DebtManager.Domain.Debts.DebtStatus.Closed;
+        }
+        <div class="flex flex-col gap-2">
+          @if (canTakePayments) {
+            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm" onclick="recordPayment()">Record manual payment</button>
+            <a class="px-4 py-2 bg-white border rounded hover:bg-gray-50 text-sm text-center" href="/Payment/SelectPlan?debtId=@debt.Id">Create or accept payment plan</a>
+            <button type="button" class="px-4 py-2 bg-white border rounded hover:bg-gray-50 text-sm" onclick="addFee()">Add fee</button>
+            <button type="button" class="px-4 py-2 bg-white border rounded hover:bg-gray-50 text-sm" onclick="proposeSettlement()">Propose settlement</button>
+          }
+          @if (isDisputed) {
+            <button type="button" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm" onclick="resolveDispute()">Resolve dispute</button>
+          }
+          @if (!isClosed) {
+            <button type="button" class="px-4 py-2 bg-white border rounded hover:bg-gray-50 text-sm" onclick="flagDispute()">Flag dispute</button>
+            <button type="button" class="px-4 py-2 bg-white border rounded hover:bg-gray-50 text-sm" onclick="writeOff()">Write-off</button>
+          }
+        </div>
+      </div>
+      <div class="p-4 border rounded">
+        <h4 class="text-sm font-semibold mb-3">Meta</h4>
+        <div class="text-xs text-gray-600 space-y-1">
+          <div>Opened (UTC): @debt.OpenedAtUtc.ToString("u")</div>
+          @if (debt.LastPaymentAtUtc.HasValue) { <div>Last payment (UTC): @debt.LastPaymentAtUtc.Value.ToString("u")</div> }
+          @if (debt.NextActionAtUtc.HasValue) { <div>Next action (UTC): @debt.NextActionAtUtc.Value.ToString("u")</div> }
+          @if (!string.IsNullOrWhiteSpace(debt.TagsCsv)) { <div>Tags: @debt.TagsCsv</div> }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+  async function fetchSummary() {
+    const res = await fetch(`/api/admin/debts/@Model.Id/summary`);
+    if (!res.ok) throw new Error('Failed to fetch summary');
+    return await res.json();
+  }
+
+  function renderDebtSummary(s) {
+    // Status & Due
+    const pill = document.getElementById('debt-status-pill');
+    if (pill) pill.textContent = s.status;
+    const due = document.getElementById('debt-due-date');
+    if (due) {
+      if (s.dueDateUtc) {
+        const d = new Date(s.dueDateUtc);
+        const yyyy = d.getUTCFullYear();
+        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const dd = String(d.getUTCDate()).padStart(2, '0');
+        due.textContent = `Due ${yyyy}-${mm}-${dd}`;
+        due.style.display = '';
+      } else {
+        due.style.display = 'none';
+      }
+    }
+
+    // Metrics
+    const fmt = (n) => Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const original = document.getElementById('metric-original');
+    const outstanding = document.getElementById('metric-outstanding');
+    const interest = document.getElementById('metric-interest');
+    const fees = document.getElementById('metric-fees');
+    if (original) original.textContent = `${s.currency} ${fmt(s.original)}`;
+    if (outstanding) outstanding.textContent = `${s.currency} ${fmt(s.outstanding)}`;
+    if (interest) interest.textContent = `${s.currency} ${fmt(s.interest)}`;
+    if (fees) fees.textContent = `${s.currency} ${fmt(s.fees)}`;
+
+    // Settlement
+    const block = document.getElementById('settlement-offer-block');
+    if (s.settlement && s.settlement.amount) {
+      if (!block) {
+        // For simplicity, reload to render the block if it didn't exist before.
+        window.location.reload();
+        return;
+      }
+      const amt = document.getElementById('settlement-amount');
+      if (amt) amt.textContent = `Amount: ${s.currency} ${fmt(s.settlement.amount)}`;
+      const exp = document.getElementById('settlement-expiry');
+      if (exp) {
+        if (s.settlement.expiresAtUtc) {
+          const ed = new Date(s.settlement.expiresAtUtc);
+          exp.textContent = `Expires (UTC): ${ed.toISOString().replace('T', ' ').replace('Z','Z')}`;
+          exp.style.display = '';
+        } else {
+          exp.style.display = 'none';
+        }
+      }
+    } else if (block) {
+      block.remove();
+    }
+
+    // Transactions
+    const tbody = document.getElementById('transactions-body');
+    if (tbody && Array.isArray(s.transactions)) {
+      tbody.innerHTML = s.transactions.map(t => {
+        const dt = new Date(t.processedAtUtc);
+        const iso = dt.toISOString().slice(0,16).replace('T',' ');
+        const amt = `${t.currency} ${fmt(t.amount)}`;
+        const receipt = t.hasReceipt ? `<a class="text-blue-600 hover:underline text-sm" href="/api/admin/payments/${t.id}/receipt">Receipt</a>` : '';
+        return `
+          <tr>
+            <td class="px-4 py-2 text-sm">${iso} UTC</td>
+            <td class="px-4 py-2 text-sm font-medium">${amt}</td>
+            <td class="px-4 py-2 text-sm">${t.method}</td>
+            <td class="px-4 py-2 text-sm">${t.status}</td>
+            <td class="px-4 py-2 text-right">${receipt}</td>
+          </tr>`;
+      }).join('');
+    }
+  }
+  async function recordPayment() {
+    const amount = prompt("Enter payment amount (@Model.Currency):");
+    if (!amount) return;
+    const method = prompt("Method (card, bank, directdebit, cash, cheque, manualadjustment):", "cash");
+    const notes = prompt("Notes (optional):", "");
+    try {
+      const res = await fetch('/api/admin/payments/adhoc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ debtId: '@Model.Id', amount: parseFloat(amount), currency: '@Model.Currency', method, notes })
+      });
+      if (!res.ok) { const err = await res.json(); alert(err.error || 'Failed to record payment'); return; }
+      const data = await res.json();
+      alert('Payment recorded. Transaction: ' + data.transactionId);
+      const summary = await fetchSummary();
+      renderDebtSummary(summary);
+    } catch (e) { alert('Error: ' + e); }
+  }
+
+  async function addFee() {
+    const amountStr = prompt("Enter fee amount (@Model.Currency):");
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (!isFinite(amount) || amount <= 0) { alert('Invalid amount'); return; }
+    const reason = prompt("Reason for fee:");
+    if (!reason) { alert('Reason is required'); return; }
+    try {
+      const res = await fetch('/api/admin/debts/add-fee', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ debtId: '@Model.Id', amount, reason })
+      });
+      if (!res.ok) { const err = await safeJson(res); alert(err.error || 'Failed to add fee'); return; }
+      const summary = await fetchSummary();
+      renderDebtSummary(summary);
+    } catch (e) { alert('Error: ' + e); }
+  }
+
+  async function proposeSettlement() {
+    const amountStr = prompt("Settlement amount (@Model.Currency):");
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (!isFinite(amount) || amount <= 0) { alert('Invalid amount'); return; }
+    const expiresStr = prompt("Expiry (UTC) in ISO format, e.g. 2025-12-31T23:59:00Z:");
+    if (!expiresStr) return;
+    const expires = new Date(expiresStr);
+    if (isNaN(expires.getTime()) || expires <= new Date()) { alert('Invalid expiry'); return; }
+    try {
+      const res = await fetch('/api/admin/debts/propose-settlement', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ debtId: '@Model.Id', amount, expiresAtUtc: expires.toISOString() })
+      });
+      if (!res.ok) { const err = await safeJson(res); alert(err.error || 'Failed to propose settlement'); return; }
+      const summary = await fetchSummary();
+      renderDebtSummary(summary);
+    } catch (e) { alert('Error: ' + e); }
+  }
+
+  async function resolveDispute() {
+    if (!confirm('Mark dispute as resolved?')) return;
+    try {
+      const res = await fetch('/api/admin/debts/resolve-dispute', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ debtId: '@Model.Id' })
+      });
+      if (!res.ok) { const err = await safeJson(res); alert(err.error || 'Failed to resolve dispute'); return; }
+      const summary = await fetchSummary();
+      renderDebtSummary(summary);
+    } catch (e) { alert('Error: ' + e); }
+  }
+
+  async function flagDispute() {
+    const reason = prompt('Enter dispute reason:');
+    if (!reason) return;
+    try {
+      const res = await fetch('/api/admin/debts/flag-dispute', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ debtId: '@Model.Id', reason })
+      });
+      if (!res.ok) { const err = await safeJson(res); alert(err.error || 'Failed to flag dispute'); return; }
+      const summary = await fetchSummary();
+      renderDebtSummary(summary);
+    } catch (e) { alert('Error: ' + e); }
+  }
+
+  async function writeOff() {
+    const reason = prompt('Write-off reason:');
+    if (!reason) return;
+    if (!confirm('This will mark the debt as written-off. Continue?')) return;
+    try {
+      const res = await fetch('/api/admin/debts/write-off', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ debtId: '@Model.Id', reason })
+      });
+      if (!res.ok) { const err = await safeJson(res); alert(err.error || 'Failed to write off debt'); return; }
+      const summary = await fetchSummary();
+      renderDebtSummary(summary);
+    } catch (e) { alert('Error: ' + e); }
+  }
+
+  async function acceptSettlement() {
+    if (!confirm('Accept the pending settlement offer?')) return;
+    try {
+      const res = await fetch('/api/admin/debts/accept-settlement', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ debtId: '@Model.Id' })
+      });
+      if (!res.ok) { const err = await safeJson(res); alert(err.error || 'Failed to accept settlement'); return; }
+      const data = await res.json();
+      updateSummary(data);
+    } catch (e) { alert('Error: ' + e); }
+  }
+
+  async function rejectSettlement() {
+    const reason = prompt('Reason (optional):', '');
+    try {
+      const res = await fetch('/api/admin/debts/reject-settlement', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ debtId: '@Model.Id', reason })
+      });
+      if (!res.ok) { const err = await safeJson(res); alert(err.error || 'Failed to reject settlement'); return; }
+      const data = await res.json();
+      updateSummary(data);
+    } catch (e) { alert('Error: ' + e); }
+  }
+
+  async function safeJson(res) {
+    try { return await res.json(); } catch { return {}; }
+  }
+
+  // On load, no-op. We could fetch and render again if desired.
+</script>
+}

@@ -356,7 +356,7 @@ public class MessagesController : Controller
     /// Compose a new message
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> Compose(CancellationToken ct)
+    public IActionResult Compose()
     {
         var vm = new ComposeMessageVm();
         ViewBag.Title = "Compose Message";

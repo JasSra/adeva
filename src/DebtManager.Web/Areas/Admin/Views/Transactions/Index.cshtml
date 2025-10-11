@@ -11,6 +11,7 @@
     <div class="p-6 border-b flex items-center justify-between">
         <h3 class="text-lg font-semibold">Transactions</h3>
         <div class="flex gap-2">
+            <input type="text" name="organizationId" value="@((ViewBag.OrganizationId != null) ? ViewBag.OrganizationId.ToString() : "")" placeholder="Organization Id" class="border rounded px-3 py-2 text-sm" />
             <select name="type" class="border rounded px-3 py-2 text-sm">
                 <option value="">All Directions</option>
                 <option value="inbound" @(ViewBag.Type == "inbound" ? "selected" : "")>Inbound</option>

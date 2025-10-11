@@ -51,13 +51,14 @@ public static class DummyDataSeeder
         var organizations = new List<Organization>();
 
         // Scenario 1: New organization ready for approval
+        var pendingBrand = BrandingFixtures.Next();
         var pendingOrg = Organization.CreatePending(
             name: "ABC Collections Ltd",
             legalName: "ABC Collections Pty Ltd",
             abn: "12345678901",
             defaultCurrency: "AUD",
-            primaryColorHex: "#1e3a8a",
-            secondaryColorHex: "#3b82f6",
+            primaryColorHex: pendingBrand.PrimaryColorHex,
+            secondaryColorHex: pendingBrand.SecondaryColorHex,
             supportEmail: "support@abccollections.example",
             supportPhone: "1300123456",
             timezone: "Australia/Sydney",
@@ -65,16 +66,18 @@ public static class DummyDataSeeder
             tradingName: "ABC Collections"
         );
         pendingOrg.SetTags(new[] { "dummy", "scenario:pending-approval" });
+        BrandingFixtures.ApplyTo(pendingOrg, pendingBrand);
         organizations.Add(pendingOrg);
 
         // Scenario 2: Rejected organization
+        var rejectedBrand = BrandingFixtures.Next();
         var rejectedOrg = Organization.CreatePending(
             name: "XYZ Debt Recovery",
             legalName: "XYZ Debt Recovery Pty Ltd",
             abn: "98765432109",
             defaultCurrency: "AUD",
-            primaryColorHex: "#dc2626",
-            secondaryColorHex: "#ef4444",
+            primaryColorHex: rejectedBrand.PrimaryColorHex,
+            secondaryColorHex: rejectedBrand.SecondaryColorHex,
             supportEmail: "support@xyzdebt.example",
             supportPhone: "1300987654",
             timezone: "Australia/Melbourne",
@@ -82,16 +85,18 @@ public static class DummyDataSeeder
             tradingName: "XYZ Recovery"
         );
         rejectedOrg.SetTags(new[] { "dummy", "scenario:rejected" });
+        BrandingFixtures.ApplyTo(rejectedOrg, rejectedBrand);
         organizations.Add(rejectedOrg);
 
         // Scenario 3: Approved and onboarded organization
+        var activeBrand = BrandingFixtures.Next();
         var activeOrg = new Organization(
             name: "Premier Collections",
             legalName: "Premier Collections Pty Ltd",
             abn: "11223344556",
             defaultCurrency: "AUD",
-            primaryColorHex: "#059669",
-            secondaryColorHex: "#10b981",
+            primaryColorHex: activeBrand.PrimaryColorHex,
+            secondaryColorHex: activeBrand.SecondaryColorHex,
             supportEmail: "support@premier.example",
             supportPhone: "1300555666",
             timezone: "Australia/Brisbane",
@@ -101,16 +106,18 @@ public static class DummyDataSeeder
         activeOrg.Approve(DateTime.UtcNow.AddDays(-30));
         activeOrg.MarkOnboarded(DateTime.UtcNow.AddDays(-29));
         activeOrg.SetTags(new[] { "dummy", "scenario:active-established" });
+        BrandingFixtures.ApplyTo(activeOrg, activeBrand);
         organizations.Add(activeOrg);
 
         // Scenario 4: Recently approved organization
+        var recentBrand = BrandingFixtures.Next();
         var recentOrg = new Organization(
             name: "Swift Debt Solutions",
             legalName: "Swift Debt Solutions Pty Ltd",
             abn: "55667788990",
             defaultCurrency: "AUD",
-            primaryColorHex: "#7c3aed",
-            secondaryColorHex: "#8b5cf6",
+            primaryColorHex: recentBrand.PrimaryColorHex,
+            secondaryColorHex: recentBrand.SecondaryColorHex,
             supportEmail: "support@swift.example",
             supportPhone: "1300777888",
             timezone: "Australia/Perth",
@@ -119,6 +126,7 @@ public static class DummyDataSeeder
         );
         recentOrg.Approve(DateTime.UtcNow.AddDays(-3));
         recentOrg.SetTags(new[] { "dummy", "scenario:recently-approved" });
+        BrandingFixtures.ApplyTo(recentOrg, recentBrand);
         organizations.Add(recentOrg);
 
         return organizations;
@@ -305,7 +313,7 @@ public static class DummyDataSeeder
             // Defaulted payment plan
             var plan = new PaymentPlan(
                 debt.Id,
-                $"PP-{debt.ClientReferenceNumber}",
+                $"PP-{debt.Id:N}-{Guid.NewGuid():N}",
                 PaymentPlanType.Custom,
                 PaymentFrequency.Monthly,
                 DateTime.UtcNow.AddMonths(-3),
@@ -322,7 +330,7 @@ public static class DummyDataSeeder
             // Completed payment plan
             var plan = new PaymentPlan(
                 debt.Id,
-                $"PP-{debt.ClientReferenceNumber}",
+                $"PP-{debt.Id:N}-{Guid.NewGuid():N}",
                 PaymentPlanType.FullSettlement,
                 PaymentFrequency.OneOff,
                 DateTime.UtcNow.AddDays(-35),
@@ -339,7 +347,7 @@ public static class DummyDataSeeder
             // Draft payment plan awaiting approval
             var plan = new PaymentPlan(
                 debt.Id,
-                $"PP-DRAFT-{debt.ClientReferenceNumber}",
+                $"PP-DRAFT-{debt.Id:N}-{Guid.NewGuid():N}",
                 PaymentPlanType.SystemGenerated,
                 PaymentFrequency.Weekly,
                 DateTime.UtcNow.AddDays(7),

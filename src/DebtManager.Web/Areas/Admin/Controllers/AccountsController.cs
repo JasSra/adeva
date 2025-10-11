@@ -19,13 +19,14 @@ public class AccountsController : Controller
         _auditService = auditService;
     }
 
-    public async Task<IActionResult> Index(string? search, string? role, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Index(string? search, string? role, Guid? orgId, int page = 1, int pageSize = 20)
     {
         var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
         ViewBag.ThemeName = theme?.Name ?? "Default";
         ViewBag.Title = "User Accounts";
         ViewBag.Search = search;
         ViewBag.Role = role;
+        ViewBag.OrgId = orgId;
         ViewBag.Page = page;
         ViewBag.PageSize = pageSize;
 
@@ -34,6 +35,15 @@ public class AccountsController : Controller
         if (!string.IsNullOrWhiteSpace(search))
         {
             query = query.Where(u => u.Email!.Contains(search) || (u.UserName != null && u.UserName.Contains(search)));
+        }
+
+        if (orgId.HasValue)
+        {
+            // Join via profiles to filter by organization
+            query = from u in _userManager.Users
+                    join p in HttpContext.RequestServices.GetRequiredService<DebtManager.Infrastructure.Persistence.AppDbContext>().UserProfiles on u.Id equals p.UserId
+                    where p.OrganizationId == orgId
+                    select u;
         }
 
         var totalCount = await query.CountAsync();

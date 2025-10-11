@@ -14,7 +14,7 @@ public class AuditController : Controller
         _auditLogRepository = auditLogRepository;
     }
 
-    public async Task<IActionResult> Index(string? search, string? entity, DateTime? fromDate, DateTime? toDate, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Index(string? search, string? entity, string? entityId, DateTime? fromDate, DateTime? toDate, int page = 1, int pageSize = 20)
     {
         var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
         ViewBag.ThemeName = theme?.Name ?? "Default";
@@ -23,12 +23,15 @@ public class AuditController : Controller
         ViewBag.Entity = entity;
         ViewBag.FromDate = fromDate;
         ViewBag.ToDate = toDate;
+        ViewBag.EntityId = entityId;
         ViewBag.Page = page;
         ViewBag.PageSize = pageSize;
 
         var skip = (page - 1) * pageSize;
-        var logs = await _auditLogRepository.SearchAsync(search, entity, fromDate, toDate, skip, pageSize);
-        var totalCount = await _auditLogRepository.GetCountAsync(search, entity, fromDate, toDate);
+        // If entityId specified, include it in search string to narrow down
+        var effectiveSearch = string.IsNullOrWhiteSpace(entityId) ? search : (string.IsNullOrWhiteSpace(search) ? entityId : ($"{search} {entityId}"));
+        var logs = await _auditLogRepository.SearchAsync(effectiveSearch, entity, fromDate, toDate, skip, pageSize);
+        var totalCount = await _auditLogRepository.GetCountAsync(effectiveSearch, entity, fromDate, toDate);
         ViewBag.TotalCount = totalCount;
         ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 

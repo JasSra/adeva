@@ -31,6 +31,16 @@ public class Organization : Entity
     public string? FaviconUrl { get; private set; }
     public string? StatementFooter { get; private set; }
     public string? BrandTagline { get; private set; }
+    // Application lifecycle metadata
+    public string? ApplicationApprovalNote { get; private set; }
+    public string? ApplicationRejectionReason { get; private set; }
+    public string? PhoneVerificationNotes { get; private set; }
+    public string? PhoneVerifiedBy { get; private set; }
+    public DateTime? PhoneVerifiedAtUtc { get; private set; }
+    // Bank/payout details (non-sensitive dev storage)
+    public string? BankAccountName { get; private set; }
+    public string? BankAccountBsb { get; private set; }
+    public string? BankAccountNumber { get; private set; }
     public bool IsApproved { get; private set; }
     public DateTime? ApprovedAtUtc { get; private set; }
     public DateTime? OnboardedAtUtc { get; private set; }
@@ -121,6 +131,18 @@ public class Organization : Entity
         UpdatedAtUtc = ApprovedAtUtc;
     }
 
+    public void SetApprovalNote(string? note)
+    {
+        ApplicationApprovalNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void SetRejectionReason(string? reason)
+    {
+        ApplicationRejectionReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
     public void MarkOnboarded(DateTime? onboardedAtUtc = null)
     {
         OnboardedAtUtc = onboardedAtUtc ?? DateTime.UtcNow;
@@ -163,6 +185,32 @@ public class Organization : Entity
     {
         StatementFooter = statementFooter;
         UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void SetTimezone(string timezone)
+    {
+        if (string.IsNullOrWhiteSpace(timezone))
+        {
+            throw new ArgumentException("Timezone is required", nameof(timezone));
+        }
+        Timezone = timezone.Trim();
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void SetBankDetails(string? accountName, string? bsb, string? accountNumber)
+    {
+        BankAccountName = string.IsNullOrWhiteSpace(accountName) ? null : accountName.Trim();
+        BankAccountBsb = string.IsNullOrWhiteSpace(bsb) ? null : bsb.Trim();
+        BankAccountNumber = string.IsNullOrWhiteSpace(accountNumber) ? null : accountNumber.Trim();
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void RecordPhoneVerification(string notes, string verifiedBy, DateTime? verifiedAtUtc = null)
+    {
+        PhoneVerificationNotes = notes;
+        PhoneVerifiedBy = verifiedBy;
+        PhoneVerifiedAtUtc = verifiedAtUtc ?? DateTime.UtcNow;
+        UpdatedAtUtc = PhoneVerifiedAtUtc;
     }
 
     public void ChangeDefaultCurrency(string currency)

@@ -205,6 +205,24 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
+// Auto-apply EF Core migrations in Development to keep schema in sync
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+        Log.Information("EF Core migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        var maintenanceInner = app.Services.GetRequiredService<IMaintenanceState>();
+        maintenanceInner.Enable(ex);
+        Log.Error(ex, "Database migration failed; entering maintenance mode.");
+    }
+}
+
 // Optionally turn on the Developer Exception Page in non-dev when explicitly enabled
 if (!app.Environment.IsDevelopment() && app.Configuration.GetValue("Diagnostics:UseDeveloperExceptionPage", false))
 {

@@ -1,0 +1,185 @@
+@model DebtManager.Domain.Organizations.Organization
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Application Details";
+}
+
+<section class="app-section">
+    <div class="app-surface">
+        <div class="app-surface-header">
+            <div class="space-y-1">
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-slate-100">@Model.Name</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Detailed organization profile and onboarding status.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                @if (!Model.IsApproved)
+                {
+                    <form method="post" action="@Url.Action("Approve", new { id = Model.Id })" class="inline">
+                        @Html.AntiForgeryToken()
+                        <button data-unstyled="true" type="submit" class="btn text-sm" onclick="return confirm('Approve this application?');">Approve</button>
+                    </form>
+                    <button data-unstyled="true" type="button" class="btn-danger-outline text-sm" onclick="showRejectModal('@Model.Id', '@Model.Name')">Reject</button>
+                }
+                else
+                {
+                    <span class="app-chip app-chip--success">Approved</span>
+                }
+            </div>
+        </div>
+        <div class="app-surface-body">
+            <dl class="app-property-grid">
+                <div>
+                    <dt>Legal name</dt>
+                    <dd>@Model.LegalName</dd>
+                </div>
+                <div>
+                    <dt>ABN</dt>
+                    <dd>@Model.Abn</dd>
+                </div>
+                <div>
+                    <dt>Trading name</dt>
+                    <dd>@(Model.TradingName ?? "-")</dd>
+                </div>
+                <div>
+                    <dt>Subdomain</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Subdomain) ? "-" : Model.Subdomain)</dd>
+                </div>
+                <div>
+                    <dt>Support email</dt>
+                    <dd>@Model.SupportEmail</dd>
+                </div>
+                <div>
+                    <dt>Support phone</dt>
+                    <dd>@Model.SupportPhone</dd>
+                </div>
+                <div>
+                    <dt>Created</dt>
+                    <dd>@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</dd>
+                </div>
+                <div>
+                    <dt>Status</dt>
+                    <dd>
+                        @if (Model.IsApproved)
+                        {
+                            <span class="app-chip app-chip--success">Approved</span>
+                        }
+                        else
+                        {
+                            <span class="app-chip app-chip--warning">Pending review</span>
+                        }
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</section>
+
+<div class="app-section">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="app-surface">
+            <div class="app-surface-header">
+                <h3 class="text-base font-semibold">Bank details (payout)</h3>
+                <p class="text-sm text-slate-500">Capture before approval.</p>
+            </div>
+            <div class="app-surface-body">
+                <form method="post" action="@Url.Action("ApproveWithDetails", new { id = Model.Id })" class="space-y-3">
+                    @Html.AntiForgeryToken()
+                    <div>
+                        <label class="block text-sm font-medium">Account name</label>
+                        <input name="bankAccountName" class="w-full border rounded px-3 py-2" value="@Model.BankAccountName" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium">BSB</label>
+                            <input name="bankBsb" class="w-full border rounded px-3 py-2" value="@Model.BankAccountBsb" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium">Account number</label>
+                            <input name="bankAccountNumber" class="w-full border rounded px-3 py-2" value="@Model.BankAccountNumber" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Approval note (optional)</label>
+                        <textarea name="approvalNote" rows="3" class="w-full border rounded px-3 py-2" placeholder="Internal note sent to audit only">@Model.ApplicationApprovalNote</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium">Phone verification notes</label>
+                        <textarea name="phoneVerificationNotes" rows="3" class="w-full border rounded px-3 py-2" placeholder="Script outcomes, caller, timestamp">@Model.PhoneVerificationNotes</textarea>
+                        @if(Model.PhoneVerifiedAtUtc.HasValue){<p class="text-xs text-slate-500 mt-1">Verified @Model.PhoneVerifiedAtUtc.Value.ToLocalTime():g by @Model.PhoneVerifiedBy</p>}
+                    </div>
+                    <div class="flex items-center justify-end gap-2">
+                        <button data-unstyled="true" type="submit" class="btn">Save & Approve</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="app-surface lg:col-span-2">
+            <div class="app-surface-header">
+                <h3 class="text-base font-semibold">Phone verification script</h3>
+                <p class="text-sm text-slate-500">Guided questions to confirm ownership.</p>
+            </div>
+            <div class="app-surface-body prose">
+<ol>
+<li>Confirm business legal name and ABN.</li>
+<li>Confirm bank account ownership matches legal entity.</li>
+<li>Explain fees and payout cadence; get acknowledgement.</li>
+<li>Record reference and your name.</li>
+</ol>
+            </div>
+        </div>
+    </div>
+    <div class="mt-4">
+        <a href="@Url.Action("Index")" class="btn-ghost text-sm">Back to applications</a>
+    </div>
+</div>
+
+<div id="rejectModal" class="hidden fixed inset-0 z-50 app-modal items-center justify-center">
+    <div class="app-modal__dialog">
+        <div class="flex items-start justify-between gap-4 mb-4">
+            <div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Reject application</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Share context with the applicant about the decision.</p>
+            </div>
+            <button data-unstyled="true" type="button" class="btn-ghost text-sm" onclick="hideRejectModal()" aria-label="Close modal">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <form id="rejectForm" method="post" class="space-y-4">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="rejectOrgId" name="id" value="" />
+            <div>
+                <label class="text-sm font-medium text-slate-600 dark:text-slate-300">Organization</label>
+                <p id="rejectOrgName" class="mt-1 text-sm text-slate-500 dark:text-slate-400"></p>
+            </div>
+            <div>
+                <label for="reason" class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">Reason for rejection</label>
+                <textarea id="reason" name="reason" rows="4" required placeholder="Share context so the applicant understands the next steps."></textarea>
+            </div>
+            <div class="flex items-center justify-end gap-2">
+                <button data-unstyled="true" type="button" class="btn-ghost text-sm" onclick="hideRejectModal()">Cancel</button>
+                <button data-unstyled="true" type="submit" class="btn-danger text-sm">Reject application</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showRejectModal(orgId, orgName) {
+    const modal = document.getElementById('rejectModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.getElementById('rejectOrgId').value = orgId;
+    document.getElementById('rejectOrgName').textContent = orgName;
+    document.getElementById('rejectForm').action = '@Url.Action("Reject")/' + orgId;
+}
+
+function hideRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.getElementById('reason').value = '';
+}
+</script>

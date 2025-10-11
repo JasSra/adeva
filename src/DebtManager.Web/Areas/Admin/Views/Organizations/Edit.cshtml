@@ -1,0 +1,49 @@
+@model DebtManager.Domain.Organizations.Organization
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Edit Organization";
+}
+
+<form method="post" action="#" class="app-section app-surface">
+    <div class="app-surface-header">
+        <h2 class="text-xl font-semibold">Edit @Model.Name</h2>
+    </div>
+    <div class="app-surface-body grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium">Legal name</label>
+            <input class="w-full border rounded px-3 py-2" name="LegalName" value="@Model.LegalName" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium">Trading name</label>
+            <input class="w-full border rounded px-3 py-2" name="TradingName" value="@Model.TradingName" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium">Support email</label>
+            <input class="w-full border rounded px-3 py-2" name="SupportEmail" value="@Model.SupportEmail" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium">Support phone</label>
+            <input class="w-full border rounded px-3 py-2" name="SupportPhone" value="@Model.SupportPhone" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium">Subdomain</label>
+            <input class="w-full border rounded px-3 py-2" name="Subdomain" value="@Model.Subdomain" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium">Timezone</label>
+            <input class="w-full border rounded px-3 py-2" name="Timezone" value="@Model.Timezone" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium">Primary color</label>
+            <input class="w-full border rounded px-3 py-2" name="PrimaryColorHex" value="@Model.PrimaryColorHex" />
+        </div>
+        <div>
+            <label class="block text-sm font-medium">Secondary color</label>
+            <input class="w-full border rounded px-3 py-2" name="SecondaryColorHex" value="@Model.SecondaryColorHex" />
+        </div>
+    </div>
+    <div class="app-surface-footer">
+        <a href="@Url.Action("Details", new { id = Model.Id })" class="btn-ghost">Cancel</a>
+        <button type="submit" class="btn">Save</button>
+    </div>
+</form>

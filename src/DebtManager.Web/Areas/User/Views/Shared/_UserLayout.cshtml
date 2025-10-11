@@ -2,6 +2,7 @@
     var themeName = ViewBag.ThemeName as string ?? "Default";
     var theme = Context.Items[DebtManager.Web.Services.BrandingResolverMiddleware.ThemeItemKey] as DebtManager.Web.Services.BrandingTheme;
     var primaryColor = theme?.PrimaryColorHex ?? "#0ea5e9";
+    var secondaryColor = theme?.SecondaryColorHex ?? "#0369a1";
 }
 <!DOCTYPE html>
 <html>
@@ -13,6 +14,7 @@
     <style>
         :root{
             --primary: @primaryColor;
+            --secondary: @secondaryColor;
             --success: #16a34a;
             --warning: #f59e0b;
             --danger: #dc2626;

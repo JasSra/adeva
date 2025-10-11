@@ -172,6 +172,12 @@ public partial class ScenariosController : Controller
             await CreateScenarioActorsAsync(result);
             TempData["SuccessMessage"] = $"Generated pack {result.PackId} ({result.PackName}) – Orgs: {result.OrganizationIds.Count}, Debtors: {result.DebtorIds.Count}, Debts: {result.DebtIds.Count}. Impersonation users created.";
         }
+        catch (DbUpdateException dbEx)
+        {
+            var inner = dbEx.InnerException?.Message ?? "(no inner)";
+            var entities = string.Join(", ", dbEx.Entries.Select(e => e.Entity.GetType().Name));
+            TempData["ErrorMessage"] = $"Error generating scenarios: {dbEx.Message}<br/>Inner: {inner}<br/>Entities: {entities}<br/>Stack: {dbEx.StackTrace?.Substring(0, Math.Min(500, dbEx.StackTrace?.Length ?? 0))}";
+        }
         catch (Exception ex)
         {
             TempData["ErrorMessage"] = $"Error generating scenarios: {ex.Message}<br/>Stack: {ex.StackTrace?.Substring(0, Math.Min(500, ex.StackTrace?.Length ?? 0))}";
