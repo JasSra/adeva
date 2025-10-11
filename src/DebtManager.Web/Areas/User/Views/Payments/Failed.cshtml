@@ -1,0 +1,147 @@
+@{
+    Layout = "~/Areas/User/Views/Shared/_UserLayout.cshtml";
+}
+
+@inject IConfiguration Configuration
+<script src="https://js.stripe.com/v3/"></script>
+
+<div class="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+    <div class="bg-white rounded-lg shadow-lg">
+        <!-- Error Header -->
+        <div class="bg-red-50 border-l-4 border-red-500 p-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h2 class="text-xl font-bold text-red-800 mb-1">Payment Failed</h2>
+                    <p class="text-sm text-red-700">We couldn't process your payment. Please try again or use a different payment method.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <!-- Error Details -->
+            <div id="error-details" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="font-semibold text-gray-900 mb-2 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    What went wrong?
+                </h3>
+                <p class="text-sm text-gray-700" id="error-message">Your card was declined. Please check your card details or try a different payment method.</p>
+                
+                <div class="mt-3 text-xs text-gray-600">
+                    <p><strong>Transaction ID:</strong> <span id="transaction-id" class="font-mono">-</span></p>
+                    <p><strong>Time:</strong> <span id="error-time">-</span></p>
+                </div>
+            </div>
+
+            <!-- Common Reasons -->
+            <div class="mb-6">
+                <h3 class="font-semibold text-gray-900 mb-3">Common reasons for payment failure:</h3>
+                <ul class="space-y-2 text-sm text-gray-700">
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 mr-2 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Insufficient funds in your account</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 mr-2 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Card has expired or been reported lost/stolen</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 mr-2 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Incorrect card details (number, CVV, or expiry date)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 mr-2 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Transaction blocked by your bank for security reasons</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- What to do next -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-semibold text-blue-800">What you can do:</h3>
+                        <div class="mt-2 text-sm text-blue-700">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Verify your card details and try again</li>
+                                <li>Try a different payment method (e.g., another card or bank account)</li>
+                                <li>Contact your bank to ensure the transaction is authorized</li>
+                                <li>Check your available balance</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="/User/Payments/MakePayment" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-center shadow-md flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Try Again
+                </a>
+                <a href="/User/Debts" class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-center">
+                    Back to Debts
+                </a>
+            </div>
+
+            <!-- Support Contact -->
+            <div class="mt-6 pt-6 border-t text-center">
+                <p class="text-sm text-gray-600 mb-2">Need help?</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm">
+                    <a href="mailto:support@example.com" class="text-blue-600 hover:underline flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Email Support
+                    </a>
+                    <span class="text-gray-400 hidden sm:inline">|</span>
+                    <a href="tel:1300000000" class="text-blue-600 hover:underline flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        Call Us: 1300 000 000
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Parse error details from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentIntentId = urlParams.get('payment_intent');
+    const errorCode = urlParams.get('error_code');
+    const errorMessage = urlParams.get('error_message');
+
+    if (paymentIntentId) {
+        document.getElementById('transaction-id').textContent = paymentIntentId;
+    }
+
+    if (errorMessage) {
+        document.getElementById('error-message').textContent = decodeURIComponent(errorMessage);
+    }
+
+    document.getElementById('error-time').textContent = new Date().toLocaleString();
+</script>

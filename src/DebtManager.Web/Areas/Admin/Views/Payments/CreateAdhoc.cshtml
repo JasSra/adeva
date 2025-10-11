@@ -1,0 +1,339 @@
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Create Adhoc Payment";
+}
+
+<div class="max-w-4xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create Adhoc Payment</h1>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Manually record a payment for a debt</p>
+            </div>
+            <a href="/Admin/Payments" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition font-medium">
+                ← Back to Payments
+            </a>
+        </div>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-blue-700 dark:text-blue-300">
+                    <strong>Note:</strong> Adhoc payments are for manually recording payments received outside the system (e.g., cash, cheque, bank transfer). 
+                    This action will immediately update the debt balance and create an audit trail.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-6">
+            <form id="adhoc-payment-form" class="space-y-6">
+                <!-- Debt Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Debt Reference <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex gap-2">
+                        <input 
+                            type="text" 
+                            id="debt-reference"
+                            class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2"
+                            placeholder="e.g., D-5001 or ACC123456"
+                            required />
+                        <button 
+                            type="button"
+                            id="find-debt-btn"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium whitespace-nowrap">
+                            Find Debt
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter the debt reference or account ID</p>
+                </div>
+
+                <!-- Debt Details (shown after finding debt) -->
+                <div id="debt-details" class="hidden">
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                        <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Debt Information</h3>
+                        <input type="hidden" id="debt-id" />
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400">Debtor</p>
+                                <p class="font-medium text-gray-900 dark:text-white" id="debtor-name">-</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400">Reference</p>
+                                <p class="font-medium text-gray-900 dark:text-white" id="debt-ref">-</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400">Outstanding Balance</p>
+                                <p class="font-bold text-red-600" id="outstanding-amount">-</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400">Currency</p>
+                                <p class="font-medium text-gray-900 dark:text-white" id="debt-currency">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Details -->
+                <div id="payment-section" class="hidden space-y-6">
+                    <!-- Amount -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Payment Amount <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-lg">$</span>
+                            <input 
+                                type="number" 
+                                id="payment-amount"
+                                class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg pl-10 pr-4 py-2 text-lg"
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0.01"
+                                required />
+                        </div>
+                        <div class="flex gap-2 mt-2">
+                            <button type="button" class="quick-amount-btn text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full" data-percentage="25">25%</button>
+                            <button type="button" class="quick-amount-btn text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full" data-percentage="50">50%</button>
+                            <button type="button" class="quick-amount-btn text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full" data-percentage="100">Full Amount</button>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Payment Method <span class="text-red-500">*</span>
+                        </label>
+                        <select 
+                            id="payment-method"
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2"
+                            required>
+                            <option value="">Select a method...</option>
+                            <option value="cash">Cash</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="banktransfer">Bank Transfer</option>
+                            <option value="directdebit">Direct Debit</option>
+                            <option value="card">Card (offline)</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Notes
+                        </label>
+                        <textarea 
+                            id="payment-notes"
+                            class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2"
+                            rows="3"
+                            placeholder="Add any additional information about this payment..."></textarea>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Optional: Include reference numbers, receipt details, etc.</p>
+                    </div>
+                </div>
+
+                <!-- Error/Success Messages -->
+                <div id="form-error" class="hidden p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300"></div>
+                <div id="form-success" class="hidden p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-300"></div>
+
+                <!-- Submit Button -->
+                <div id="submit-section" class="hidden flex gap-3 pt-4 border-t dark:border-gray-700">
+                    <button 
+                        type="submit"
+                        id="submit-btn"
+                        class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span id="submit-text">💰 Create Payment</span>
+                        <span id="submit-spinner" class="hidden">
+                            <svg class="animate-spin inline-block w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Processing...
+                        </span>
+                    </button>
+                    <button 
+                        type="button"
+                        onclick="window.location.href='/Admin/Payments'"
+                        class="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition font-medium">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentDebt = null;
+    let outstandingAmount = 0;
+
+    // Find debt button
+    document.getElementById('find-debt-btn').addEventListener('click', async function() {
+        const reference = document.getElementById('debt-reference').value.trim();
+        if (!reference) {
+            showError('Please enter a debt reference');
+            return;
+        }
+        await findDebt(reference);
+    });
+
+    // Quick amount buttons
+    document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const percentage = parseInt(this.dataset.percentage);
+            const amount = outstandingAmount * (percentage / 100);
+            document.getElementById('payment-amount').value = amount.toFixed(2);
+        });
+    });
+
+    // Form submission
+    document.getElementById('adhoc-payment-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await createPayment();
+    });
+
+    async function findDebt(reference) {
+        showLoading(true);
+        hideMessages();
+
+        try {
+            const response = await fetch(`/api/payment/find-by-reference?reference=${encodeURIComponent(reference)}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                showError(data.error || 'Debt not found');
+                return;
+            }
+
+            currentDebt = data;
+            outstandingAmount = data.amount;
+
+            // Populate debt details
+            document.getElementById('debt-id').value = data.debtId;
+            document.getElementById('debt-ref').textContent = data.reference;
+            document.getElementById('outstanding-amount').textContent = `$${data.amount.toFixed(2)}`;
+            document.getElementById('debt-currency').textContent = data.currency;
+            document.getElementById('payment-amount').value = data.amount.toFixed(2);
+
+            // TODO: Fetch debtor name from API
+            document.getElementById('debtor-name').textContent = 'Loading...';
+
+            // Show sections
+            document.getElementById('debt-details').classList.remove('hidden');
+            document.getElementById('payment-section').classList.remove('hidden');
+            document.getElementById('submit-section').classList.remove('hidden');
+
+        } catch (error) {
+            showError('Failed to find debt. Please try again.');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function createPayment() {
+        const debtId = document.getElementById('debt-id').value;
+        const amount = parseFloat(document.getElementById('payment-amount').value);
+        const method = document.getElementById('payment-method').value;
+        const notes = document.getElementById('payment-notes').value;
+
+        if (!debtId || !amount || !method) {
+            showError('Please fill in all required fields');
+            return;
+        }
+
+        if (amount <= 0) {
+            showError('Amount must be greater than zero');
+            return;
+        }
+
+        if (amount > outstandingAmount) {
+            const confirmed = confirm(`Warning: Payment amount ($${amount.toFixed(2)}) exceeds outstanding balance ($${outstandingAmount.toFixed(2)}). Continue?`);
+            if (!confirmed) return;
+        }
+
+        setLoading(true);
+        hideMessages();
+
+        try {
+            const response = await fetch('/api/admin/payments/adhoc', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    debtId,
+                    amount,
+                    currency: currentDebt.currency,
+                    method,
+                    notes
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                showError(data.error || 'Failed to create payment');
+                return;
+            }
+
+            showSuccess(`Payment created successfully! Transaction ID: ${data.transactionId}`);
+            
+            // Reset form after 2 seconds and redirect
+            setTimeout(() => {
+                window.location.href = `/Admin/Payments/Details/${data.transactionId}`;
+            }, 2000);
+
+        } catch (error) {
+            showError('An error occurred while creating the payment');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function showLoading(loading) {
+        document.getElementById('find-debt-btn').disabled = loading;
+    }
+
+    function setLoading(loading) {
+        const btn = document.getElementById('submit-btn');
+        const text = document.getElementById('submit-text');
+        const spinner = document.getElementById('submit-spinner');
+
+        btn.disabled = loading;
+        if (loading) {
+            text.classList.add('hidden');
+            spinner.classList.remove('hidden');
+        } else {
+            text.classList.remove('hidden');
+            spinner.classList.add('hidden');
+        }
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('form-error');
+        errorDiv.textContent = message;
+        errorDiv.classList.remove('hidden');
+        setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+    }
+
+    function showSuccess(message) {
+        const successDiv = document.getElementById('form-success');
+        successDiv.textContent = message;
+        successDiv.classList.remove('hidden');
+    }
+
+    function hideMessages() {
+        document.getElementById('form-error').classList.add('hidden');
+        document.getElementById('form-success').classList.add('hidden');
+    }
+</script>

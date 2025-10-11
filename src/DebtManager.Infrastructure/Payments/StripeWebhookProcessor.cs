@@ -65,15 +65,18 @@ public class PaymentWebhookJob
 {
     private readonly ITransactionRepository _transactionRepository;
     private readonly IDebtRepository _debtRepository;
+    private readonly IBackgroundJobClient _backgroundJobClient;
     private readonly ILogger<PaymentWebhookJob> _logger;
 
     public PaymentWebhookJob(
         ITransactionRepository transactionRepository,
         IDebtRepository debtRepository,
+        IBackgroundJobClient backgroundJobClient,
         ILogger<PaymentWebhookJob> logger)
     {
         _transactionRepository = transactionRepository;
         _debtRepository = debtRepository;
+        _backgroundJobClient = backgroundJobClient;
         _logger = logger;
     }
 
@@ -186,6 +189,14 @@ public class PaymentWebhookJob
 
         await _transactionRepository.SaveChangesAsync(ct);
 
+        // Queue receipt generation job
+        _backgroundJobClient.Enqueue<ReceiptGenerationJob>(
+            job => job.GenerateReceiptAsync(transaction.Id, CancellationToken.None));
+
+        // Queue payment success notification job
+        _backgroundJobClient.Enqueue<PaymentNotificationJob>(
+            job => job.SendPaymentSuccessNotificationAsync(transaction.Id, CancellationToken.None));
+
         _logger.LogInformation(
             "Payment succeeded for debt {DebtId}, amount {Amount} {Currency}, transaction {TxId}",
             debtId, amount, transaction.Currency, transaction.Id);
@@ -210,6 +221,10 @@ public class PaymentWebhookJob
         {
             existingTx.MarkFailed(paymentIntent.LastPaymentError?.Message ?? "Payment failed");
             await _transactionRepository.SaveChangesAsync(ct);
+
+            // Queue payment failure notification job
+            _backgroundJobClient.Enqueue<PaymentNotificationJob>(
+                job => job.SendPaymentFailureNotificationAsync(existingTx.Id, CancellationToken.None));
         }
         else
         {
@@ -230,6 +245,10 @@ public class PaymentWebhookJob
             transaction.MarkFailed(paymentIntent.LastPaymentError?.Message ?? "Payment failed");
             await _transactionRepository.AddAsync(transaction, ct);
             await _transactionRepository.SaveChangesAsync(ct);
+
+            // Queue payment failure notification job
+            _backgroundJobClient.Enqueue<PaymentNotificationJob>(
+                job => job.SendPaymentFailureNotificationAsync(transaction.Id, CancellationToken.None));
         }
 
         _logger.LogWarning("Payment failed for debt {DebtId}, intent {IntentId}", debtId, paymentIntent.Id);

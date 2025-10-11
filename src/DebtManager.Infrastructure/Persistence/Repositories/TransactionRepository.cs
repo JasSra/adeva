@@ -16,6 +16,15 @@ public class TransactionRepository(AppDbContext db) : ITransactionRepository
         return db.Transactions.FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 
+    public Task<Transaction?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        return db.Transactions
+            .Include(x => x.Debt)
+            .Include(x => x.Debtor)
+            .Include(x => x.PaymentPlan)
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
+    }
+
     public Task<Transaction?> GetByProviderReferenceAsync(string providerRef, CancellationToken ct = default)
     {
         return db.Transactions
@@ -37,6 +46,14 @@ public class TransactionRepository(AppDbContext db) : ITransactionRepository
     {
         return await db.Transactions
             .Where(x => x.Status == TransactionStatus.Pending && x.ProcessedAtUtc <= asOfUtc)
+            .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<Transaction>> GetFailedTransactionsAsync(DateTime fromUtc, CancellationToken ct = default)
+    {
+        return await db.Transactions
+            .Where(x => x.Status == TransactionStatus.Failed && x.ProcessedAtUtc >= fromUtc)
+            .OrderByDescending(x => x.ProcessedAtUtc)
             .ToListAsync(ct);
     }
 

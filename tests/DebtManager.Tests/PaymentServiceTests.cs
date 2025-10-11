@@ -6,6 +6,7 @@ using DebtManager.Domain.Debtors;
 using DebtManager.Domain.Organizations;
 using DebtManager.Domain.Payments;
 using DebtManager.Infrastructure.Payments;
+using Hangfire;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -131,10 +132,12 @@ public class PaymentWebhookJobTests
         _transactionRepositoryMock = new Mock<ITransactionRepository>();
         _debtRepositoryMock = new Mock<IDebtRepository>();
         _loggerMock = new Mock<ILogger<PaymentWebhookJob>>();
+        var backgroundJobClientMock = new Mock<IBackgroundJobClient>();
 
         _webhookJob = new PaymentWebhookJob(
             _transactionRepositoryMock.Object,
             _debtRepositoryMock.Object,
+            backgroundJobClientMock.Object,
             _loggerMock.Object
         );
     }

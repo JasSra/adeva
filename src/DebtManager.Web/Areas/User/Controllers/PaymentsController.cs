@@ -140,6 +140,15 @@ public class PaymentsController : Controller
         return View();
     }
 
+    [HttpGet]
+    public IActionResult Failed()
+    {
+        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
+        ViewBag.ThemeName = theme?.Name ?? "Default";
+        ViewBag.Title = "Payment Failed";
+        return View();
+    }
+
     private async Task<Guid?> GetCurrentDebtorIdAsync(CancellationToken ct)
     {
         var externalId = User.FindFirstValue("oid") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
