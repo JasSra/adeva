@@ -91,6 +91,38 @@ public class PaymentsController : Controller
         return View();
     }
 
+    public IActionResult ProcessStripePayment()
+    {
+        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
+        ViewBag.ThemeName = theme?.Name ?? "Default";
+        ViewBag.Title = "Process Stripe Payment";
+        return View();
+    }
+
+    public IActionResult TestStripePayment()
+    {
+        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
+        ViewBag.ThemeName = theme?.Name ?? "Default";
+        ViewBag.Title = "Test Stripe Payment";
+        return View();
+    }
+
+    public IActionResult PaymentSuccess()
+    {
+        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
+        ViewBag.ThemeName = theme?.Name ?? "Default";
+        ViewBag.Title = "Payment Successful";
+        return View();
+    }
+
+    public IActionResult TestSuccess()
+    {
+        var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;
+        ViewBag.ThemeName = theme?.Name ?? "Default";
+        ViewBag.Title = "Test Payment Successful";
+        return View();
+    }
+
     public async Task<IActionResult> RetryFailed()
     {
         var theme = HttpContext.Items[BrandingResolverMiddleware.ThemeItemKey] as BrandingTheme;

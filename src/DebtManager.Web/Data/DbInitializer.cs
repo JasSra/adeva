@@ -94,6 +94,8 @@ public static class DbInitializer
         }
 
         // Stripe
+        if (!await cfg.ExistsAsync("Stripe:PublishableKey"))
+            await cfg.SetAsync("Stripe:PublishableKey", "pk_test_1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ");
         if (!await cfg.ExistsAsync("Stripe:SecretKey"))
             await cfg.SetAsync("Stripe:SecretKey", "sk_test_1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ", true);
         if (!await cfg.ExistsAsync("Stripe:WebhookSecret"))

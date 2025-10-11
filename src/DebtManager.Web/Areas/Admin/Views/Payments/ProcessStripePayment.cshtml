@@ -1,0 +1,443 @@
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Process Stripe Payment";
+}
+
+@inject IConfiguration Configuration
+
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<div class="max-w-4xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <svg class="w-7 h-7 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    Process Stripe Payment
+                </h1>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Accept payment via Stripe for any debtor using all supported payment methods</p>
+            </div>
+            <a href="/Admin/Payments" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition font-medium">
+                ← Back to Payments
+            </a>
+        </div>
+    </div>
+
+    <!-- Warning Alert -->
+    <div class="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-yellow-700 dark:text-yellow-300">
+                    <strong>Live Payment Processing:</strong> This will process a real Stripe payment. Make sure you're using test mode for testing. 
+                    The payment will be charged to the debtor's selected payment method and processed through Stripe.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-6">
+            <form id="stripe-payment-form" class="space-y-6">
+                <!-- Step 1: Debtor Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Debt Reference <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex gap-2">
+                        <input 
+                            type="text" 
+                            id="debt-reference"
+                            class="flex-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2"
+                            placeholder="e.g., D-5001 or ACC123456"
+                            required />
+                        <button 
+                            type="button"
+                            id="find-debt-btn"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium whitespace-nowrap">
+                            <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Find Debt
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter the debt reference to process payment</p>
+                </div>
+
+                <!-- Debt Details (shown after finding debt) -->
+                <div id="debt-details" class="hidden">
+                    <div class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-xl p-5 border-2 border-blue-100 dark:border-blue-800 shadow-sm">
+                        <h3 class="font-bold text-gray-900 dark:text-white mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Debt Information
+                        </h3>
+                        <input type="hidden" id="debt-id" />
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">Debtor</p>
+                                <p class="font-semibold text-gray-900 dark:text-white" id="debtor-name">-</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-500 mt-1" id="debtor-email">-</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">Reference</p>
+                                <p class="font-semibold text-gray-900 dark:text-white" id="debt-ref">-</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">Outstanding Balance</p>
+                                <p class="font-bold text-red-600 text-lg" id="outstanding-amount">-</p>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <p class="text-gray-600 dark:text-gray-400 text-xs mb-1">Currency</p>
+                                <p class="font-semibold text-gray-900 dark:text-white" id="debt-currency">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Amount Section -->
+                <div id="amount-section" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Payment Amount <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-lg font-semibold">$</span>
+                        <input 
+                            type="number" 
+                            id="payment-amount"
+                            class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg pl-10 pr-4 py-3 text-lg font-semibold focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                            placeholder="0.00"
+                            step="0.01"
+                            min="0.01"
+                            required />
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button type="button" class="quick-amount-btn text-xs px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-800 dark:hover:text-blue-200 border border-gray-200 dark:border-gray-600 rounded-full transition font-medium" data-percentage="25">
+                            25%
+                        </button>
+                        <button type="button" class="quick-amount-btn text-xs px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-800 dark:hover:text-blue-200 border border-gray-200 dark:border-gray-600 rounded-full transition font-medium" data-percentage="50">
+                            50%
+                        </button>
+                        <button type="button" class="quick-amount-btn text-xs px-4 py-2 bg-green-100 dark:bg-green-900/20 hover:bg-green-200 text-green-700 dark:text-green-300 hover:text-green-800 border border-green-300 dark:border-green-700 rounded-full transition font-medium" data-percentage="100">
+                            ✓ Full Amount
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stripe Payment Element -->
+                <div id="payment-element-section" class="hidden">
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        Select Payment Method
+                    </h3>
+                    
+                    <!-- Stripe Payment Element Container -->
+                    <div id="payment-element" class="mb-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
+                        <!-- Stripe.js will inject payment UI here -->
+                        <div class="text-center text-gray-500 py-4">
+                            <svg class="animate-spin inline-block w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Loading payment methods...
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-800 dark:text-green-300">
+                        <svg class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span><strong>Secure Payment:</strong> Supports cards, Apple Pay, Google Pay, ACH bank transfers, and more.</span>
+                    </div>
+                </div>
+
+                <!-- Error/Success Messages -->
+                <div id="form-error" class="hidden p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300"></div>
+                <div id="form-success" class="hidden p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-300"></div>
+
+                <!-- Submit Button -->
+                <div id="submit-section" class="hidden flex gap-3 pt-4 border-t dark:border-gray-700">
+                    <button 
+                        type="button"
+                        id="submit-payment-btn"
+                        class="flex-1 px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <span id="submit-text" class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Process Payment Securely
+                        </span>
+                        <span id="submit-spinner" class="hidden flex items-center">
+                            <svg class="animate-spin inline-block w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Processing Payment...
+                        </span>
+                    </button>
+                    <button 
+                        type="button"
+                        onclick="window.location.href='/Admin/Payments'"
+                        class="px-6 py-4 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition font-semibold">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Security Info -->
+    <div class="mt-6 text-center">
+        <div class="flex items-center justify-center gap-6 text-sm text-gray-600 dark:text-gray-400">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-green-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>256-bit SSL Encryption</span>
+            </div>
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-blue-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>PCI DSS Compliant</span>
+            </div>
+            <div class="flex items-center">
+                <span class="font-semibold text-blue-600">Powered by Stripe</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let stripe;
+    let elements;
+    let currentDebt = null;
+    let outstandingAmount = 0;
+    let clientSecret = null;
+
+    // Initialize Stripe
+    async function initializeStripe() {
+        try {
+            const response = await fetch('/api/payment/stripe-key');
+            const { publishableKey } = await response.json();
+            stripe = Stripe(publishableKey);
+        } catch (error) {
+            console.error('Failed to initialize Stripe:', error);
+            showError('Failed to initialize payment system. Please refresh the page.');
+        }
+    }
+
+    // Find debt button
+    document.getElementById('find-debt-btn').addEventListener('click', async function() {
+        const reference = document.getElementById('debt-reference').value.trim();
+        if (!reference) {
+            showError('Please enter a debt reference');
+            return;
+        }
+        await findDebt(reference);
+    });
+
+    // Quick amount buttons
+    document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const percentage = parseInt(this.dataset.percentage);
+            const amount = outstandingAmount * (percentage / 100);
+            document.getElementById('payment-amount').value = amount.toFixed(2);
+        });
+    });
+
+    // Payment amount change - initialize payment when amount entered
+    document.getElementById('payment-amount')?.addEventListener('change', async function() {
+        const amount = parseFloat(this.value);
+        if (amount && amount > 0 && currentDebt) {
+            await initializePaymentElement(amount);
+        }
+    });
+
+    // Submit payment button
+    document.getElementById('submit-payment-btn')?.addEventListener('click', handleSubmitPayment);
+
+    async function findDebt(reference) {
+        setButtonLoading('find-debt-btn', true);
+        hideMessages();
+
+        try {
+            const response = await fetch(`/api/payment/find-by-reference?reference=${encodeURIComponent(reference)}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                showError(data.error || 'Debt not found');
+                return;
+            }
+
+            currentDebt = data;
+            outstandingAmount = data.amount;
+
+            // Populate debt details
+            document.getElementById('debt-id').value = data.debtId;
+            document.getElementById('debt-ref').textContent = data.reference;
+            document.getElementById('outstanding-amount').textContent = `$${data.amount.toFixed(2)}`;
+            document.getElementById('debt-currency').textContent = data.currency;
+            document.getElementById('payment-amount').value = data.amount.toFixed(2);
+
+            // Show sections
+            document.getElementById('debt-details').classList.remove('hidden');
+            document.getElementById('amount-section').classList.remove('hidden');
+
+            // Auto-initialize payment element
+            await initializePaymentElement(data.amount);
+
+        } catch (error) {
+            console.error('Error finding debt:', error);
+            showError('Failed to find debt. Please try again.');
+        } finally {
+            setButtonLoading('find-debt-btn', false);
+        }
+    }
+
+    async function initializePaymentElement(amount) {
+        if (!currentDebt) return;
+
+        try {
+            // Create payment intent
+            const response = await fetch('/api/payment/create-intent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    debtId: currentDebt.debtId,
+                    amount: amount,
+                    currency: currentDebt.currency || 'AUD'
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                showError(data.error || 'Failed to initialize payment');
+                return;
+            }
+
+            clientSecret = data.clientSecret;
+
+            // Initialize Elements
+            const appearance = {
+                theme: 'stripe',
+                variables: {
+                    colorPrimary: '#3b82f6',
+                }
+            };
+
+            elements = stripe.elements({ clientSecret, appearance });
+
+            const paymentElement = elements.create('payment');
+            paymentElement.mount('#payment-element');
+
+            // Show payment section
+            document.getElementById('payment-element-section').classList.remove('hidden');
+            document.getElementById('submit-section').classList.remove('hidden');
+
+        } catch (error) {
+            console.error('Error initializing payment:', error);
+            showError('Failed to initialize payment method. Please try again.');
+        }
+    }
+
+    async function handleSubmitPayment() {
+        const amount = parseFloat(document.getElementById('payment-amount').value);
+        
+        if (!amount || amount <= 0) {
+            showError('Please enter a valid payment amount');
+            return;
+        }
+
+        if (!clientSecret) {
+            showError('Payment not initialized. Please refresh and try again.');
+            return;
+        }
+
+        setButtonLoading('submit-payment-btn', true);
+        hideMessages();
+
+        try {
+            const { error } = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    return_url: `${window.location.origin}/Admin/Payments/PaymentSuccess`,
+                },
+            });
+
+            if (error) {
+                showError(error.message);
+                setButtonLoading('submit-payment-btn', false);
+            }
+            // If no error, user will be redirected to return_url
+        } catch (error) {
+            console.error('Payment error:', error);
+            showError('An unexpected error occurred. Please try again.');
+            setButtonLoading('submit-payment-btn', false);
+        }
+    }
+
+    function setButtonLoading(buttonId, loading) {
+        const btn = document.getElementById(buttonId);
+        if (!btn) return;
+
+        if (buttonId === 'submit-payment-btn') {
+            const text = document.getElementById('submit-text');
+            const spinner = document.getElementById('submit-spinner');
+            btn.disabled = loading;
+            if (loading) {
+                text?.classList.add('hidden');
+                spinner?.classList.remove('hidden');
+            } else {
+                text?.classList.remove('hidden');
+                spinner?.classList.add('hidden');
+            }
+        } else {
+            btn.disabled = loading;
+            if (loading) {
+                btn.innerHTML = '<svg class="animate-spin inline-block w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Loading...';
+            }
+        }
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('form-error');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => errorDiv.classList.add('hidden'), 8000);
+        }
+    }
+
+    function showSuccess(message) {
+        const successDiv = document.getElementById('form-success');
+        if (successDiv) {
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+        }
+    }
+
+    function hideMessages() {
+        document.getElementById('form-error')?.classList.add('hidden');
+        document.getElementById('form-success')?.classList.add('hidden');
+    }
+
+    // Initialize on page load
+    initializeStripe();
+</script>

@@ -1,0 +1,382 @@
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Test Stripe Payment";
+}
+
+@inject IConfiguration Configuration
+
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<div class="max-w-4xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <svg class="w-7 h-7 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Test Stripe Payment
+                </h1>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Test payment processing with Stripe test cards and all payment methods</p>
+            </div>
+            <a href="/Admin/Payments" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition font-medium">
+                ← Back to Payments
+            </a>
+        </div>
+    </div>
+
+    <!-- Test Mode Banner -->
+    <div class="mb-6 bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-500 p-4 rounded-lg">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="ml-3 flex-1">
+                <h3 class="text-sm font-bold text-purple-800 dark:text-purple-300">Test Mode Active</h3>
+                <p class="text-sm text-purple-700 dark:text-purple-400 mt-1">
+                    This page is for testing Stripe integration. Use test card numbers below. No real charges will be made.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Cards Reference -->
+    <div class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+            Stripe Test Card Numbers
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <h3 class="font-semibold text-green-800 dark:text-green-300 mb-2">✓ Successful Payments</h3>
+                <ul class="space-y-1 text-green-700 dark:text-green-400">
+                    <li class="font-mono">4242 4242 4242 4242 - Visa</li>
+                    <li class="font-mono">5555 5555 5555 4444 - Mastercard</li>
+                    <li class="font-mono">3782 822463 10005 - Amex</li>
+                </ul>
+            </div>
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <h3 class="font-semibold text-red-800 dark:text-red-300 mb-2">✗ Failed Payments</h3>
+                <ul class="space-y-1 text-red-700 dark:text-red-400">
+                    <li class="font-mono">4000 0000 0000 0002 - Declined</li>
+                    <li class="font-mono">4000 0000 0000 9995 - Insufficient funds</li>
+                    <li class="font-mono">4000 0000 0000 0069 - Expired card</li>
+                </ul>
+            </div>
+        </div>
+        <p class="mt-3 text-xs text-gray-600 dark:text-gray-400">
+            <strong>Note:</strong> Use any future expiry date (e.g., 12/25), any 3-digit CVC, and any postal code.
+        </p>
+    </div>
+
+    <!-- Test Payment Form -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-6">
+            <form id="test-payment-form" class="space-y-6">
+                <!-- Test Amount -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Test Amount <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg font-semibold">$</span>
+                        <input 
+                            type="number" 
+                            id="test-amount"
+                            class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg pl-10 pr-4 py-3 text-lg font-semibold"
+                            placeholder="10.00"
+                            value="10.00"
+                            step="0.01"
+                            min="0.50"
+                            required />
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button type="button" class="test-amount-btn text-xs px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 border rounded-full" data-amount="1.00">$1</button>
+                        <button type="button" class="test-amount-btn text-xs px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 border rounded-full" data-amount="10.00">$10</button>
+                        <button type="button" class="test-amount-btn text-xs px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 border rounded-full" data-amount="100.00">$100</button>
+                        <button type="button" class="test-amount-btn text-xs px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 border rounded-full" data-amount="1000.00">$1,000</button>
+                    </div>
+                </div>
+
+                <!-- Currency Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Currency
+                    </label>
+                    <select id="test-currency" class="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2">
+                        <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                    </select>
+                </div>
+
+                <!-- Initialize Payment Button -->
+                <button 
+                    type="button"
+                    id="init-test-payment-btn"
+                    class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                    Initialize Test Payment
+                </button>
+
+                <!-- Stripe Payment Element -->
+                <div id="test-payment-element-section" class="hidden">
+                    <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Payment Method</h3>
+                    <div id="test-payment-element" class="mb-4 border-2 border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-900"></div>
+                </div>
+
+                <!-- Messages -->
+                <div id="test-error" class="hidden p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded-lg text-sm text-red-700 dark:text-red-300"></div>
+                <div id="test-success" class="hidden p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 rounded-lg text-sm text-green-700 dark:text-green-300"></div>
+
+                <!-- Submit Test Payment -->
+                <div id="test-submit-section" class="hidden">
+                    <button 
+                        type="button"
+                        id="submit-test-payment-btn"
+                        class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-bold shadow-lg disabled:opacity-50">
+                        <span id="test-submit-text">🧪 Process Test Payment</span>
+                        <span id="test-submit-spinner" class="hidden">Processing...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Test Results -->
+    <div id="test-results" class="hidden mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Test Results</h2>
+        <div id="test-results-content" class="space-y-2 text-sm"></div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+        <h3 class="font-semibold text-blue-900 dark:text-blue-300 mb-2">Testing Tips</h3>
+        <ul class="space-y-2 text-sm text-blue-800 dark:text-blue-400">
+            <li class="flex items-start">
+                <svg class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Test successful payment flow with card <code class="bg-blue-100 dark:bg-blue-900 px-1 rounded">4242 4242 4242 4242</code></span>
+            </li>
+            <li class="flex items-start">
+                <svg class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Test failed payment with <code class="bg-blue-100 dark:bg-blue-900 px-1 rounded">4000 0000 0000 0002</code></span>
+            </li>
+            <li class="flex items-start">
+                <svg class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Check Hangfire dashboard at <code class="bg-blue-100 dark:bg-blue-900 px-1 rounded">/hangfire</code> for background jobs</span>
+            </li>
+            <li class="flex items-start">
+                <svg class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Monitor webhook events with Stripe CLI: <code class="bg-blue-100 dark:bg-blue-900 px-1 rounded">stripe listen --forward-to https://localhost:5001/api/webhooks/stripe</code></span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    let stripe;
+    let elements;
+    let clientSecret = null;
+
+    // Initialize Stripe
+    async function initializeStripe() {
+        try {
+            const response = await fetch('/api/payment/stripe-key');
+            const { publishableKey } = await response.json();
+            stripe = Stripe(publishableKey);
+        } catch (error) {
+            console.error('Failed to initialize Stripe:', error);
+            showTestError('Failed to initialize Stripe. Please check configuration.');
+        }
+    }
+
+    // Test amount buttons
+    document.querySelectorAll('.test-amount-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('test-amount').value = this.dataset.amount;
+        });
+    });
+
+    // Initialize test payment
+    document.getElementById('init-test-payment-btn')?.addEventListener('click', async function() {
+        await initializeTestPayment();
+    });
+
+    // Submit test payment
+    document.getElementById('submit-test-payment-btn')?.addEventListener('click', async function() {
+        await submitTestPayment();
+    });
+
+    async function initializeTestPayment() {
+        const amount = parseFloat(document.getElementById('test-amount').value);
+        const currency = document.getElementById('test-currency').value;
+
+        if (!amount || amount < 0.50) {
+            showTestError('Amount must be at least $0.50');
+            return;
+        }
+
+        hideTestMessages();
+        setTestLoading(true, 'init-test-payment-btn');
+
+        try {
+            // Create test payment intent
+            const response = await fetch('/api/payment/create-test-intent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount, currency })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                showTestError(data.error || 'Failed to initialize test payment');
+                return;
+            }
+
+            clientSecret = data.clientSecret;
+
+            // Initialize Elements
+            const appearance = {
+                theme: 'stripe',
+                variables: { colorPrimary: '#9333ea' }
+            };
+
+            elements = stripe.elements({ clientSecret, appearance });
+            const paymentElement = elements.create('payment');
+            paymentElement.mount('#test-payment-element');
+
+            // Show payment section
+            document.getElementById('test-payment-element-section').classList.remove('hidden');
+            document.getElementById('test-submit-section').classList.remove('hidden');
+
+            showTestSuccess(`Test payment initialized for $${amount.toFixed(2)} ${currency}`);
+
+        } catch (error) {
+            console.error('Error:', error);
+            showTestError('Failed to initialize payment. Please try again.');
+        } finally {
+            setTestLoading(false, 'init-test-payment-btn');
+        }
+    }
+
+    async function submitTestPayment() {
+        if (!clientSecret) {
+            showTestError('Please initialize payment first');
+            return;
+        }
+
+        hideTestMessages();
+        setTestLoading(true, 'submit-test-payment-btn');
+
+        try {
+            const { error, paymentIntent } = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    return_url: `${window.location.origin}/Admin/Payments/TestSuccess`,
+                },
+                redirect: 'if_required'
+            });
+
+            if (error) {
+                showTestError(`Payment failed: ${error.message}`);
+                displayTestResults(false, error);
+            } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+                showTestSuccess('✓ Test payment successful!');
+                displayTestResults(true, paymentIntent);
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            showTestError('An error occurred during payment');
+        } finally {
+            setTestLoading(false, 'submit-test-payment-btn');
+        }
+    }
+
+    function displayTestResults(success, data) {
+        const resultsDiv = document.getElementById('test-results');
+        const contentDiv = document.getElementById('test-results-content');
+        
+        let html = `
+            <div class="p-4 ${success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border rounded-lg">
+                <h3 class="font-semibold ${success ? 'text-green-900' : 'text-red-900'} mb-2">
+                    ${success ? '✓ Success' : '✗ Failed'}
+                </h3>
+                <div class="text-sm ${success ? 'text-green-800' : 'text-red-800'} space-y-1">
+        `;
+
+        if (success) {
+            html += `
+                <p><strong>Payment ID:</strong> ${data.id}</p>
+                <p><strong>Amount:</strong> $${(data.amount / 100).toFixed(2)} ${data.currency.toUpperCase()}</p>
+                <p><strong>Status:</strong> ${data.status}</p>
+                <p><strong>Payment Method:</strong> ${data.payment_method}</p>
+            `;
+        } else {
+            html += `
+                <p><strong>Error:</strong> ${data.message}</p>
+                <p><strong>Code:</strong> ${data.code || 'N/A'}</p>
+                <p><strong>Type:</strong> ${data.type || 'N/A'}</p>
+            `;
+        }
+
+        html += `</div></div>`;
+        contentDiv.innerHTML = html;
+        resultsDiv.classList.remove('hidden');
+    }
+
+    function setTestLoading(loading, buttonId) {
+        const btn = document.getElementById(buttonId);
+        if (!btn) return;
+        btn.disabled = loading;
+        if (buttonId === 'submit-test-payment-btn') {
+            const text = document.getElementById('test-submit-text');
+            const spinner = document.getElementById('test-submit-spinner');
+            if (loading) {
+                text?.classList.add('hidden');
+                spinner?.classList.remove('hidden');
+            } else {
+                text?.classList.remove('hidden');
+                spinner?.classList.add('hidden');
+            }
+        }
+    }
+
+    function showTestError(message) {
+        const errorDiv = document.getElementById('test-error');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+    }
+
+    function showTestSuccess(message) {
+        const successDiv = document.getElementById('test-success');
+        if (successDiv) {
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+        }
+    }
+
+    function hideTestMessages() {
+        document.getElementById('test-error')?.classList.add('hidden');
+        document.getElementById('test-success')?.classList.add('hidden');
+    }
+
+    // Initialize on page load
+    initializeStripe();
+</script>
